@@ -58,13 +58,26 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
-
+  pages: {
+    signIn: '/signin',
+    signOut: '/signin',
+  },
   secret: NEXT_AUTH_SECRET,
   callbacks: {
     async session({ session, token }: { session: any; token: any }) {
       session.address = token.sub;
       session.user.name = token.sub;
       return session;
+    },
+    async jwt({ token, user }) {
+      return token;
+    },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
 };

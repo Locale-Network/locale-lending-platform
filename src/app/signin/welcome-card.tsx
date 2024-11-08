@@ -6,8 +6,24 @@ import Link from 'next/link';
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useSession } from 'next-auth/react';
+import { useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
+
+// TODO: add link to terms and privacy
 
 export default function CardWithForm() {
+   const router = useRouter();
+   const { status } = useSession();
+   const { isConnected, address } = useAccount();
+
+  React.useEffect(() => {
+    if (status === 'authenticated' && isConnected && address) {
+      router.replace('/borrower');
+    }
+  }, [status, isConnected, address, router]);
+
+
   return (
     <Card className="w-[350px]">
       <CardHeader className="flex flex-col items-center">
@@ -32,11 +48,11 @@ export default function CardWithForm() {
         <ConnectButton label="Sign in with Ethereum" />
 
         <div className="text-xs text-muted-foreground">
-          <Link href="/terms" className="hover:underline">
+          <Link href="#" className="hover:underline">
             Terms and Conditions
           </Link>
           {' • '}
-          <Link href="/privacy" className="hover:underline">
+          <Link href="#" className="hover:underline">
             Privacy Policy
           </Link>
         </div>
