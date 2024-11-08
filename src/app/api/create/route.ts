@@ -1,9 +1,9 @@
-import { sql } from "@vercel/postgres";
-import { NextResponse } from "next/server";
+import { sql } from '@vercel/postgres';
+import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
-      const result = await sql`CREATE TABLE proofs (
+    const result = await sql`CREATE TABLE proofs (
         id SERIAL PRIMARY KEY,
         account_id VARCHAR(255) NULL,
         name VARCHAR(255) NULL,
@@ -23,8 +23,8 @@ export async function GET(request: Request) {
     //     is_deleted BOOLEAN DEFAULT FALSE
     // );`;
 
-    return NextResponse.json({result}, {status: 200});
+    return NextResponse.json({ result }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({error}, {status: 500});
+    return NextResponse.json({ error }, { status: 500 });
   }
 }

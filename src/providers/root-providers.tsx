@@ -2,7 +2,7 @@
 
 import '@rainbow-me/rainbowkit/styles.css';
 
-import {  RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import {
   RainbowKitSiweNextAuthProvider,
   GetSiweMessageOptions,
@@ -27,20 +27,13 @@ interface RootProviderProps {
   initialState: State | undefined;
 }
 
-export default function RootProviders({
-  children,
-  initialState,
-}: RootProviderProps) {
+export default function RootProviders({ children, initialState }: RootProviderProps) {
   return (
     <WagmiProvider config={config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
         <SessionProvider>
-          <RainbowKitSiweNextAuthProvider
-            getSiweMessageOptions={getSiweMessageOptions}
-          >
-            <RainbowKitProvider initialChain={arbitrum}>
-              {children}
-            </RainbowKitProvider>
+          <RainbowKitSiweNextAuthProvider getSiweMessageOptions={getSiweMessageOptions}>
+            <RainbowKitProvider initialChain={arbitrum}>{children}</RainbowKitProvider>
           </RainbowKitSiweNextAuthProvider>
         </SessionProvider>
       </QueryClientProvider>

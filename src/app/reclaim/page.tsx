@@ -1,6 +1,6 @@
-"use client";
-import { useCallback, useEffect, useState } from "react";
-import { usePlaidLink } from "react-plaid-link";
+'use client';
+import { useCallback, useEffect, useState } from 'react';
+import { usePlaidLink } from 'react-plaid-link';
 
 export interface StateInterface {
   linkSuccess: boolean;
@@ -24,38 +24,34 @@ export default function Home() {
     linkSuccess: false,
     isItemAccess: true,
     isPaymentInitiation: false,
-    linkToken: "", // Don't set to null or error message will show up briefly when site loads
+    linkToken: '', // Don't set to null or error message will show up briefly when site loads
     accessToken: null,
     itemId: null,
     isError: false,
     backend: true,
-    products: ["transactions"],
+    products: ['transactions'],
     linkTokenError: {
-      error_type: "",
-      error_code: "",
-      error_message: "",
+      error_type: '',
+      error_code: '',
+      error_message: '',
     },
   });
 
   const [user, setUser] = useState<{ name: string; officialName: string }>({
-    name: "",
-    officialName: "",
+    name: '',
+    officialName: '',
   });
 
   const getInfo = useCallback(async () => {
-    const response = await fetch(
-      `/api/info?access_token=${state.accessToken}`,
-      { method: "POST" }
-    );
+    const response = await fetch(`/api/info?access_token=${state.accessToken}`, { method: 'POST' });
     if (!response.ok) {
-      setState((prevState) => ({ ...prevState, backend: false }));
+      setState(prevState => ({ ...prevState, backend: false }));
       return { paymentInitiation: false };
     }
     const data = await response.json();
-    const paymentInitiation: boolean =
-      data.products.includes("payment_initiation");
+    const paymentInitiation: boolean = data.products.includes('payment_initiation');
 
-    setState((prevState) => ({
+    setState(prevState => ({
       ...prevState,
       products: data.products,
       isPaymentInitiation: paymentInitiation,
@@ -66,25 +62,25 @@ export default function Home() {
   const generateToken = useCallback(async (isPaymentInitiation: boolean) => {
     // Link tokens for 'payment_initiation' use a different creation flow in your backend.
     const path = isPaymentInitiation
-      ? "/api/create_link_token_for_payment"
-      : "/api/create_link_token";
+      ? '/api/create_link_token_for_payment'
+      : '/api/create_link_token';
     const response = await fetch(path, {
-      method: "POST",
+      method: 'POST',
     });
     if (!response.ok) {
-      setState((prevState) => ({ ...prevState, linkToken: null }));
+      setState(prevState => ({ ...prevState, linkToken: null }));
       return;
     }
     const data = await response.json();
     if (data) {
-      setState((prevState) => ({
+      setState(prevState => ({
         ...prevState,
         linkToken: data.link_token,
       }));
     }
 
     // Save the link_token to be used later in the Oauth flow.
-    localStorage.setItem("link_token", data.link_token);
+    localStorage.setItem('link_token', data.link_token);
   }, []);
 
   useEffect(() => {
@@ -92,10 +88,10 @@ export default function Home() {
       const { paymentInitiation } = await getInfo(); // used to determine which path to take when generating token
       // do not generate a new token for OAuth redirect; instead
       // setLinkToken from localStorage
-      if (window.location.href.includes("?oauth_state_id=")) {
-        setState((prevState) => ({
+      if (window.location.href.includes('?oauth_state_id=')) {
+        setState(prevState => ({
           ...prevState,
-          linkToken: localStorage.getItem("link_token"),
+          linkToken: localStorage.getItem('link_token'),
         }));
         return;
       }
@@ -107,13 +103,12 @@ export default function Home() {
   useEffect(() => {
     const init = async () => {
       await fetch(`/api/transactions?access_token=${state.accessToken}`, {
-        method: "GET",
+        method: 'GET',
       });
 
-      const response = await fetch(
-        `/api/accounts?access_token=${state.accessToken}`,
-        { method: "GET" }
-      );
+      const response = await fetch(`/api/accounts?access_token=${state.accessToken}`, {
+        method: 'GET',
+      });
 
       const data = await response.json();
       console.log(data);
@@ -133,10 +128,10 @@ export default function Home() {
     (public_token: string) => {
       // If the access_token is needed, send public_token to server
       const exchangePublicTokenForAccessToken = async () => {
-        const response = await fetch("/api/set_access_token", {
-          method: "POST",
+        const response = await fetch('/api/set_access_token', {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ public_token }),
         });
@@ -183,10 +178,7 @@ export default function Home() {
     onSuccess,
   };
 
-  if (
-    typeof window !== "undefined" &&
-    window.location.href.includes("?oauth_state_id=")
-  ) {
+  if (typeof window !== 'undefined' && window.location.href.includes('?oauth_state_id=')) {
     // TODO: figure out how to delete this ts-ignore
     // @ts-ignore
     config.receivedRedirectUri = window.location.href;
@@ -210,8 +202,7 @@ export default function Home() {
               <strong className="title">Account Name :</strong> {user.name}
             </div>
             <div>
-              <strong className="title">Official name :</strong>{" "}
-              {user.officialName}
+              <strong className="title">Official name :</strong> {user.officialName}
             </div>
           </div>
         )}

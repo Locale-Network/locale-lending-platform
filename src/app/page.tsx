@@ -1,12 +1,12 @@
-import { Reason } from "@/constants/reason.enum";
-import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk";
+import { Reason } from '@/constants/reason.enum';
+import { ReclaimProofRequest } from '@reclaimprotocol/js-sdk';
 
-import { Button } from "@/components/ui/button";
-import { Suspense } from "react";
-import Link from "next/link";
-import QRCode from "react-qr-code";
-import VerificationStatus from "@/containers/VerificationStatus/VerificationStatus";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from '@/components/ui/button';
+import { Suspense } from 'react';
+import Link from 'next/link';
+import QRCode from 'react-qr-code';
+import VerificationStatus from '@/containers/VerificationStatus/VerificationStatus';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ReclaimPageProps {
   searchParams: {
@@ -27,14 +27,10 @@ const VerificationStatusComponent = async ({
   const callbackUrl = process.env.RECLAIM_CALLBACK_URL;
   const providerId = process.env.RECLAIM_PROVIDER_ID;
   if (!appSecret || !appId || !callbackUrl || !providerId) {
-    throw new Error("Missing configuration");
+    throw new Error('Missing configuration');
   }
 
-  const reclaimProofRequest = await ReclaimProofRequest.init(
-    appId,
-    appSecret,
-    providerId
-  );
+  const reclaimProofRequest = await ReclaimProofRequest.init(appId, appSecret, providerId);
 
   // await reclaimProofRequest.buildProofRequest(providerId, true, "V2Linking");
 
@@ -67,17 +63,17 @@ export default async function ReclaimPage({ searchParams }: ReclaimPageProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="flex min-h-screen flex-col items-center justify-center">
       <Suspense
         fallback={
           <>
             <div className="mb-4">
-              <Skeleton className="w-[256px] h-[256px]" />
+              <Skeleton className="h-[256px] w-[256px]" />
             </div>
             <Button disabled>
               <span className="mr-2">
                 <svg
-                  className="animate-spin h-5 w-5 text-white"
+                  className="h-5 w-5 animate-spin text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -100,18 +96,15 @@ export default async function ReclaimPage({ searchParams }: ReclaimPageProps) {
               Verifying...
             </Button>
             <div className="mt-4">
-              <Skeleton className="w-[160px] h-[20px]" />
+              <Skeleton className="h-[20px] w-[160px]" />
             </div>
             <div>
-              <Skeleton className="w-[20px] h-[20px]" />
+              <Skeleton className="h-[20px] w-[20px]" />
             </div>
           </>
         }
       >
-        <VerificationStatusComponent
-          account={account}
-          redirectUrl={redirectUrl}
-        />
+        <VerificationStatusComponent account={account} redirectUrl={redirectUrl} />
       </Suspense>
     </div>
   );

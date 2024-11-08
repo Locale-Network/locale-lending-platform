@@ -11,20 +11,14 @@ import {
 
 const projectId = process.env.NEXT_PUBLIC_REOWN_CLOUD_PROJECT_ID;
 if (!projectId) {
-  throw new Error("REOWN_CLOUD_PROJECT_ID is not set");
+  throw new Error('REOWN_CLOUD_PROJECT_ID is not set');
 }
 
 const connectors = connectorsForWallets(
   [
     {
       groupName: 'Recommended',
-      wallets: [
-        metaMaskWallet,
-        rabbyWallet,
-        rainbowWallet,
-        walletConnectWallet,
-        trustWallet,
-      ],
+      wallets: [metaMaskWallet, rabbyWallet, rainbowWallet, walletConnectWallet, trustWallet],
     },
   ],
   {
