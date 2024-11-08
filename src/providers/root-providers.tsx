@@ -8,7 +8,7 @@ import {
   GetSiweMessageOptions,
 } from '@rainbow-me/rainbowkit-siwe-next-auth';
 import { SessionProvider } from 'next-auth/react';
-
+import type { Session } from 'next-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { WagmiProvider, type State } from 'wagmi';
@@ -25,6 +25,7 @@ const queryClient = new QueryClient();
 interface RootProviderProps {
   children: React.ReactNode;
   initialState: State | undefined;
+  session: Session | null;
 }
 
 
@@ -43,11 +44,11 @@ const appInfo = {
   disclaimer: Disclaimer,
 };
 
-export default function RootProviders({ children, initialState }: RootProviderProps) {
+export default function RootProviders({ children, initialState, session }: RootProviderProps) {
   return (
     <WagmiProvider config={config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
-        <SessionProvider>
+        <SessionProvider session={session}>
           <RainbowKitSiweNextAuthProvider getSiweMessageOptions={getSiweMessageOptions}>
             <RainbowKitProvider appInfo={appInfo}  initialChain={arbitrum}>{children}</RainbowKitProvider>
           </RainbowKitSiweNextAuthProvider>
