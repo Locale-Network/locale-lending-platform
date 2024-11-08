@@ -27,7 +27,14 @@
     "react-plaid-link": "^3.5.2",
     "react-qr-code": "^2.0.15",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "siwe": "^2.1.4",
+    "viem": "^2.7.15",
+    "wagmi": "^2.5.7",
+    "next-auth": "^4.24.5",
+    "ethers": "^5.7.2",
+    "@rainbow-me/rainbowkit": "2.1.4",
+    "@rainbow-me/rainbowkit-siwe-next-auth": "^0.4.1"
   },
   "devDependencies": {
     "@types/node": "^20",

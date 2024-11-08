@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
-
+import "@rainbow-me/rainbowkit/styles.css";
+import RootProviders from "@/providers/root-providers";
+import { headers } from "next/headers";
+import { cookieToInitialState } from "wagmi";
+import { config } from "@/utils/cookie";
 import { cn } from "@/lib/utils";
 
 const fontSans = FontSans({
@@ -19,6 +23,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialState = cookieToInitialState(config, headers().get("cookie"));
+
   return (
     <html lang="en">
       <body
@@ -27,7 +33,7 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        {children}
+        <RootProviders initialState={initialState}>{children}</RootProviders>
       </body>
     </html>
   );

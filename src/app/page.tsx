@@ -63,7 +63,7 @@ export default async function ReclaimPage({ searchParams }: ReclaimPageProps) {
   const { account, redirectUrl } = searchParams;
 
   if (!account) {
-    return <div>No account provided</div>;
+    return <div className="">No account provided</div>;
   }
 
   return (
