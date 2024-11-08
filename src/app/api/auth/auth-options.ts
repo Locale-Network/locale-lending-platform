@@ -3,7 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { getCsrfToken } from 'next-auth/react';
 import { SiweMessage } from 'siwe';
 import prisma from '@prisma/index';
-import { PrismaAdapter } from "@auth/prisma-adapter"
+import { PrismaAdapter } from '@auth/prisma-adapter';
 
 const NEXT_AUTH_URL = process.env.NEXTAUTH_URL;
 if (!NEXT_AUTH_URL) {
