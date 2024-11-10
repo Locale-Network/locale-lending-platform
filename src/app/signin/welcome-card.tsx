@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import WalletConnectButton from '@/components/wallet-connect-button';
 import { useSession } from 'next-auth/react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
@@ -57,7 +57,7 @@ export default function CardWithForm() {
         </p>
       </CardContent>
       <CardFooter className="flex flex-col items-center space-y-4">
-        <ConnectButton label="Sign in with Ethereum" />
+        <WalletConnectButton label="Sign in with Ethereum" />
 
         <div className="text-xs text-muted-foreground">
           <Link href="#" className="hover:underline">

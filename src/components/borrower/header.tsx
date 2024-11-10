@@ -1,4 +1,4 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import WalletConnectButton from '@/components/wallet-connect-button';
 
 export default function BorrowerHeader() {
   return (
@@ -7,7 +7,7 @@ export default function BorrowerHeader() {
         <div className="flex items-center"></div>
 
         <div className="flex items-center space-x-4">
-          <ConnectButton />
+          <WalletConnectButton/>
         </div>
       </div>
     </header>
