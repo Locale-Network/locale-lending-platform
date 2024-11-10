@@ -24,10 +24,12 @@
     "@rainbow-me/rainbowkit": "2.1.4",
     "@rainbow-me/rainbowkit-siwe-next-auth": "^0.4.1",
     "@reclaimprotocol/js-sdk": "^2.1.1",
+    "@tanstack/react-table": "^8.20.5",
     "@vercel/postgres": "^0.9.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "ethers": "^5.7.2",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.454.0",
     "moment": "^2.30.1",
     "next": "14.2.7",
@@ -45,6 +47,7 @@
     "wagmi": "^2.5.7"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.13",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
