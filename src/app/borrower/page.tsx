@@ -2,7 +2,7 @@
 
 import { useAuthRedirect } from '@/hooks/use-auth-redirect';
 
-export default function BorrowerPage() {
+export default function Page() {
   const { isLoading, isAuthenticated, session } = useAuthRedirect();
 
   if (isLoading) {
