@@ -1,19 +1,31 @@
-import { NextAuthOptions } from 'next-auth';
+import { NextAuthOptions, PagesOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { getCsrfToken } from 'next-auth/react';
 import { SiweMessage } from 'siwe';
 import prisma from '@prisma/index';
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import { Role } from '@prisma/client';
 
-const NEXT_AUTH_URL = process.env.NEXTAUTH_URL;
-if (!NEXT_AUTH_URL) {
-  throw new Error('NEXTAUTH_URL is not set');
-}
+const NEXTAUTH_URL = process.env.NEXTAUTH_URL as string;
+// if (!NEXTAUTH_URL) {
+//   throw new Error('NEXTAUTH_URL is not set');
+// }
 
-const NEXT_AUTH_SECRET = process.env.NEXTAUTH_SECRET;
-if (!NEXT_AUTH_SECRET) {
-  throw new Error('NEXTAUTH_SECRET is not set');
-}
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET as string;
+// if (!NEXTAUTH_SECRET) {
+//   throw new Error('NEXTAUTH_SECRET is not set');
+// }
+
+export const ROLE_REDIRECTS: Record<Role, string> = {
+  BORROWER: '/borrower',
+  APPROVER: '/approver',
+  ADMIN: '/admin',
+} as const;
+
+export const authPages: Partial<PagesOptions> = {
+  signIn: '/signin',
+  signOut: '/signin',
+};
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -35,7 +47,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         try {
           const siwe = new SiweMessage(JSON.parse(credentials?.message || '{}'));
-          const nextAuthUrl = new URL(NEXT_AUTH_URL);
+          const nextAuthUrl = new URL(NEXTAUTH_URL);
 
           const result = await siwe.verify({
             signature: credentials?.signature || '',
@@ -43,12 +55,22 @@ export const authOptions: NextAuthOptions = {
             nonce: await getCsrfToken({ req }),
           });
 
-          if (result.success) {
-            return {
-              id: siwe.address,
-            };
+          if (!result.success) {
+            return null;
           }
-          return null;
+
+          const chainAccount = await prisma.chainAccount.findUnique({
+            where: {
+              address: siwe.address,
+            },
+          });
+
+          const role = chainAccount?.role || 'BORROWER';
+
+          return {
+            id: siwe.address,
+            role,
+          };
         } catch (e) {
           return null;
         }
@@ -58,26 +80,22 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
-  pages: {
-    signIn: '/signin',
-    signOut: '/signin',
-  },
-  secret: NEXT_AUTH_SECRET,
+  pages: authPages,
+  secret: NEXTAUTH_SECRET,
   callbacks: {
     async session({ session, token }: { session: any; token: any }) {
       session.address = token.sub;
       session.user.name = token.sub;
+      session.user.role = token.role;
+
       return session;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user: any }) {
+      if (user) {
+        token.role = user.role;
+      }
       return token;
     },
-    async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith('/')) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
-    },
   },
+  debug: process.env.NODE_ENV === 'development',
 };
