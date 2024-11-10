@@ -1,6 +1,6 @@
 'use client';
 
-import { Home } from 'lucide-react';
+import { HandCoins, Home } from 'lucide-react';
 import { usePathname } from 'next/navigation'; // Add this import
 
 import {
@@ -21,6 +21,11 @@ const items = [
     url: '/borrower',
     icon: Home,
   },
+  {
+    title: 'Loans',
+    url: '/borrower/loans',
+    icon: HandCoins,
+  },
 ];
 
 export default function BorrowerSidebar() {
@@ -35,7 +40,7 @@ export default function BorrowerSidebar() {
             <SidebarMenu>
               {items.map(item => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname.startsWith(item.url)}>
+                  <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <a href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
