@@ -9,20 +9,32 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useSession } from 'next-auth/react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
+import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
+import { signIn } from './actions';
 
 // TODO: add link to terms and privacy
 
 export default function CardWithForm() {
-   const router = useRouter();
-   const { status } = useSession();
-   const { isConnected, address } = useAccount();
+  const router = useRouter();
+  const { status } = useSession();
+  const { isConnected, address } = useAccount();
 
   React.useEffect(() => {
     if (status === 'authenticated' && isConnected && address) {
-      router.replace('/borrower');
+      (async function () {
+        const chainAccount = await signIn(address);
+
+        if (!chainAccount) {
+          return;
+        }
+
+        const redirectPath = ROLE_REDIRECTS[chainAccount.role];
+        if (redirectPath) {
+          router.replace(redirectPath);
+        }
+      })();
     }
   }, [status, isConnected, address, router]);
-
 
   return (
     <Card className="w-[350px]">
