@@ -1,5 +1,5 @@
-
+import LoanApplicationForm from './form';
 
 export default function Page() {
-  return <div>Apply for loan</div>;
+  return <LoanApplicationForm />;
 }
