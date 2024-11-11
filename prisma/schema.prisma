@@ -44,3 +44,12 @@ model Transaction {
 
     @@map("transactions")
 }
+
+model KYCVerification {
+    id             Int      @id @default(autoincrement())
+    plaidSessionId String   @unique
+    user           String   @unique
+    status         String
+    createdAt      DateTime @default(now()) @map("created_at")
+    updatedAt      DateTime @updatedAt
+}
