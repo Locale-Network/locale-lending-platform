@@ -4,6 +4,8 @@ import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
+// TODO: decide if KYC is complete
+
 export default function ApplyLoanButton() {
   const router = useRouter();
 

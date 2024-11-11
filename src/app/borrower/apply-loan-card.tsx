@@ -4,6 +4,8 @@ import { Pencil } from 'lucide-react';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 
+// TODO: decide if KYC is complete
+
 export default function ApplyLoanCard() {
   const router = useRouter();
 
