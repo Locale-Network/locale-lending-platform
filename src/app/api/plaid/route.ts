@@ -3,22 +3,44 @@ import {
   isKycVerifiedByUser,
   updateKyVerification,
 } from "@/services/db/plaid/kyc";
+import { formatError } from "@/utils/plaid";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const data: {
-    user: string;
-    plaidSessionId: string;
-    status: string;
-  } = await req.json();
+  try {
+    const data: {
+      user: string;
+      plaidSessionId: string;
+      status: string;
+    } = await req.json();
 
-  return createKycVerification(data);
+    const response = await createKycVerification(data);
+    return NextResponse.json(response);
+  } catch (error: any) {
+    const formattedError = error?.response
+      ? formatError(error?.response)
+      : error;
+    return NextResponse.json(
+      {message: "Error creating KYC verification", error: formattedError},
+      {status: 500}
+    );
+  }
 }
 
 export async function PUT(req: NextRequest) {
-  const data = await req.json();
-
-  return updateKyVerification(data);
+  try {
+    const data = await req.json();
+    const response = await updateKyVerification(data);
+    return NextResponse.json(response);
+  } catch (error: any) {
+    const formattedError = error?.response
+      ? formatError(error?.response)
+      : error;
+    return NextResponse.json(
+      {message: "Error updating KYC verification", error: formattedError},
+      {status: 500}
+    );
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -29,5 +51,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json("User ID not found", {status: 404});
   }
 
-  return isKycVerifiedByUser(user);
+  const result = await isKycVerifiedByUser(user);
+
+  // Ensure the result is a valid Response type
+  if (typeof result === "object" && result !== null) {
+    return NextResponse.json(result);
+  } else {
+    return NextResponse.json("No KYC verification message for specific user", {
+      status: 404,
+    });
+  }
 }
