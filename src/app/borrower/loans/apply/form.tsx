@@ -53,7 +53,6 @@ const formSchema = z.object({
   repaymentPeriod: z.string().min(1, { message: 'Please select a repayment period.' }),
 
   // Step 3: Loan Preferences
-  loanTerm: z.string().min(1, { message: 'Please select a loan term.' }),
   interestRate: z.number().min(0, { message: 'Interest rate must be 0 or greater.' }),
   repaymentSchedule: z.string().min(1, { message: 'Please select a repayment schedule.' }),
 
@@ -104,7 +103,6 @@ export default function LoanApplicationForm() {
       loanPurpose: '',
       loanAmount: 0,
       repaymentPeriod: '',
-      loanTerm: '',
       interestRate: 0,
       repaymentSchedule: '',
       income: 0,
@@ -310,28 +308,6 @@ export default function LoanApplicationForm() {
 
             {step === 3 && (
               <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="loanTerm"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Loan Term</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a loan term" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="shortTerm">Short Term</SelectItem>
-                          <SelectItem value="mediumTerm">Medium Term</SelectItem>
-                          <SelectItem value="longTerm">Long Term</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="interestRate"
