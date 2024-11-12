@@ -1,15 +1,13 @@
-import client, { formatError } from "@/utils/plaid";
+import { getPlaidKycVerification } from "@/services/plaid";
+import { formatError } from "@/utils/plaid";
 import { NextRequest, NextResponse } from "next/server";
-import { IdentityVerificationGetRequest } from "plaid";
 
 export async function GET(req: NextRequest) {
-  const {identity_verification_id} = await req.json();
+  const url = new URL(req?.url);
+  const identity_verification_id = url.searchParams.get("access_token");
 
-  const request: IdentityVerificationGetRequest = {
-    identity_verification_id,
-  };
   try {
-    const response = await client.identityVerificationGet(request);
+    const response = await getPlaidKycVerification(identity_verification_id);
 
     return NextResponse.json({data: response.data}, {status: 200});
   } catch (error: any) {

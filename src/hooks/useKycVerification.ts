@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePlaidLink } from "react-plaid-link";
 
-const useKycVerification = () => {
+const useKycVerification = (userId?: string) => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
 
   const generateToken = useCallback(async () => {
@@ -13,7 +13,7 @@ const useKycVerification = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ account: "wallet 1" }),
+        body: JSON.stringify({account: "wallet 1221"}),
       });
 
       if (!response.ok) {
@@ -27,16 +27,21 @@ const useKycVerification = () => {
     }
   }, []);
 
-  const requestUserData = useCallback(async (identity_verification_id: string) => {
-    const response = await fetch("/api/plaid/kyc/verified", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ identity_verification_id }),
-    });
-    return response;
-  }, []);
+  const requestUserData = useCallback(
+    async (identity_verification_id: string) => {
+      const response = await fetch(
+        `/api/plaid/kyc/verified?verificationId=${identity_verification_id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response;
+    },
+    []
+  );
 
   const config = {
     token: linkToken || "",
@@ -44,23 +49,51 @@ const useKycVerification = () => {
       await requestUserData(metadata.link_session_id);
     },
     onExit: (err: any, metadata: any) => {
-      console.log(`Exited early. Error: ${JSON.stringify(err)} Metadata: ${JSON.stringify(metadata)}`);
+      console.log(
+        `Exited early. Error: ${JSON.stringify(err)} Metadata: ${JSON.stringify(
+          metadata
+        )}`
+      );
     },
   };
 
-  const { open } = usePlaidLink(config);
+  const {open} = usePlaidLink(config);
 
-  const openKycLink = async () => {
+  // Opens the KYC flow
+  const startKYCFlow = async () => {
     if (linkToken) {
       await open();
     }
   };
 
-  useEffect(() => {
-    generateToken();
-  }, [generateToken]);
+  /**
+   * returns a shareable url, which can use to navigate user to a separate
+   * kyc flow. After succeeded, they will need to navigate back.
+   * status will be updated by the webhook
+   */
+  const retryKycVerification = async () => {
+    if (userId) {
+      const response = await fetch("/api/plaid/kyc/retry", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({account: userId}),
+      });
 
-  return { generateToken, openKycLink, linkToken };
+      const data = await response.json();
+      return data;
+    }
+    return "No User Id";
+  };
+
+  useEffect(() => {
+    if (userId) {
+      generateToken();
+    }
+  }, [generateToken, userId]);
+
+  return {generateToken, startKYCFlow, linkToken, retryKycVerification};
 };
 
 export default useKycVerification;

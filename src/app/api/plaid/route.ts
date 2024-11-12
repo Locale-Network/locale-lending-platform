@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   try {
     const data: {
       user: string;
-      plaidSessionId: string;
+      identityVerificationId: string;
       status: string;
     } = await req.json();
 
