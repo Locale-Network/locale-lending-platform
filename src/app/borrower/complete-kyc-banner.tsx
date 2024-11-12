@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 
+// TODO: use Thidasa's hook to check if the user has completed KYC
+
 export default function CompleteKycBanner() {
   const router = useRouter();
 

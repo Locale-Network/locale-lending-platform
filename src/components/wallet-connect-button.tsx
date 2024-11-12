@@ -4,8 +4,6 @@ import * as React from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { Loader2 } from 'lucide-react';
-import { signOut } from 'next-auth/react';
-import { useSession } from 'next-auth/react';
 
 // Create a singleton instance
 let instance: WalletConnectButton | null = null;
@@ -22,6 +20,8 @@ class WalletConnectButton {
 
   Component({ label }: { label?: string }) {
     const { isConnecting } = useAccount();
+
+    // TODO: make GET request to /api/auth/signout
 
     if (isConnecting) {
       return (
