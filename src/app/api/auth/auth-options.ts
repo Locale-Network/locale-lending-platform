@@ -1,3 +1,7 @@
+export const config = {
+  runtime: 'nodejs',
+};
+
 import { NextAuthOptions, PagesOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { SiweMessage, generateNonce } from 'siwe';
@@ -5,6 +9,7 @@ import prisma from '@prisma/index';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { Role } from '@prisma/client';
 import { getCsrfToken } from 'next-auth/react';
+import { getToken } from 'next-auth/jwt';
 
 const NEXTAUTH_URL = process.env.NEXTAUTH_URL as string;
 // if (!NEXTAUTH_URL) {
@@ -52,7 +57,7 @@ export const authOptions: NextAuthOptions = {
           const result = await siwe.verify({
             signature: credentials?.signature || '',
             domain: nextAuthUrl.host,
-            nonce: await getCsrfToken({ req }),
+            nonce: siwe.nonce,
           });
 
           if (!result.success) {
