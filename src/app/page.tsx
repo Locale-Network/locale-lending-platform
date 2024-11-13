@@ -8,6 +8,8 @@ import QRCode from 'react-qr-code';
 import VerificationStatus from '@/containers/VerificationStatus/VerificationStatus';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// TODO: convert to server action to download transaction history for credit score calculation
+
 interface ReclaimPageProps {
   searchParams: {
     account: string;

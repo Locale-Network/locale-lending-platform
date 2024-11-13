@@ -31,6 +31,7 @@ export async function POST(req: Request) {
   console.log('ctx', context);
   console.log('extractedParameterValues', extractedParameterValues);
 
+  // TODO: with a proof (ex: credit_score) we can filter out private data from the context and reference it later
   await prisma.proof.create({
     data: {
       address: context.contextAddress,

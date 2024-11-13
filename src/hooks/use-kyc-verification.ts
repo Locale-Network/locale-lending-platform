@@ -13,7 +13,7 @@ const useKycVerification = (userId?: string) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({account: "wallet 1221"}),
+        body: JSON.stringify({account: "wallet 1221"}), // TODO: replace with chain account address
       });
 
       if (!response.ok) {
