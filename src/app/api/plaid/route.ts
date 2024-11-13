@@ -4,14 +4,15 @@ import {
   updateKyVerification,
 } from "@/services/db/plaid/kyc";
 import { formatError } from "@/utils/plaid";
+import { KYCVerificationStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
     const data: {
-      user: string;
+      chainAccountAddress: string;
       identityVerificationId: string;
-      status: string;
+      status: KYCVerificationStatus;
     } = await req.json();
 
     const response = await createKycVerification(data);

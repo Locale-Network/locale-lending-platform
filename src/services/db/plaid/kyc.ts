@@ -1,18 +1,18 @@
-import { PrismaClient } from "@prisma/client";
+import { KYCVerificationStatus, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export const createKycVerification = async (data: {
-  user: string;
+  chainAccountAddress: string;
   identityVerificationId: string;
-  status: string;
+  status: KYCVerificationStatus;
 }) => {
   return prisma.kYCVerification.create({data});
 };
 
 export const updateKyVerification = async (data: {
   identityVerificationId: string;
-  status: string;
+  status: KYCVerificationStatus;
   userAttempted?: boolean;
 }) => {
   const existingRecord = await prisma.kYCVerification.findUnique({
@@ -37,16 +37,16 @@ export const updateKyVerification = async (data: {
   });
 };
 
-export const isKycVerifiedByUser = async (userId: string) => {
+export const isKycVerifiedByUser = async (chainAccountAddress: string) => {
   return prisma.kYCVerification
     .findFirst({
       where: {
-        user: userId,
+        chainAccountAddress: chainAccountAddress,
       },
     })
-    .then((result) => {
+    .then(result => {
       if (!result) {
-        return "No KYC verification message for specific user";
+        return 'No KYC verification message for specific user';
       }
       return result;
     });
