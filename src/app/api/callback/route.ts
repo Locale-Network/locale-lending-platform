@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@prisma/index'
 import { Context, Proof, verifyProof } from '@reclaimprotocol/js-sdk';
 import { sql } from '@vercel/postgres';
 import { NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   console.log('req', req);

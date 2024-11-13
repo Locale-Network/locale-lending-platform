@@ -1,6 +1,5 @@
-import { KYCVerificationStatus, PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { KYCVerificationStatus } from "@prisma/client";
+import prisma from '@prisma/index'
 
 export const createKycVerification = async (data: {
   chainAccountAddress: string;

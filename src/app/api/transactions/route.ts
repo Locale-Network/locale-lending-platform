@@ -1,11 +1,9 @@
 import client from '@/utils/plaid';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@prisma/index'
 import { NextRequest, NextResponse } from 'next/server';
 import { RemovedTransaction, Transaction, TransactionsSyncRequest } from 'plaid';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest, res: NextResponse) {
   try {
