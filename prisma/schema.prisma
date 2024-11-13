@@ -1,5 +1,6 @@
 generator client {
-    provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -53,4 +54,21 @@ model KYCVerification {
     createdAt              DateTime @default(now()) @map("created_at")
     updatedAt              DateTime @updatedAt
     attempts               Int      @default(1)
+}
+
+enum Role {
+    BORROWER
+    APPROVER
+    ADMIN
+}
+
+// accounts from the Arbitrum chain
+model ChainAccount {
+    id        Int      @id @default(autoincrement())
+    address   String   @unique @db.VarChar(255)
+    role      Role     @default(BORROWER)
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("chain_accounts")
 }
