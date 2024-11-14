@@ -6,17 +6,21 @@ import { useRouter } from 'next/navigation';
 import { getKycStatus } from './actions';
 import { useAccount } from 'wagmi';
 import { useToast } from '@/hooks/use-toast';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 
 // TODO: decide if KYC is complete
 
 export default function ApplyLoanCard() {
   const router = useRouter();
   const { toast } = useToast();
+  const { openConnectModal } = useConnectModal();
+  
 
   const { address: chainAccountAddress } = useAccount();
 
   const handleClick = async () => {
     if (!chainAccountAddress) {
+      openConnectModal?.();
       return;
     }
 
