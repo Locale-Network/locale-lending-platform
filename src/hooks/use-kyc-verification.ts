@@ -1,10 +1,12 @@
 "use client";
 
+import { KYCVerificationStatus } from "@prisma/client";
 import { useCallback, useEffect, useState } from "react";
 import { usePlaidLink } from "react-plaid-link";
 
 const useKycVerification = (userId?: string) => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [isKycVerified, setIsKycVerified] = useState<boolean | null>(null);
 
   const generateToken = useCallback(async () => {
     try {
@@ -87,13 +89,30 @@ const useKycVerification = (userId?: string) => {
     return "No User Id";
   };
 
+  // Checks KYC status from the DB
+  const checkKycVerification = useCallback(async () => {
+    if (userId) {
+      const response = await fetch(`/api/plaid/kyc/verified?userId=${userId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      setIsKycVerified(data.status === KYCVerificationStatus.success);
+    } else {
+      setIsKycVerified(false);
+    }
+  }, [userId]);
+
   useEffect(() => {
     if (userId) {
       generateToken();
+      checkKycVerification()
     }
-  }, [generateToken, userId]);
+  }, [checkKycVerification, generateToken, userId]);
 
-  return {generateToken, startKYCFlow, linkToken, retryKycVerification};
+  return {generateToken, startKYCFlow, linkToken, retryKycVerification, isKycVerified};
 };
 
 export default useKycVerification;
