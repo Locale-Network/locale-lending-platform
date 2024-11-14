@@ -1,12 +1,11 @@
 'use client';
 
 import { GalleryHorizontalEnd } from 'lucide-react';
-import { Card,  CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 
 export default function ViewLoansCard() {
   const router = useRouter();
-
 
   const handleClick = () => {
     router.push('/borrower/loans');

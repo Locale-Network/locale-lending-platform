@@ -13,14 +13,11 @@ export default async function Table<T>({
   total: number;
   totalPages: number;
 }) {
-
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-auto">
       <DataTable columns={columns} data={rows} />
       <div className="flex w-full items-center justify-center">
-        <p className="flex flex-row gap-2 whitespace-nowrap">
-          Total: {total}
-        </p>
+        <p className="flex flex-row gap-2 whitespace-nowrap">Total: {total}</p>
         <Pagination totalPages={totalPages} />
       </div>
     </div>

@@ -1,5 +1,5 @@
 import client from '@/utils/plaid';
-import prisma from '@prisma/index'
+import prisma from '@prisma/index';
 import { NextRequest, NextResponse } from 'next/server';
 import { RemovedTransaction, Transaction, TransactionsSyncRequest } from 'plaid';
 

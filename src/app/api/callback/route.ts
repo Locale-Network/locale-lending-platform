@@ -1,4 +1,4 @@
-import prisma from '@prisma/index'
+import prisma from '@prisma/index';
 import { Context, Proof, verifyProof } from '@reclaimprotocol/js-sdk';
 import { sql } from '@vercel/postgres';
 import { NextResponse } from 'next/server';

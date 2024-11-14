@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { KYCVerificationStatus } from "@prisma/client";
-import { useCallback, useEffect, useState } from "react";
-import { usePlaidLink } from "react-plaid-link";
+import { KYCVerificationStatus } from '@prisma/client';
+import { useCallback, useEffect, useState } from 'react';
+import { usePlaidLink } from 'react-plaid-link';
 
 const useKycVerification = (userId?: string) => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
@@ -10,56 +10,51 @@ const useKycVerification = (userId?: string) => {
 
   const generateToken = useCallback(async () => {
     try {
-      const response = await fetch("/api/plaid/kyc/link-token", {
-        method: "POST",
+      const response = await fetch('/api/plaid/kyc/link-token', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({account: "wallet 1221"}), // TODO: replace with chain account address
+        body: JSON.stringify({ account: userId }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate link token");
+        throw new Error('Failed to generate link token');
       }
 
       const data = await response.json();
       setLinkToken(data.link_token);
     } catch (error) {
-      console.error("Error generating token:", error);
+      console.error('Error generating token:', error);
     }
   }, []);
 
-  const requestUserData = useCallback(
-    async (identity_verification_id: string) => {
-      const response = await fetch(
-        `/api/plaid/kyc/verified?verificationId=${identity_verification_id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      return response;
-    },
-    []
-  );
+  const requestUserData = useCallback(async (identity_verification_id: string) => {
+    const response = await fetch(
+      `/api/plaid/kyc/verified?verificationId=${identity_verification_id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response;
+  }, []);
 
   const config = {
-    token: linkToken || "",
+    token: linkToken || '',
     onSuccess: async (_data: any, metadata: any) => {
       await requestUserData(metadata.link_session_id);
     },
     onExit: (err: any, metadata: any) => {
       console.log(
-        `Exited early. Error: ${JSON.stringify(err)} Metadata: ${JSON.stringify(
-          metadata
-        )}`
+        `Exited early. Error: ${JSON.stringify(err)} Metadata: ${JSON.stringify(metadata)}`
       );
     },
   };
 
-  const {open} = usePlaidLink(config);
+  const { open } = usePlaidLink(config);
 
   // Opens the KYC flow
   const startKYCFlow = async () => {
@@ -75,27 +70,27 @@ const useKycVerification = (userId?: string) => {
    */
   const retryKycVerification = async () => {
     if (userId) {
-      const response = await fetch("/api/plaid/kyc/retry", {
-        method: "POST",
+      const response = await fetch('/api/plaid/kyc/retry', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({account: userId}),
+        body: JSON.stringify({ account: userId }),
       });
 
       const data = await response.json();
       return data;
     }
-    return "No User Id";
+    return 'No User Id';
   };
 
   // Checks KYC status from the DB
   const checkKycVerification = useCallback(async () => {
     if (userId) {
       const response = await fetch(`/api/plaid/kyc/verified?userId=${userId}`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
       const data = await response.json();
@@ -108,11 +103,11 @@ const useKycVerification = (userId?: string) => {
   useEffect(() => {
     if (userId) {
       generateToken();
-      checkKycVerification()
+      checkKycVerification();
     }
   }, [checkKycVerification, generateToken, userId]);
 
-  return {generateToken, startKYCFlow, linkToken, retryKycVerification, isKycVerified};
+  return { generateToken, startKYCFlow, linkToken, retryKycVerification, isKycVerified };
 };
 
 export default useKycVerification;

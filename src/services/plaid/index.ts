@@ -1,11 +1,9 @@
-import client from "@/utils/plaid";
-import { IdentityVerificationGetRequest, Strategy } from "plaid";
+import client from '@/utils/plaid';
+import { IdentityVerificationGetRequest, Strategy } from 'plaid';
 
-export const getPlaidKycVerification = async (
-  identity_verification_id: string | null
-) => {
+export const getPlaidKycVerification = async (identity_verification_id: string | null) => {
   if (!identity_verification_id) {
-    throw new Error("Verification ID unavailable");
+    throw new Error('Verification ID unavailable');
   }
 
   const request: IdentityVerificationGetRequest = {
@@ -19,12 +17,12 @@ export const getPlaidKycVerification = async (
 
 export const retryPlaidKycVerification = async (userId: string) => {
   if (!userId) {
-    throw new Error("User unavailable");
+    throw new Error('User unavailable');
   }
 
   const data = await client.identityVerificationRetry({
     client_user_id: userId,
-    template_id: process.env.TEMPLATE_ID || "",
+    template_id: process.env.TEMPLATE_ID || '',
     strategy: Strategy.Reset,
     secret: process.env.PLAID_SECRET,
   });

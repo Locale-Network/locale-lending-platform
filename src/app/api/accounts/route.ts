@@ -1,5 +1,5 @@
 import client, { formatError } from '@/utils/plaid';
-import prisma from '@prisma/index'
+import prisma from '@prisma/index';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {

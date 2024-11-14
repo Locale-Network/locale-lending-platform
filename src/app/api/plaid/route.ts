@@ -1,11 +1,11 @@
 import {
   createKycVerification,
-  isKycVerifiedByUser,
+  // isKycVerifiedByUser,
   updateKyVerification,
-} from "@/services/db/plaid/kyc";
-import { formatError } from "@/utils/plaid";
-import { KYCVerificationStatus } from "@prisma/client";
-import { NextRequest, NextResponse } from "next/server";
+} from '@/services/db/plaid/kyc';
+import { formatError } from '@/utils/plaid';
+import { KYCVerificationStatus } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,12 +18,10 @@ export async function POST(req: NextRequest) {
     const response = await createKycVerification(data);
     return NextResponse.json(response);
   } catch (error: any) {
-    const formattedError = error?.response
-      ? formatError(error?.response)
-      : error;
+    const formattedError = error?.response ? formatError(error?.response) : error;
     return NextResponse.json(
-      {message: "Error creating KYC verification", error: formattedError},
-      {status: 500}
+      { message: 'Error creating KYC verification', error: formattedError },
+      { status: 500 }
     );
   }
 }
@@ -34,32 +32,30 @@ export async function PUT(req: NextRequest) {
     const response = await updateKyVerification(data);
     return NextResponse.json(response);
   } catch (error: any) {
-    const formattedError = error?.response
-      ? formatError(error?.response)
-      : error;
+    const formattedError = error?.response ? formatError(error?.response) : error;
     return NextResponse.json(
-      {message: "Error updating KYC verification", error: formattedError},
-      {status: 500}
+      { message: 'Error updating KYC verification', error: formattedError },
+      { status: 500 }
     );
   }
 }
 
-export async function GET(req: NextRequest) {
-  const url = new URL(req?.url);
-  const user = url.searchParams.get("user");
+// export async function GET(req: NextRequest) {
+//   const url = new URL(req?.url);
+//   const user = url.searchParams.get("user");
 
-  if (!user) {
-    return NextResponse.json("User ID not found", {status: 404});
-  }
+//   if (!user) {
+//     return NextResponse.json("User ID not found", {status: 404});
+//   }
 
-  const result = await isKycVerifiedByUser(user);
+//   const result = await isKycVerifiedByUser(user);
 
-  // Ensure the result is a valid Response type
-  if (typeof result === "object" && result !== null) {
-    return NextResponse.json(result);
-  } else {
-    return NextResponse.json("No KYC verification message for specific user", {
-      status: 404,
-    });
-  }
-}
+//   // Ensure the result is a valid Response type
+//   if (typeof result === "object" && result !== null) {
+//     return NextResponse.json(result);
+//   } else {
+//     return NextResponse.json("No KYC verification message for specific user", {
+//       status: 404,
+//     });
+//   }
+// }

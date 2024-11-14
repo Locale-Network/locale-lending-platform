@@ -1,12 +1,12 @@
-import { KYCVerificationStatus } from "@prisma/client";
-import prisma from '@prisma/index'
+import { KYCVerificationStatus, KYCVerification } from '@prisma/client';
+import prisma from '@prisma/index';
 
 export const createKycVerification = async (data: {
   chainAccountAddress: string;
   identityVerificationId: string;
   status: KYCVerificationStatus;
 }) => {
-  return prisma.kYCVerification.create({data});
+  return prisma.kYCVerification.create({ data });
 };
 
 export const updateKyVerification = async (data: {
@@ -15,20 +15,18 @@ export const updateKyVerification = async (data: {
   userAttempted?: boolean;
 }) => {
   const existingRecord = await prisma.kYCVerification.findUnique({
-    where: {identityVerificationId: data.identityVerificationId},
+    where: { identityVerificationId: data.identityVerificationId },
   });
 
   if (!existingRecord) {
-    throw "KYC verification record not found";
+    throw 'KYC verification record not found';
   }
 
   return prisma.kYCVerification.update({
     data: {
       status: data.status,
       updatedAt: new Date(),
-      attempts: data.userAttempted
-        ? existingRecord.attempts + 1
-        : existingRecord.attempts,
+      attempts: data.userAttempted ? existingRecord.attempts + 1 : existingRecord.attempts,
     },
     where: {
       identityVerificationId: data.identityVerificationId,
@@ -36,27 +34,29 @@ export const updateKyVerification = async (data: {
   });
 };
 
-export const isKycVerifiedByUser = async (chainAccountAddress: string) => {
-  return prisma.kYCVerification
-    .findFirst({
-      where: {
-        chainAccountAddress: chainAccountAddress,
-      },
-    })
-    .then(result => {
-      if (!result) {
-        return 'No KYC verification message for specific user';
-      }
-      return result;
-    });
-};
+export const getKycVerification = async ({
+  chainAccountAddress,
+  identityVerificationId,
+}: {
+  chainAccountAddress?: string;
+  identityVerificationId?: string;
+}): Promise<KYCVerification | null> => {
+  if (!chainAccountAddress && !identityVerificationId) {
+    throw new Error('Either chainAccountAddress or identityVerificationId is required');
+  }
 
-export const isKycVerifiedBySessionId = async (
-  identityVerificationId: string
-) => {
-  return prisma.kYCVerification.findFirst({
+  /*
+    query by chainAccountAddress AND identityVerificationId if both are provided
+    otherwise query by either chainAccountAddress or identityVerificationId
+  */
+  const record = await prisma.kYCVerification.findFirst({
     where: {
-      identityVerificationId,
+      OR: [
+        ...(chainAccountAddress ? [{ chainAccountAddress }] : []),
+        ...(identityVerificationId ? [{ identityVerificationId }] : []),
+      ],
     },
   });
+
+  return record;
 };

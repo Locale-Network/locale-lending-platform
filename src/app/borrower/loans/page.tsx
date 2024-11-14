@@ -49,7 +49,6 @@ const data: LoanApplication[] = [
 
 // TODO: db querying
 
-
 export default function Page({
   searchParams,
 }: {

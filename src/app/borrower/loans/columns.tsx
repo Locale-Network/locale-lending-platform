@@ -69,4 +69,3 @@ export const columns: ColumnDef<LoanApplication>[] = [
     cell: ({ row }) => <div>{row.getValue('creditScore')}</div>,
   },
 ];
-
