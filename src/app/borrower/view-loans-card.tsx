@@ -13,7 +13,10 @@ export default function ViewLoansCard() {
   };
 
   return (
-    <Card className="w-full max-w-2xl" onClick={handleClick}>
+    <Card
+      className="w-full max-w-2xl cursor-pointer transition-all hover:scale-[1.01] hover:shadow-lg"
+      onClick={handleClick}
+    >
       <CardHeader className="space-y-4">
         <div className="h-14 w-14 rounded-xl bg-blue-100 p-4">
           <GalleryHorizontalEnd className="h-6 w-6 text-blue-600" />
