@@ -19,6 +19,7 @@ export default function CardWithForm() {
   const { status } = useSession();
   const { isConnected, address } = useAccount();
 
+  // TODO: need to do global
   React.useEffect(() => {
     if (status === 'authenticated' && isConnected && address) {
       (async function () {
