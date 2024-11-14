@@ -17,7 +17,7 @@ import { config } from '@/utils/wagmi';
 import { arbitrum } from 'wagmi/chains';
 
 const getSiweMessageOptions: GetSiweMessageOptions = () => ({
-  statement: 'Sign in to MY APP',
+  statement: 'Sign in to Locale Lending Platform',
 });
 
 const queryClient = new QueryClient();
