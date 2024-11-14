@@ -3,10 +3,6 @@ import ViewLoansCard from './view-loans-card';
 import CompleteKycBanner from './complete-kyc-banner';
 
 export default function Page() {
-
-  // TODO: logic to render CompleteKYCBanner
-
-
   return (
     <div className="container mx-auto p-4">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
