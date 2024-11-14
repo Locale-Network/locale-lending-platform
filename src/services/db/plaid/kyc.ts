@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { KYCVerificationStatus, KYCVerification } from '@prisma/client';
 import prisma from '@prisma/index';
 
