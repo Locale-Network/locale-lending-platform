@@ -14,7 +14,6 @@ export default function ApplyLoanCard() {
   const router = useRouter();
   const { toast } = useToast();
   const { openConnectModal } = useConnectModal();
-  
 
   const { address: chainAccountAddress } = useAccount();
 

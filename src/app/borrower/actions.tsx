@@ -4,12 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
 import { Role } from '@prisma/client';
 import plaidClient from '@/utils/plaid';
-import {
-  CountryCode,
-  Products,
-  Strategy,
-  IdentityVerificationGetResponse,
-} from 'plaid';
+import { CountryCode, Products, Strategy, IdentityVerificationGetResponse } from 'plaid';
 import { getKycVerification } from '@/services/db/plaid/kyc';
 import { isPlaidError } from '@/types/plaid';
 
