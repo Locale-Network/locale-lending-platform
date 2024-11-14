@@ -3,15 +3,37 @@
 import { Pencil } from 'lucide-react';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
+import { getKycStatus } from './actions';
+import { useAccount } from 'wagmi';
+import { useToast } from '@/hooks/use-toast';
 
 // TODO: decide if KYC is complete
 
 export default function ApplyLoanCard() {
   const router = useRouter();
+  const { toast } = useToast();
 
+  const { address: chainAccountAddress } = useAccount();
 
-  const handleClick = () => {
-    router.push('/borrower/loans/apply');
+  const handleClick = async () => {
+    if (!chainAccountAddress) {
+      return;
+    }
+
+    const kycStatus = await getKycStatus(chainAccountAddress);
+
+    if (kycStatus.isError) {
+      toast({
+        title: 'Error',
+        description: kycStatus.errorMessage,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    console.log(JSON.stringify(kycStatus, null, 2));
+
+    // router.push('/borrower/loans/apply');
   };
 
   return (
