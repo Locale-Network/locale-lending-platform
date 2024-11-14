@@ -14,7 +14,7 @@ export default function ViewLoansCard() {
 
   return (
     <Card
-      className="w-full max-w-2xl cursor-pointer transition-all hover:scale-[1.01] hover:shadow-lg"
+      className="cursor-pointer transition-all hover:scale-[1.01] hover:shadow-lg"
       onClick={handleClick}
     >
       <CardHeader className="space-y-4">
