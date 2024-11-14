@@ -59,7 +59,7 @@ enum KYCVerificationStatus {
 // chain account identity verification with PLAID
 model KYCVerification {
   id                     Int                   @id @default(autoincrement())
-  identityVerificationId String                @unique
+  identityVerificationId String                @unique @map("identity_verification_id")
   chainAccountAddress    String                @unique @map("chain_account_address") @db.VarChar(255)
   status                 KYCVerificationStatus @default(active)
   createdAt              DateTime              @default(now()) @map("created_at")
