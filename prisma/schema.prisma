@@ -58,15 +58,15 @@ enum KYCVerificationStatus {
 
 // chain account identity verification with PLAID
 model KYCVerification {
-  id                     Int                   @id @default(autoincrement())
-  identityVerificationId String                @unique @map("identity_verification_id")
-  chainAccountAddress    String                @unique @map("chain_account_address") @db.VarChar(255)
+  identityVerificationId String                @id @db.VarChar(255) @map("identity_verification_id") 
+  chainAccountAddress    String                @unique @db.VarChar(255) @map("chain_account_address") 
   status                 KYCVerificationStatus @default(active)
   createdAt              DateTime              @default(now()) @map("created_at")
   updatedAt              DateTime              @updatedAt @map("updated_at")
   attempts               Int                   @default(1)
   chainAccount           ChainAccount          @relation(fields: [chainAccountAddress], references: [address])
 
+  @@index([chainAccountAddress])
   @@map("kyc_verifications")
 }
 
@@ -78,8 +78,7 @@ enum Role {
 
 // accounts from the Arbitrum chain
 model ChainAccount {
-  id              Int              @id @default(autoincrement())
-  address         String           @unique @db.VarChar(255)
+  address         String           @id @db.VarChar(255)
   role            Role             @default(BORROWER)
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
