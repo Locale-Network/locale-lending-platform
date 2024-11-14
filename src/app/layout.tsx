@@ -9,6 +9,7 @@ import { config } from '@/utils/cookie';
 import { cn } from '@/lib/utils';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
+import { Toaster } from '@/components/ui/toaster';
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -33,6 +34,7 @@ export default async function RootLayout({
       <body className={cn('min-h-screen bg-background font-sans antialiased', fontSans.variable)}>
         <RootProviders session={session} initialState={initialState}>
           {children}
+          <Toaster />
         </RootProviders>
       </body>
     </html>
