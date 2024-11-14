@@ -8,7 +8,7 @@ export async function upsertChainAccount(address: string): Promise<ChainAccount>
     where: { address },
     create: { address },
     update: {
-      updatedAt: new Date(), // existing accounts login in
+      updatedAt: new Date().toISOString(), // existing accounts login in
     },
   });
 

@@ -10,29 +10,22 @@ import { useSession } from 'next-auth/react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
-import { signIn } from './actions';
 
 // TODO: add link to terms and privacy
 
 export default function CardWithForm() {
   const router = useRouter();
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const { isConnected, address } = useAccount();
 
-  // TODO: need to do global
   React.useEffect(() => {
     if (status === 'authenticated' && isConnected && address) {
       (async function () {
-        const chainAccount = await signIn(address);
+        const role = session?.user.role;
 
-        if (!chainAccount) {
-          return;
-        }
+        const redirectPath = ROLE_REDIRECTS[role];
 
-        const redirectPath = ROLE_REDIRECTS[chainAccount.role];
-        if (redirectPath) {
-          router.replace(redirectPath);
-        }
+        router.replace(redirectPath);
       })();
     }
   }, [status, isConnected, address, router]);

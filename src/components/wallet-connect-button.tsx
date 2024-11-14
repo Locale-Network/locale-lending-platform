@@ -4,13 +4,24 @@ import * as React from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { Loader2 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { signIn } from '@/app/signin/actions';
 
 interface WalletConnectButtonProps {
   label?: string;
 }
 
 const WalletConnectButton = ({ label }: WalletConnectButtonProps) => {
-  const { isConnecting } = useAccount();
+  const { isConnecting, address, isConnected } = useAccount();
+  const { status } = useSession();
+
+  React.useEffect(() => {
+    if (status === 'authenticated' && isConnected && address) {
+      (async function () {
+        await signIn(address);
+      })();
+    }
+  }, [status, isConnected, address]);
 
   if (isConnecting) {
     return (
