@@ -22,6 +22,7 @@ model Proof {
   @@map("proofs")
 }
 
+// https://plaid.com/docs/api/accounts/
 model Account {
   id           Int      @id @default(autoincrement())
   accountId    String?  @map("account_id") @db.VarChar(255)
@@ -83,6 +84,22 @@ model ChainAccount {
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
   KYCVerification KYCVerification?
+  PlaidItemAccessTokens PlaidItemAccessToken[]
 
   @@map("chain_accounts")
+}
+
+
+// plaid items authorised by chain account
+model PlaidItemAccessToken {
+  id                  Int       @id @default(autoincrement())
+  accessToken         String    @db.VarChar(255) @map("access_token") 
+  itemId              String    @db.VarChar(255) @map("item_id")
+  chainAccountAddress String    @db.VarChar(255) @map("chain_account_address")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address])
+
+  @@index([chainAccountAddress])
+  @@map("plaid_item_access_tokens")
 }

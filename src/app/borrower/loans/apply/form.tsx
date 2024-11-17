@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { Plus, Link as LinkIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -41,6 +41,25 @@ import {
   Pronoun,
   RacialIdentification,
 } from '@/types/borrower';
+import {
+  createLinkTokenForTransactions,
+  plaidPublicTokenExchange,
+  savePlaidItemAccessToken,
+  getConnectedBankAccounts,
+} from './actions';
+import { useAccount } from 'wagmi';
+import { usePlaidLink } from 'react-plaid-link';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { capitalize } from 'lodash';
 
 // TODO: terms and privacy links
 // TODO: form submit
@@ -57,6 +76,16 @@ const loanSchema = z.object({
     .min(0, 'Interest rate cannot be negative')
     .max(100, 'Interest rate cannot exceed 100%'),
 });
+
+const connectedBankAccountSchema = z.object({
+  institutionId: z.string(),
+  instituteName: z.string(),
+  accountId: z.string(),
+  accountName: z.string(),
+  accountMask: z.string().nullable(),
+  accountType: z.string(),
+});
+export type ConnectedBankAccount = z.infer<typeof connectedBankAccountSchema>;
 
 const formSchema = z.object({
   // Step 1: Business information
@@ -101,6 +130,11 @@ const formSchema = z.object({
     .min(2, { message: 'Residential address must be at least 2 characters.' }),
   // Step 2: Individual information
 
+  // Step 4: Cash flow verification
+  shareTransactions: z.boolean(),
+  connectedBankAccounts: z.array(connectedBankAccountSchema),
+  // Step 4: Cash flow verification
+
   // Step 5: Current loans
   hasOutstandingLoans: z.boolean(),
   outstandingLoans: z.array(loanSchema),
@@ -121,8 +155,13 @@ const formSchema = z.object({
     .refine(val => val === true, { message: 'You must acknowledge the risks involved.' }),
 });
 
+type LoadConnectedBankAccountsFn = (address: string) => Promise<void>;
+
 export default function LoanApplicationForm() {
+  const { address: chainAccountAddress } = useAccount();
   const [step, setStep] = useState(1);
+  const [loadingConnectedBankAccounts, setLoadingConnectedBankAccounts] = useState(false);
+  const [linkToken, setLinkToken] = useState<string | null>(null);
   const totalSteps = 7;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -130,6 +169,8 @@ export default function LoanApplicationForm() {
     defaultValues: {
       hasOutstandingLoans: false,
       outstandingLoans: [],
+      shareTransactions: false,
+      connectedBankAccounts: [],
       termsAgreement: false,
       riskAcknowledgment: false,
     },
@@ -143,6 +184,16 @@ export default function LoanApplicationForm() {
   const outstandingLoans = useWatch({
     control: form.control,
     name: 'outstandingLoans',
+  });
+
+  const shareTransactions = useWatch({
+    control: form.control,
+    name: 'shareTransactions',
+  });
+
+  const connectedBankAccounts = useWatch({
+    control: form.control,
+    name: 'connectedBankAccounts',
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -176,13 +227,50 @@ export default function LoanApplicationForm() {
   const prevStep = () => setStep(step => Math.max(step - 1, 1));
   const clickStep = (step: number) => setStep(step);
 
+  useEffect(() => {
+    (async function load() {
+      if (chainAccountAddress) {
+        const response = await createLinkTokenForTransactions(chainAccountAddress);
+
+        if (!response.isError && response.linkToken) {
+          setLinkToken(response.linkToken);
+        }
+      }
+    })();
+  }, [chainAccountAddress]);
+
+   const loadConnectedBankAccounts: LoadConnectedBankAccountsFn = useCallback(
+     async (address: string) => {
+       try {
+         setLoadingConnectedBankAccounts(true);
+         const response = await getConnectedBankAccounts(address);
+         if (!response.isError && response.connectedBankAccounts) {
+           form.setValue('connectedBankAccounts', response.connectedBankAccounts);
+         }
+       } catch (error) {
+         setLoadingConnectedBankAccounts(false);
+       } finally {
+         setLoadingConnectedBankAccounts(false);
+       }
+     },
+     [form]
+   );
+
+   useEffect(() => {
+     if (chainAccountAddress && shareTransactions) {
+       loadConnectedBankAccounts(chainAccountAddress);
+     }
+   }, [chainAccountAddress, shareTransactions, loadConnectedBankAccounts]);
+
+
+
   return (
     <Card className="mx-auto w-full max-w-4xl">
       <CardHeader>
         <CardTitle>{cardTitleForStep(step)}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 flex justify-between">
+        <div className="mb-10 flex justify-between">
           <div
             className={`'bg-secondary text-secondary-foreground' flex h-8 w-8 items-center justify-center rounded-full`}
             onClick={prevStep}
@@ -608,7 +696,78 @@ export default function LoanApplicationForm() {
 
             {step === 3 && <div className="space-y-4"></div>}
 
-            {step === 4 && <div className="space-y-4"></div>}
+            {step === 4 && (
+              <div className="space-y-4">
+                <p>
+                  Connect your bank accounts securely. This step helps us understand your business
+                  financial health through cash flow data and expedite the loan approval process.
+                  Learn how it works {/* TODO: give link here */}
+                  <Link href="#" className="text-blue-500 hover:text-blue-600">
+                    here
+                  </Link>
+                  .
+                </p>
+                <FormField
+                  control={form.control}
+                  name="shareTransactions"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Authorize Data Sharing</FormLabel>
+                        <FormDescription>
+                          By connecting my accounts, I authorize Plaid to share my business
+                          transaction history for loan evaluation purposes
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                {shareTransactions && (
+                  <>
+                    <PlaidLinkForTransactions
+                      noOfAccounts={connectedBankAccounts.length}
+                      linkToken={linkToken}
+                      chainAccountAddress={chainAccountAddress || ''}
+                      loadConnectedBankAccounts={loadConnectedBankAccounts}
+                    />
+
+                    {loadingConnectedBankAccounts && (
+                      <div className="flex items-center space-x-2">
+                        <p className="animate-pulse">Loading connected bank accounts...</p>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      </div>
+                    )}
+
+                    {connectedBankAccounts.length > 0 && (
+                      <Table>
+                        <TableCaption>A list of your connected bank accounts.</TableCaption>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Institution</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Mask</TableHead>
+                            <TableHead>Type</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {connectedBankAccounts.map((account, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{account.instituteName}</TableCell>
+                              <TableCell className="font-medium">{account.accountName}</TableCell>
+                              <TableCell>{account.accountMask}</TableCell>
+                              <TableCell>{capitalize(account.accountType)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             {step === 5 && (
               <div className="space-y-4">
@@ -904,3 +1063,75 @@ export default function LoanApplicationForm() {
     </Card>
   );
 }
+
+interface PlaidLinkProps {
+  linkToken: string | null;
+  chainAccountAddress: string;
+  noOfAccounts: number;
+  loadConnectedBankAccounts: LoadConnectedBankAccountsFn;
+}
+const PlaidLinkForTransactions: React.FC<PlaidLinkProps> = (props: PlaidLinkProps) => {
+  const [buttonText, setButtonText] = useState(props.noOfAccounts < 1 ? 'Connect' : 'Connect more');
+  const toast = useToast();
+
+  useEffect(() => {
+    setButtonText(props.noOfAccounts < 1 ? 'Connect' : 'Connect more');
+  }, [props.noOfAccounts]);
+
+  const onSuccess = useCallback(async (public_token: any, metadata: any) => {
+    const response = await plaidPublicTokenExchange({
+      publicToken: public_token,
+      chainAccountAddress: props.chainAccountAddress,
+    });
+
+    if (response.isError) {
+      toast.toast({
+        title: 'Error',
+        description: response.errorMessage,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { accessToken, itemId } = response;
+
+    if (!accessToken || !itemId) {
+      toast.toast({
+        title: 'Error',
+        description: 'Error connecting Plaid account',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    await savePlaidItemAccessToken({ accessToken, itemId, chainAccountAddress: props.chainAccountAddress });
+
+    toast.toast({
+      title: 'Success',
+      description: 'Plaid account connected successfully',
+      variant: 'success',
+    });
+    props.loadConnectedBankAccounts(props.chainAccountAddress);
+  }, []);
+  const config: Parameters<typeof usePlaidLink>[0] = {
+    token: props.linkToken!,
+    onSuccess,
+  };
+  const { open, ready } = usePlaidLink(config);
+
+  if (!ready) {
+    return (
+      <div className="flex items-center space-x-2">
+        <p className="animate-pulse">Creating secure connection...</p>
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <Button onClick={() => open()} disabled={!ready}>
+      {buttonText}
+      <LinkIcon />
+    </Button>
+  );
+};
