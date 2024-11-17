@@ -1,3 +1,5 @@
+import 'server-only';
+
 import client from '@/utils/plaid';
 import { IdentityVerificationGetRequest, Strategy } from 'plaid';
 

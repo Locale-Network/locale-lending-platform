@@ -1,21 +1,23 @@
 'use client';
 
-import { Pencil } from 'lucide-react';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
-import { getKycStatus } from './actions';
-import { useAccount } from 'wagmi';
-import { useToast } from '@/hooks/use-toast';
+import useKycVerification from '@/hooks/use-kyc-verification';
+import { KYCVerificationStatus } from '@prisma/client';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { Pencil } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useAccount } from 'wagmi';
 
 // TODO: decide if KYC is complete
 
 export default function ApplyLoanCard() {
   const router = useRouter();
-  const { toast } = useToast();
   const { openConnectModal } = useConnectModal();
 
   const { address: chainAccountAddress } = useAccount();
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const { startKYCFlow, kycStatus, retryKycVerification } = useKycVerification(chainAccountAddress);
 
   const handleClick = async () => {
     if (!chainAccountAddress) {
@@ -23,20 +25,16 @@ export default function ApplyLoanCard() {
       return;
     }
 
-    const kycStatus = await getKycStatus(chainAccountAddress);
-
-    if (kycStatus.isError) {
-      toast({
-        title: 'Error',
-        description: kycStatus.errorMessage,
-        variant: 'destructive',
-      });
-      return;
+    if (kycStatus === KYCVerificationStatus.success) {
+      router.push('/borrower/loans/apply');
+    } else if (kycStatus === KYCVerificationStatus.failed) {
+      const data = await retryKycVerification();
+      if (data?.shareable_url) {
+        setRedirectUrl(data.shareable_url);
+      }
+    } else {
+      await startKYCFlow();
     }
-
-    console.log(JSON.stringify(kycStatus, null, 2));
-
-    // router.push('/borrower/loans/apply');
   };
 
   return (

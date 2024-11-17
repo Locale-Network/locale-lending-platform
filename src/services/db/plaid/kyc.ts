@@ -1,14 +1,13 @@
 import 'server-only';
 
-import { KYCVerificationStatus, KYCVerification } from '@prisma/client';
+import { KYCVerification, KYCVerificationStatus } from '@prisma/client';
 import prisma from '@prisma/index';
 
 export const createKycVerification = async (data: {
   chainAccountAddress: string;
   identityVerificationId: string;
-  status: KYCVerificationStatus;
 }) => {
-  return prisma.kYCVerification.create({ data });
+  return prisma.kYCVerification.create({ data: { ...data, updatedAt: new Date() } });
 };
 
 export const updateKyVerification = async (data: {
