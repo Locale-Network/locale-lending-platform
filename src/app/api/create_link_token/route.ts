@@ -15,7 +15,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
       countryCode => countryCode as CountryCode
     );
     const configs: LinkTokenCreateRequest = {
-      user: { client_user_id: 'user-id' },
+      user: { client_user_id: 'user-id' }, // FIXME: need to be chain account address
       client_name: 'Plaid Quickstart',
       products,
       country_codes: countryCodes,
