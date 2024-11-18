@@ -55,17 +55,19 @@ const useKycVerification = (chainAccountAddress?: string) => {
 
   useEffect(() => {
     const fetchKycStatus = async () => {
-      if (chainAccountAddress) {
-        const kycResponse = await getKycStatus(chainAccountAddress);
-        if (kycResponse.identityVerificationData?.status) {
-          setKycStatus(kycResponse.identityVerificationData?.status);
-          // Generate token only if the status is not success
-          if (kycResponse.identityVerificationData.status !== KYCVerificationStatus.success) {
-            generateToken();
-          }
-        }
+      if (!chainAccountAddress) return;
+
+      const { identityVerificationData, hasAttemptedKyc } = await getKycStatus(chainAccountAddress);
+
+      // Generate token if user hasn't attempted KYC or if previous attempt wasn't successful
+      if (!hasAttemptedKyc || identityVerificationData?.status !== KYCVerificationStatus.success) {
+        generateToken();
+        return;
       }
+
+      setKycStatus(identityVerificationData?.status);
     };
+
     fetchKycStatus();
   }, [chainAccountAddress, generateToken]);
 
