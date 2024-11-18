@@ -3,7 +3,6 @@
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import useKycVerification from '@/hooks/use-kyc-verification';
 import { KYCVerificationStatus } from '@prisma/client';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -13,18 +12,12 @@ import { useAccount } from 'wagmi';
 
 export default function ApplyLoanCard() {
   const router = useRouter();
-  const { openConnectModal } = useConnectModal();
 
   const { address: chainAccountAddress } = useAccount();
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const { startKYCFlow, kycStatus, retryKycVerification } = useKycVerification(chainAccountAddress);
 
   const handleClick = async () => {
-    if (!chainAccountAddress) {
-      openConnectModal?.();
-      return;
-    }
-
     if (kycStatus === KYCVerificationStatus.success) {
       router.push('/borrower/loans/apply');
     } else if (kycStatus === KYCVerificationStatus.failed) {
