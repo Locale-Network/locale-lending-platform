@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import { Loader2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { signIn } from '@/app/signin/actions';
+import { useRouter } from 'next/navigation';
 
 interface WalletConnectButtonProps {
   label?: string;
@@ -14,14 +15,20 @@ interface WalletConnectButtonProps {
 const WalletConnectButton = ({ label }: WalletConnectButtonProps) => {
   const { isConnecting, address, isConnected } = useAccount();
   const { status } = useSession();
-
+  const router = useRouter();
   React.useEffect(() => {
     if (status === 'authenticated' && isConnected && address) {
       (async function () {
         await signIn(address);
       })();
     }
-  }, [status, isConnected, address]);
+
+    if (status === 'unauthenticated') {
+      router.push('/signin');
+    }
+  }, [status, isConnected, address, router]);
+
+
 
   if (isConnecting) {
     return (
