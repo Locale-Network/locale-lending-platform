@@ -59,13 +59,13 @@ const useKycVerification = (chainAccountAddress?: string) => {
 
       const { identityVerificationData, hasAttemptedKyc } = await getKycStatus(chainAccountAddress);
 
+      setKycStatus(identityVerificationData?.status || '');
+
       // Generate token if user hasn't attempted KYC or if previous attempt wasn't successful
       if (!hasAttemptedKyc || identityVerificationData?.status !== KYCVerificationStatus.success) {
         generateToken();
-        return;
       }
 
-      setKycStatus(identityVerificationData?.status);
     };
 
     fetchKycStatus();
