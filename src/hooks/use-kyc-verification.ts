@@ -58,13 +58,11 @@ const useKycVerification = (chainAccountAddress?: string) => {
       if (chainAccountAddress) {
         const kycResponse = await getKycStatus(chainAccountAddress);
         if (kycResponse.identityVerificationData?.status) {
-          // KYC Verification has succeeded
           setKycStatus(kycResponse.identityVerificationData?.status);
-        } else {
-          // either KYC verification is not gone through
-          // or a failed
-          // need to generate the token to start the KYC flow or retry
-          generateToken();
+          // Generate token only if the status is not success
+          if (kycResponse.identityVerificationData.status !== KYCVerificationStatus.success) {
+            generateToken();
+          }
         }
       }
     };
