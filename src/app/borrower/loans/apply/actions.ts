@@ -210,7 +210,7 @@ export async function createLinkTokenForTransactions(
       country_codes: [CountryCode.Us],
       client_name: 'Locale Lending Platform',
       language: 'en',
-      webhook: 'https://webhook.example.com',
+      webhook: 'https://webhook.example.com', // TODO: change to actual webhook
     });
 
     return {
