@@ -1,12 +1,12 @@
 'use server';
-import { isAddress } from 'viem';
-import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
-import { Role } from '@prisma/client';
-import plaidClient from '@/utils/plaid';
-import { CountryCode, Products, Strategy, IdentityVerificationGetResponse } from 'plaid';
 import { getKycVerification } from '@/services/db/plaid/kyc';
 import { isPlaidError } from '@/types/plaid';
+import plaidClient from '@/utils/plaid';
+import { Role } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { CountryCode, IdentityVerificationGetResponse, Products, Strategy } from 'plaid';
+import { isAddress } from 'viem';
 
 async function validateRequest(chainAccountAddress: string) {
   const session = await getServerSession(authOptions);
@@ -35,21 +35,23 @@ interface GetKycStatusResponse {
   hasAttemptedKyc: boolean;
   identityVerificationData?: IdentityVerificationGetResponse;
 }
+
+export async function plaidKycStatus(identity_verification_id: string) {
+  return await plaidClient.identityVerificationGet({
+    identity_verification_id,
+  });
+}
+
 export async function getKycStatus(chainAccountAddress: string): Promise<GetKycStatusResponse> {
   try {
     await validateRequest(chainAccountAddress);
-
     const kycVerification = await getKycVerification({ chainAccountAddress });
 
     if (!kycVerification) {
       return { isError: false, hasAttemptedKyc: false };
     }
 
-    const identityVerificationId = kycVerification.identityVerificationId;
-
-    const response = await plaidClient.identityVerificationGet({
-      identity_verification_id: identityVerificationId,
-    });
+    const response = await plaidKycStatus(kycVerification.identityVerificationId);
 
     return { isError: false, hasAttemptedKyc: true, identityVerificationData: response.data };
   } catch (error: any) {

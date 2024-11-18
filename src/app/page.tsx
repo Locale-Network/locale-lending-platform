@@ -1,12 +1,9 @@
-import { Reason } from '@/constants/reason.enum';
 import { ReclaimProofRequest } from '@reclaimprotocol/js-sdk';
 
 import { Button } from '@/components/ui/button';
-import { Suspense } from 'react';
-import Link from 'next/link';
-import QRCode from 'react-qr-code';
-import VerificationStatus from '@/containers/VerificationStatus/VerificationStatus';
 import { Skeleton } from '@/components/ui/skeleton';
+import VerificationStatus from '@/containers/VerificationStatus/VerificationStatus';
+import { Suspense } from 'react';
 
 // TODO: convert to server action to download transaction history for credit score calculation
 

@@ -1,20 +1,23 @@
 'use client';
 
 import useKycVerification from '@/hooks/use-kyc-verification';
+import { KYCVerificationStatus } from '@prisma/client';
 import { Button } from './ui/button';
 
-const IdentityVerification: React.FC<{ clientUserId?: string }> = props => {
-  const { startKYCFlow, linkToken } = useKycVerification(props.clientUserId);
-
-  console.log('linkToken', linkToken);
+const KycFeature: React.FC<{ clientUserId?: string }> = props => {
+  const { startKYCFlow, kycStatus , linkToken} = useKycVerification(props.clientUserId);
 
   return (
     <div>
-      <Button disabled={!linkToken} onClick={startKYCFlow}>
-        Verify KYC
-      </Button>
+      {kycStatus === KYCVerificationStatus.success ? (
+        'Success'
+      ) : (
+        <Button disabled={!linkToken} onClick={() => startKYCFlow()}>
+          {kycStatus === 'failed' ? 'Retry' : 'Verify KYC'}
+        </Button>
+      )}
     </div>
   );
 };
 
-export default IdentityVerification;
+export default KycFeature;

@@ -1,51 +1,41 @@
 'use client';
 
+import { createKycVerificationRecord } from '@/app/actions/kyc/createKycRecord';
+import { createKycLinkToken, getKycStatus, retryKyc } from '@/app/borrower/actions';
 import { KYCVerificationStatus } from '@prisma/client';
 import { useCallback, useEffect, useState } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 
-const useKycVerification = (userId?: string) => {
+const useKycVerification = (chainAccountAddress?: string) => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
-  const [isKycVerified, setIsKycVerified] = useState<boolean | null>(null);
+  const [kycStatus, setKycStatus] = useState<KYCVerificationStatus | 'initial' | ''>('');
 
   const generateToken = useCallback(async () => {
-    try {
-      const response = await fetch('/api/plaid/kyc/link-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ account: userId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate link token');
+    if (chainAccountAddress) {
+      const data = await createKycLinkToken(chainAccountAddress);
+      if (data) {
+        setLinkToken(data.link_token);
       }
-
-      const data = await response.json();
-      setLinkToken(data.link_token);
-    } catch (error) {
-      console.error('Error generating token:', error);
     }
-  }, []);
+  }, [chainAccountAddress]);
 
-  const requestUserData = useCallback(async (identity_verification_id: string) => {
-    const response = await fetch(
-      `/api/plaid/kyc/verified?verificationId=${identity_verification_id}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-    return response;
-  }, []);
+  /**
+   * returns a shareable url, which can use to navigate user to a separate
+   * kyc flow. After succeeded, they will need to navigate back.
+   * status will be updated by the webhook
+   */
+  const retryKycVerification = async () => {
+    if (chainAccountAddress) {
+      const data = await retryKyc(chainAccountAddress);
+      return data;
+    }
+    return null;
+  };
 
   const config = {
     token: linkToken || '',
     onSuccess: async (_data: any, metadata: any) => {
-      await requestUserData(metadata.link_session_id);
+      await createKycVerificationRecord(chainAccountAddress || '', metadata.link_session_id);
     },
     onExit: (err: any, metadata: any) => {
       console.log(
@@ -59,55 +49,27 @@ const useKycVerification = (userId?: string) => {
   // Opens the KYC flow
   const startKYCFlow = async () => {
     if (linkToken) {
-      await open();
+      open();
     }
   };
-
-  /**
-   * returns a shareable url, which can use to navigate user to a separate
-   * kyc flow. After succeeded, they will need to navigate back.
-   * status will be updated by the webhook
-   */
-  const retryKycVerification = async () => {
-    if (userId) {
-      const response = await fetch('/api/plaid/kyc/retry', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ account: userId }),
-      });
-
-      const data = await response.json();
-      return data;
-    }
-    return 'No User Id';
-  };
-
-  // Checks KYC status from the DB
-  const checkKycVerification = useCallback(async () => {
-    if (userId) {
-      const response = await fetch(`/api/plaid/kyc/verified?userId=${userId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const data = await response.json();
-      setIsKycVerified(data.status === KYCVerificationStatus.success);
-    } else {
-      setIsKycVerified(false);
-    }
-  }, [userId]);
 
   useEffect(() => {
-    if (userId) {
-      generateToken();
-      checkKycVerification();
-    }
-  }, [checkKycVerification, generateToken, userId]);
+    const fetchKycStatus = async () => {
+      if (chainAccountAddress) {
+        const kycResponse = await getKycStatus(chainAccountAddress);
+        if (kycResponse.identityVerificationData?.status) {
+          setKycStatus(kycResponse.identityVerificationData?.status);
+          // Generate token only if the status is not success
+          if (kycResponse.identityVerificationData.status !== KYCVerificationStatus.success) {
+            generateToken();
+          }
+        }
+      }
+    };
+    fetchKycStatus();
+  }, [chainAccountAddress, generateToken]);
 
-  return { generateToken, startKYCFlow, linkToken, retryKycVerification, isKycVerified };
+  return { linkToken, retryKycVerification, kycStatus, startKYCFlow };
 };
 
 export default useKycVerification;
