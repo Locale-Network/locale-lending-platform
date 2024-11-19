@@ -3,20 +3,20 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog"
+  DialogTitle,
+} from '@/components/ui/dialog';
 
-export function KycRedirectDialog() {
+export function KycRedirectDialog({ isOpen }: { isOpen: boolean }) {
   return (
-    <Dialog>
+    <Dialog open={isOpen}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
-          <DialogDescription>
+          <DialogTitle>Retry Identity Verification</DialogTitle>
+          <DialogDescription className='pt-4'>
             You will be redirected to identity verification in 3 seconds.
           </DialogDescription>
         </DialogHeader>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

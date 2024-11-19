@@ -59,7 +59,7 @@ export default function ApplyLoanCard() {
         </CardHeader>
       </Card>
 
-      {redirectUrl && <KycRedirectDialog />}
+      {redirectUrl && <KycRedirectDialog isOpen={!!redirectUrl} />}
     </div>
   );
 }

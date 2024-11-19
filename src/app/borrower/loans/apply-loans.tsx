@@ -49,7 +49,7 @@ export default function ApplyLoanButton() {
         New
       </Button>
 
-      {redirectUrl && <KycRedirectDialog />}
+      {redirectUrl && <KycRedirectDialog isOpen={!!redirectUrl} />}
     </div>
   );
 }
