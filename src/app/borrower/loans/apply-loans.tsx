@@ -1,11 +1,12 @@
 'use client';
 
+import { KycRedirectDialog } from '@/components/kyc-redirect-dialog';
 import { Button } from '@/components/ui/button';
 import useKycVerification from '@/hooks/use-kyc-verification';
 import { KYCVerificationStatus } from '@prisma/client';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 export default function ApplyLoanButton() {
@@ -27,14 +28,28 @@ export default function ApplyLoanButton() {
     }
   };
 
+  useEffect(() => {
+    if (redirectUrl) {
+      const timer = setTimeout(() => {
+        window.open(redirectUrl, '_blank');
+        setRedirectUrl(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [redirectUrl]);
+
   return (
-    <Button
-      disabled={!kycStatus}
-      className="bg-blue-600 text-white hover:bg-blue-700"
-      onClick={handleClick}
-    >
-      <Plus className="mr-2 h-4 w-4" />
-      New
-    </Button>
+    <div>
+      <Button
+        disabled={!kycStatus}
+        className="bg-blue-600 text-white hover:bg-blue-700"
+        onClick={handleClick}
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        New
+      </Button>
+
+      {redirectUrl && <KycRedirectDialog isOpen={!!redirectUrl} />}
+    </div>
   );
 }
