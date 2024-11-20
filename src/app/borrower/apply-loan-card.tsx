@@ -17,16 +17,16 @@ export default function ApplyLoanCard() {
   const { startKYCFlow, kycStatus, retryKycVerification } = useKycVerification(chainAccountAddress);
 
   const handleClick = async () => {
-    if (kycStatus === KYCVerificationStatus.success) {
-      router.push('/borrower/loans/apply');
-    } else if (kycStatus === KYCVerificationStatus.failed) {
-      const data = await retryKycVerification();
-      if (data?.shareable_url) {
-        setRedirectUrl(data.shareable_url);
-      }
-    } else {
-      await startKYCFlow();
-    }
+    router.push('/borrower/loans/apply');
+    // if (kycStatus === KYCVerificationStatus.success) {
+    // } else if (kycStatus === KYCVerificationStatus.failed) {
+    //   const data = await retryKycVerification();
+    //   if (data?.shareable_url) {
+    //     setRedirectUrl(data.shareable_url);
+    //   }
+    // } else {
+    //   await startKYCFlow();
+    // }
   };
 
   useEffect(() => {
