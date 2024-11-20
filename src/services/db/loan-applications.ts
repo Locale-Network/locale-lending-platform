@@ -49,11 +49,21 @@ export const saveAccessTokenOfLoanApplicationCreator = async (args: {
 
   const { chainAccountAddress } = loanApplication;
 
-  const result = await prisma.plaidItemAccessToken.create({
-    data: {
-      chainAccountAddress,
-      itemId,
-      accessToken,
+  const result = await prisma.plaidItemAccessToken.upsert({
+    where: {
+      itemId: itemId,
+    },
+    create: {
+      accessToken: accessToken,
+      itemId: itemId,
+      chainAccount: {
+        connect: {
+          address: chainAccountAddress,
+        },
+      },
+    },
+    update: {
+      accessToken: accessToken,
     },
   });
 

@@ -1,4 +1,5 @@
-import { saveAccessTokenOfLoanApplicationCreator } from './actions';
+import CalculateCreditScore from './calculate-credit-score';
+import SaveAccessToken from './save-access-token';
 
 type Props = {
   params: {
@@ -22,17 +23,11 @@ export default async function Page({ params, searchParams }: Props) {
     return <div>No item id</div>;
   }
 
-  const { isError, errorMessage } = await saveAccessTokenOfLoanApplicationCreator({
-    loanApplicationId: id,
-    accessToken: access_token,
-    itemId: item_id,
-  });
-
   return (
     <div>
-      Credit Score for Loan {id}
-      {isError && <div>{errorMessage}</div>}
-      {!isError && <div>Access token saved</div>}
+      <p>Credit Score for Loan {id}</p>
+      <SaveAccessToken loanApplicationId={id} accessToken={access_token} itemId={item_id} />
+      <CalculateCreditScore loanApplicationId={id} accessToken={access_token} itemId={item_id} />
     </div>
   );
 }
