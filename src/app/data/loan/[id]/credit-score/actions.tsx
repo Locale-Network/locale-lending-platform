@@ -3,7 +3,7 @@
 import {
   getLoanApplication as dbGetLoanApplication,
   saveAccessTokenOfLoanApplicationCreator as dbSaveAccessTokenOfLoanApplicationCreator,
-} from '@/services/db/loan-application';
+} from '@/services/db/loan-applications';
 
 const validateRequest = async (args: {
   loanApplicationId: string;
