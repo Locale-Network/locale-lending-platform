@@ -145,7 +145,7 @@ export default function LoanApplicationForm({
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer | null>(null);
-  const totalSteps = 7;
+  const totalSteps = 4;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -184,16 +184,10 @@ export default function LoanApplicationForm({
       case 1:
         return 'Business information';
       case 2:
-        return 'Personal information';
+        return 'Link your bank account';
       case 3:
-        return 'Identity verification';
-      case 4:
-        return 'Cash flow verification';
-      case 5:
         return 'Current loans';
-      case 6:
-        return 'Supporting documents';
-      case 7:
+      case 4:
         return 'User acknowledgments';
       default:
         return 'Loan Application';
@@ -228,7 +222,7 @@ export default function LoanApplicationForm({
   };
 
   useEffect(() => {
-    if (step === 4 && !hasReclaimProof) {
+    if (step === 2 && !hasReclaimProof) {
       startReclaimProofPolling();
     }
   }, [hasReclaimProof, step]);
@@ -491,181 +485,6 @@ export default function LoanApplicationForm({
             )}
 
             {step === 2 && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="borrowerDesignation"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Designation</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.values(Designation).map(designation => (
-                              <SelectItem key={designation} value={designation}>
-                                {designation}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="borrowerFirstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="borrowerLastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="borrowerGender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Which gender do you identify with?</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.values(Gender).map(gender => (
-                              <SelectItem key={gender} value={gender}>
-                                {gender}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="borrowerPronoun"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Which pronoun do you prefer?</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.values(Pronoun).map(pronoun => (
-                              <SelectItem key={pronoun} value={pronoun}>
-                                {pronoun}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="borrowerRacialIdentification"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Racial identification</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.values(RacialIdentification).map(race => (
-                              <SelectItem key={race} value={race}>
-                                {race}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="borrowerEthnicIdentification"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ethnic identification</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.values(EthnicIdentification).map(ethnic => (
-                              <SelectItem key={ethnic} value={ethnic}>
-                                {ethnic}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="borrowerResidentialAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Residential address</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {step === 3 && <div className="space-y-4"></div>}
-
-            {step === 4 && (
               <div className="flex flex-col items-center space-y-4">
                 <p>Scan the QR code to link your bank account</p>
                 <QRCode value={reclaimRequestUrl} size={256} />
@@ -696,7 +515,7 @@ export default function LoanApplicationForm({
               </div>
             )}
 
-            {step === 5 && (
+            {step === 3 && (
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -895,39 +714,7 @@ export default function LoanApplicationForm({
               </div>
             )}
 
-            {step === 6 && (
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="governmentId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Government ID</FormLabel>
-                      <FormControl>
-                        <Input type="file" {...field} value={field.value?.name} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="proofOfAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Proof of address</FormLabel>
-                      <FormControl>
-                        <Input type="file" {...field} value={field.value?.name} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {step === 7 && (
+            {step === 4 && (
               <div className="space-y-4">
                 <FormField
                   control={form.control}
