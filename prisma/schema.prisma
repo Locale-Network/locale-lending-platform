@@ -101,7 +101,7 @@ model ChainAccount {
 model PlaidItemAccessToken {
   id          Int    @id @default(autoincrement())
   accessToken String @map("access_token") @db.VarChar(255)
-  itemId      String @map("item_id") @db.VarChar(255)
+  itemId      String @unique @map("item_id") @db.VarChar(255)
 
   chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
   chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
