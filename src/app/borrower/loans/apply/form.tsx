@@ -1,13 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Link as LinkIcon } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -41,29 +41,10 @@ import {
   Pronoun,
   RacialIdentification,
 } from '@/types/borrower';
-import {
-  createLinkTokenForTransactions,
-  plaidPublicTokenExchange,
-  savePlaidItemAccessToken,
-  getConnectedBankAccounts,
-} from './actions';
-import { useAccount } from 'wagmi';
-import { usePlaidLink } from 'react-plaid-link';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { capitalize } from 'lodash';
+import QRCode from 'react-qr-code';
 
 // TODO: terms and privacy links
 // TODO: form submit
-// TODO: file upload to vercel blod
 
 const loanSchema = z.object({
   lenderName: z.string().min(1, 'Lender name is required'),
@@ -131,8 +112,7 @@ const formSchema = z.object({
   // Step 2: Individual information
 
   // Step 4: Cash flow verification
-  shareTransactions: z.boolean(),
-  connectedBankAccounts: z.array(connectedBankAccountSchema),
+  hasReclaimProof: z.boolean(),
   // Step 4: Cash flow verification
 
   // Step 5: Current loans
@@ -155,13 +135,16 @@ const formSchema = z.object({
     .refine(val => val === true, { message: 'You must acknowledge the risks involved.' }),
 });
 
-type LoadConnectedBankAccountsFn = (address: string) => Promise<void>;
-
-export default function LoanApplicationForm() {
-  const { address: chainAccountAddress } = useAccount();
+interface LoanApplicationFormProps {
+  reclaimRequestUrl: string;
+  reclaimStatusUrl: string;
+}
+export default function LoanApplicationForm({
+  reclaimRequestUrl,
+  reclaimStatusUrl,
+}: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
-  const [loadingConnectedBankAccounts, setLoadingConnectedBankAccounts] = useState(false);
-  const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timer | null>(null);
   const totalSteps = 7;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -169,8 +152,7 @@ export default function LoanApplicationForm() {
     defaultValues: {
       hasOutstandingLoans: false,
       outstandingLoans: [],
-      shareTransactions: false,
-      connectedBankAccounts: [],
+      hasReclaimProof: false,
       termsAgreement: false,
       riskAcknowledgment: false,
     },
@@ -186,14 +168,9 @@ export default function LoanApplicationForm() {
     name: 'outstandingLoans',
   });
 
-  const shareTransactions = useWatch({
+  const hasReclaimProof = useWatch({
     control: form.control,
-    name: 'shareTransactions',
-  });
-
-  const connectedBankAccounts = useWatch({
-    control: form.control,
-    name: 'connectedBankAccounts',
+    name: 'hasReclaimProof',
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -227,42 +204,34 @@ export default function LoanApplicationForm() {
   const prevStep = () => setStep(step => Math.max(step - 1, 1));
   const clickStep = (step: number) => setStep(step);
 
-  useEffect(() => {
-    (async function load() {
-      if (chainAccountAddress) {
-        const response = await createLinkTokenForTransactions(chainAccountAddress);
-
-        if (!response.isError && response.linkToken) {
-          setLinkToken(response.linkToken);
+  const startReclaimProofPolling = async () => {
+    const pollStatus = async () => {
+      try {
+        const response = await fetch(reclaimStatusUrl);
+        const jsonResponse = await response.json();
+        if (jsonResponse?.session?.statusV2 === 'PROOF_SUBMITTED') {
+          form.setValue('hasReclaimProof', true);
+          stopReclaimProofPolling(intervalId);
         }
+      } catch (error) {
+        console.error('Error polling status:', error);
       }
-    })();
-  }, [chainAccountAddress]);
+    };
 
-   const loadConnectedBankAccounts: LoadConnectedBankAccountsFn = useCallback(
-     async (address: string) => {
-       try {
-         setLoadingConnectedBankAccounts(true);
-         const response = await getConnectedBankAccounts(address);
-         if (!response.isError && response.connectedBankAccounts) {
-           form.setValue('connectedBankAccounts', response.connectedBankAccounts);
-         }
-       } catch (error) {
-         setLoadingConnectedBankAccounts(false);
-       } finally {
-         setLoadingConnectedBankAccounts(false);
-       }
-     },
-     [form]
-   );
+    const newIntervalId = setInterval(pollStatus, 3000);
+    setIntervalId(newIntervalId);
+  };
 
-   useEffect(() => {
-     if (chainAccountAddress && shareTransactions) {
-       loadConnectedBankAccounts(chainAccountAddress);
-     }
-   }, [chainAccountAddress, shareTransactions, loadConnectedBankAccounts]);
+  const stopReclaimProofPolling = (intervalId: NodeJS.Timer | null) => {
+    clearInterval(intervalId as NodeJS.Timeout);
+    setIntervalId(null);
+  };
 
-
+  useEffect(() => {
+    if (step === 4 && !hasReclaimProof) {
+      startReclaimProofPolling();
+    }
+  }, [hasReclaimProof, step]);
 
   return (
     <Card className="mx-auto w-full max-w-4xl">
@@ -697,74 +666,32 @@ export default function LoanApplicationForm() {
             {step === 3 && <div className="space-y-4"></div>}
 
             {step === 4 && (
-              <div className="space-y-4">
-                <p>
-                  Connect your bank accounts securely. This step helps us understand your business
-                  financial health through cash flow data and expedite the loan approval process.
-                  Learn how it works {/* TODO: give link here */}
-                  <Link href="#" className="text-blue-500 hover:text-blue-600">
-                    here
-                  </Link>
-                  .
-                </p>
-                <FormField
-                  control={form.control}
-                  name="shareTransactions"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Authorize Data Sharing</FormLabel>
-                        <FormDescription>
-                          By connecting my accounts, I authorize Plaid to share my business
-                          transaction history for loan evaluation purposes
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                {shareTransactions && (
-                  <>
-                    <PlaidLinkForTransactions
-                      noOfAccounts={connectedBankAccounts.length}
-                      linkToken={linkToken}
-                      chainAccountAddress={chainAccountAddress || ''}
-                      loadConnectedBankAccounts={loadConnectedBankAccounts}
-                    />
-
-                    {loadingConnectedBankAccounts && (
-                      <div className="flex items-center space-x-2">
-                        <p className="animate-pulse">Loading connected bank accounts...</p>
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                      </div>
-                    )}
-
-                    {connectedBankAccounts.length > 0 && (
-                      <Table>
-                        <TableCaption>A list of your connected bank accounts.</TableCaption>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Institution</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Mask</TableHead>
-                            <TableHead>Type</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {connectedBankAccounts.map((account, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-medium">{account.instituteName}</TableCell>
-                              <TableCell className="font-medium">{account.accountName}</TableCell>
-                              <TableCell>{account.accountMask}</TableCell>
-                              <TableCell>{capitalize(account.accountType)}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-                  </>
+              <div className="flex flex-col items-center space-y-4">
+                <p>Scan the QR code to link your bank account</p>
+                <QRCode value={reclaimRequestUrl} size={256} />
+                {!hasReclaimProof && (
+                  <div className="flex items-center space-x-2">
+                    <p className="animate-pulse">Waiting for completion...</p>
+                  </div>
+                )}
+                {hasReclaimProof && (
+                  <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <p className="font-medium">Bank account linked successfully</p>
+                  </div>
                 )}
               </div>
             )}
@@ -1063,75 +990,3 @@ export default function LoanApplicationForm() {
     </Card>
   );
 }
-
-interface PlaidLinkProps {
-  linkToken: string | null;
-  chainAccountAddress: string;
-  noOfAccounts: number;
-  loadConnectedBankAccounts: LoadConnectedBankAccountsFn;
-}
-const PlaidLinkForTransactions: React.FC<PlaidLinkProps> = (props: PlaidLinkProps) => {
-  const [buttonText, setButtonText] = useState(props.noOfAccounts < 1 ? 'Connect' : 'Connect more');
-  const toast = useToast();
-
-  useEffect(() => {
-    setButtonText(props.noOfAccounts < 1 ? 'Connect' : 'Connect more');
-  }, [props.noOfAccounts]);
-
-  const onSuccess = useCallback(async (public_token: any, metadata: any) => {
-    const response = await plaidPublicTokenExchange({
-      publicToken: public_token,
-      chainAccountAddress: props.chainAccountAddress,
-    });
-
-    if (response.isError) {
-      toast.toast({
-        title: 'Error',
-        description: response.errorMessage,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const { accessToken, itemId } = response;
-
-    if (!accessToken || !itemId) {
-      toast.toast({
-        title: 'Error',
-        description: 'Error connecting Plaid account',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    await savePlaidItemAccessToken({ accessToken, itemId, chainAccountAddress: props.chainAccountAddress });
-
-    toast.toast({
-      title: 'Success',
-      description: 'Plaid account connected successfully',
-      variant: 'success',
-    });
-    props.loadConnectedBankAccounts(props.chainAccountAddress);
-  }, []);
-  const config: Parameters<typeof usePlaidLink>[0] = {
-    token: props.linkToken!,
-    onSuccess,
-  };
-  const { open, ready } = usePlaidLink(config);
-
-  if (!ready) {
-    return (
-      <div className="flex items-center space-x-2">
-        <p className="animate-pulse">Creating secure connection...</p>
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
-  return (
-    <Button onClick={() => open()} disabled={!ready}>
-      {buttonText}
-      <LinkIcon />
-    </Button>
-  );
-};

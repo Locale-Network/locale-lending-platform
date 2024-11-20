@@ -16,7 +16,6 @@ async function validateRequest(chainAccountAddress: string) {
   }
 
   if (session?.user.role !== Role.BORROWER) {
-    console.log('role', session?.user.role);
     throw new Error('User is not a borrower');
   }
 
