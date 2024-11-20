@@ -12,16 +12,20 @@ import {
 } from '@/services/db/plaid/item-access';
 import { revalidatePath } from 'next/cache';
 import { ConnectedBankAccount } from './form';
+import { initialiseLoanApplication as dbInitialiseLoanApplication } from '@/services/db/loan-application';
+import { redirect } from 'next/navigation';
+import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
 
+// TODO: move to global actions
 async function validateRequest(chainAccountAddress: string) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    throw new Error('No session found');
+    redirect('/sign-in');
   }
 
   if (session?.user.role !== Role.BORROWER) {
-    throw new Error('User is not a borrower');
+    redirect(ROLE_REDIRECTS[session.user.role]);
   }
 
   if (session?.address !== chainAccountAddress) {
@@ -255,3 +259,30 @@ export async function createLinkTokenForIdentityVerification(
     };
   }
 }
+
+// return loan application id
+interface InitialiseLoanApplicationResponse {
+  isError: boolean;
+  errorMessage?: string;
+  loanApplicationId?: string;
+}
+export async function initialiseLoanApplication(
+  chainAccountAddress: string
+): Promise<InitialiseLoanApplicationResponse> {
+  try {
+    await validateRequest(chainAccountAddress);
+
+    const loanApplication = await dbInitialiseLoanApplication(chainAccountAddress);
+
+    return {
+      isError: false,
+      loanApplicationId: loanApplication.id,
+    };
+  } catch (error) {
+    return {
+      isError: true,
+      errorMessage: 'Error initiating loan application',
+    };
+  }
+}
+

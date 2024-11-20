@@ -2,6 +2,7 @@ import LoanApplicationForm from './form';
 import { ReclaimProofRequest } from '@reclaimprotocol/js-sdk';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
+import { initialiseLoanApplication } from './actions';
 
 // TODO: hide show Loan Application form based on KYC status
 
@@ -11,6 +12,12 @@ export default async function Page() {
 
   if (!chainAccountAddress) {
     return null;
+  }
+
+  const { isError, errorMessage, loanApplicationId } = await initialiseLoanApplication(chainAccountAddress);
+
+  if (isError || !loanApplicationId) {
+    return <div>{errorMessage}</div>;
   }
 
   const redirectUrl = 'https://wallet.kcdollar.org';
@@ -29,7 +36,7 @@ export default async function Page() {
   reclaimProofRequest.setRedirectUrl(redirectUrl);
   reclaimProofRequest.setAppCallbackUrl(callbackUrl);
 
-  const message = `for account verification ${chainAccountAddress} ${Date.now().toString()}`;
+  const message = `credit score calculation for ${chainAccountAddress} at ${new Date().toISOString()} for loan application ${loanApplicationId}`;
   reclaimProofRequest.addContext(chainAccountAddress, message);
 
   const requestUrl = await reclaimProofRequest.getRequestUrl();
@@ -37,6 +44,7 @@ export default async function Page() {
 
   return (
     <LoanApplicationForm
+      loanApplicationId={loanApplicationId}
       reclaimRequestUrl={requestUrl}
       reclaimStatusUrl={statusUrl}
     />

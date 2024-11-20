@@ -34,13 +34,6 @@ import {
   USState,
   StateMajorCities,
 } from '@/types/business';
-import {
-  Designation,
-  EthnicIdentification,
-  Gender,
-  Pronoun,
-  RacialIdentification,
-} from '@/types/borrower';
 import QRCode from 'react-qr-code';
 
 // TODO: terms and privacy links
@@ -69,6 +62,9 @@ const connectedBankAccountSchema = z.object({
 export type ConnectedBankAccount = z.infer<typeof connectedBankAccountSchema>;
 
 const formSchema = z.object({
+
+  applicationId: z.string(),
+
   // Step 1: Business information
   businessLegalName: z.string().min(2, { message: 'Enter the legal name of the business.' }),
   businessAddress: z.string().min(2, { message: 'Enter the address of the business.' }),
@@ -98,48 +94,33 @@ const formSchema = z.object({
     .max(100, { message: 'Description must not exceed 100 characters.' }),
   // Step 1: Business information
 
-  // Step 2: Individual information
-  borrowerDesignation: z.nativeEnum(Designation),
-  borrowerFirstName: z.string().min(2, { message: 'First name must be at least 2 characters.' }),
-  borrowerLastName: z.string().min(2, { message: 'Last name must be at least 2 characters.' }),
-  borrowerGender: z.nativeEnum(Gender),
-  borrowerPronoun: z.nativeEnum(Pronoun),
-  borrowerRacialIdentification: z.nativeEnum(RacialIdentification),
-  borrowerEthnicIdentification: z.nativeEnum(EthnicIdentification),
-  borrowerResidentialAddress: z
-    .string()
-    .min(2, { message: 'Residential address must be at least 2 characters.' }),
-  // Step 2: Individual information
-
-  // Step 4: Cash flow verification
+  // Step 2: Cash flow verification
   hasReclaimProof: z.boolean(),
-  // Step 4: Cash flow verification
+  creditScoreId: z.string(),
+  // Step 2: Cash flow verification
 
-  // Step 5: Current loans
+  // Step 3: Current loans
   hasOutstandingLoans: z.boolean(),
   outstandingLoans: z.array(loanSchema),
+  // Step 3: Current loans
 
-  // Step 5: Current loans
-
-  // Step 6: Supporting Documents
-  governmentId: z.instanceof(File).optional(),
-  proofOfAddress: z.instanceof(File).optional(),
-  // Step 6: Supporting Documents
-
-  // Step 7: User Acknowledgments
+  // Step 4: User Acknowledgments
   termsAgreement: z
     .boolean()
     .refine(val => val === true, { message: 'You must agree to the terms of service.' }),
   riskAcknowledgment: z
     .boolean()
     .refine(val => val === true, { message: 'You must acknowledge the risks involved.' }),
+  // Step 4: User Acknowledgments
 });
 
 interface LoanApplicationFormProps {
+  loanApplicationId: string;
   reclaimRequestUrl: string;
   reclaimStatusUrl: string;
 }
 export default function LoanApplicationForm({
+  loanApplicationId,
   reclaimRequestUrl,
   reclaimStatusUrl,
 }: LoanApplicationFormProps) {
@@ -150,6 +131,7 @@ export default function LoanApplicationForm({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      applicationId: loanApplicationId,
       hasOutstandingLoans: false,
       outstandingLoans: [],
       hasReclaimProof: false,
@@ -184,7 +166,7 @@ export default function LoanApplicationForm({
       case 1:
         return 'Business information';
       case 2:
-        return 'Link your bank account';
+        return 'Cash flow verification';
       case 3:
         return 'Current loans';
       case 4:
