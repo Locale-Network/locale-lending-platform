@@ -25,23 +25,16 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
 import {
   BusinessLegalStructure,
   BusinessIndustry,
   USState,
   StateMajorCities,
 } from '@/types/business';
-import {
-  Designation,
-  EthnicIdentification,
-  Gender,
-  Pronoun,
-  RacialIdentification,
-} from '@/types/borrower';
 import QRCode from 'react-qr-code';
+import { CreditScore } from '@prisma/client';
+import { getCreditScoreOfLoanApplication } from './actions';
 
 // TODO: terms and privacy links
 // TODO: form submit
@@ -68,7 +61,18 @@ const connectedBankAccountSchema = z.object({
 });
 export type ConnectedBankAccount = z.infer<typeof connectedBankAccountSchema>;
 
+const creditScoreSchema = z.object({
+  id: z.string(),
+  score: z.number(),
+  scoreRangeMin: z.number(),
+  scoreRangeMax: z.number(),
+  scoreType: z.string(),
+  creditBureau: z.string(),
+});
+
 const formSchema = z.object({
+  applicationId: z.string(),
+
   // Step 1: Business information
   businessLegalName: z.string().min(2, { message: 'Enter the legal name of the business.' }),
   businessAddress: z.string().min(2, { message: 'Enter the address of the business.' }),
@@ -98,63 +102,42 @@ const formSchema = z.object({
     .max(100, { message: 'Description must not exceed 100 characters.' }),
   // Step 1: Business information
 
-  // Step 2: Individual information
-  borrowerDesignation: z.nativeEnum(Designation),
-  borrowerFirstName: z.string().min(2, { message: 'First name must be at least 2 characters.' }),
-  borrowerLastName: z.string().min(2, { message: 'Last name must be at least 2 characters.' }),
-  borrowerGender: z.nativeEnum(Gender),
-  borrowerPronoun: z.nativeEnum(Pronoun),
-  borrowerRacialIdentification: z.nativeEnum(RacialIdentification),
-  borrowerEthnicIdentification: z.nativeEnum(EthnicIdentification),
-  borrowerResidentialAddress: z
-    .string()
-    .min(2, { message: 'Residential address must be at least 2 characters.' }),
-  // Step 2: Individual information
-
-  // Step 4: Cash flow verification
+  // Step 2: Cash flow verification
   hasReclaimProof: z.boolean(),
-  // Step 4: Cash flow verification
+  creditScoreId: z.string().optional(),
+  // Step 2: Cash flow verification
 
-  // Step 5: Current loans
+  // Step 3: Current loans
   hasOutstandingLoans: z.boolean(),
   outstandingLoans: z.array(loanSchema),
-
-  // Step 5: Current loans
-
-  // Step 6: Supporting Documents
-  governmentId: z.instanceof(File).optional(),
-  proofOfAddress: z.instanceof(File).optional(),
-  // Step 6: Supporting Documents
-
-  // Step 7: User Acknowledgments
-  termsAgreement: z
-    .boolean()
-    .refine(val => val === true, { message: 'You must agree to the terms of service.' }),
-  riskAcknowledgment: z
-    .boolean()
-    .refine(val => val === true, { message: 'You must acknowledge the risks involved.' }),
+  // Step 3: Current loans
 });
 
 interface LoanApplicationFormProps {
+  loanApplicationId: string;
   reclaimRequestUrl: string;
   reclaimStatusUrl: string;
 }
 export default function LoanApplicationForm({
+  loanApplicationId,
   reclaimRequestUrl,
   reclaimStatusUrl,
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timer | null>(null);
-  const totalSteps = 4;
+  const [creditScore, setCreditScore] = useState<Partial<CreditScore> | null>(null);
+  const [reclaimProofIntervalId, setReclaimProofIntervalId] = useState<NodeJS.Timer | null>(null);
+  const [creditScoreIntervalId, setCreditScoreIntervalId] = useState<NodeJS.Timer | null>(null);
+
+  const totalSteps = 3;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      applicationId: loanApplicationId,
       hasOutstandingLoans: false,
       outstandingLoans: [],
       hasReclaimProof: false,
-      termsAgreement: false,
-      riskAcknowledgment: false,
+      creditScoreId: undefined,
     },
   });
 
@@ -173,6 +156,11 @@ export default function LoanApplicationForm({
     name: 'hasReclaimProof',
   });
 
+  const creditScoreId = useWatch({
+    control: form.control,
+    name: 'creditScoreId',
+  });
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
     // Here you would typically send the form data to your backend
@@ -184,11 +172,9 @@ export default function LoanApplicationForm({
       case 1:
         return 'Business information';
       case 2:
-        return 'Link your bank account';
+        return 'Cash flow verification';
       case 3:
         return 'Current loans';
-      case 4:
-        return 'User acknowledgments';
       default:
         return 'Loan Application';
     }
@@ -205,7 +191,6 @@ export default function LoanApplicationForm({
         const jsonResponse = await response.json();
         if (jsonResponse?.session?.statusV2 === 'PROOF_SUBMITTED') {
           form.setValue('hasReclaimProof', true);
-          stopReclaimProofPolling(intervalId);
         }
       } catch (error) {
         console.error('Error polling status:', error);
@@ -213,12 +198,36 @@ export default function LoanApplicationForm({
     };
 
     const newIntervalId = setInterval(pollStatus, 3000);
-    setIntervalId(newIntervalId);
+    setReclaimProofIntervalId(newIntervalId);
   };
 
   const stopReclaimProofPolling = (intervalId: NodeJS.Timer | null) => {
     clearInterval(intervalId as NodeJS.Timeout);
-    setIntervalId(null);
+    setReclaimProofIntervalId(null);
+  };
+
+  const startCreditScorePolling = async () => {
+    const pollStatus = async () => {
+      try {
+        const response = await getCreditScoreOfLoanApplication(loanApplicationId);
+
+        if (response.creditScore) {
+          const { creditScore } = response;
+          form.setValue('creditScoreId', creditScore.id);
+          setCreditScore(creditScore);
+        }
+      } catch (error) {
+        console.error('Error polling credit score:', error);
+      }
+    };
+
+    const newIntervalId = setInterval(pollStatus, 3000);
+    setCreditScoreIntervalId(newIntervalId);
+  };
+
+  const stopCreditScorePolling = (intervalId: NodeJS.Timer | null) => {
+    clearInterval(intervalId as NodeJS.Timeout);
+    setCreditScoreIntervalId(null);
   };
 
   useEffect(() => {
@@ -226,6 +235,34 @@ export default function LoanApplicationForm({
       startReclaimProofPolling();
     }
   }, [hasReclaimProof, step]);
+
+  useEffect(() => {
+    if (hasReclaimProof) {
+      stopReclaimProofPolling(reclaimProofIntervalId);
+    }
+  }, [hasReclaimProof]);
+
+  useEffect(() => {
+    if (hasReclaimProof) {
+      startCreditScorePolling();
+    }
+
+    return () => {
+      stopCreditScorePolling(creditScoreIntervalId);
+    };
+  }, [hasReclaimProof]);
+
+  useEffect(() => {
+    if (creditScoreId) {
+      stopCreditScorePolling(creditScoreIntervalId);
+    }
+
+    return () => {
+      stopCreditScorePolling(creditScoreIntervalId);
+    };
+  }, [creditScoreId]);
+
+  console.log('creditScore', JSON.stringify(creditScore, null, 2));
 
   return (
     <Card className="mx-auto w-full max-w-4xl">
@@ -485,33 +522,65 @@ export default function LoanApplicationForm({
             )}
 
             {step === 2 && (
-              <div className="flex flex-col items-center space-y-4">
-                <p>Scan the QR code to link your bank account</p>
-                <QRCode value={reclaimRequestUrl} size={256} />
-                {!hasReclaimProof && (
-                  <div className="flex items-center space-x-2">
-                    <p className="animate-pulse">Waiting for completion...</p>
-                  </div>
-                )}
-                {hasReclaimProof && (
-                  <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <p className="font-medium">Bank account linked successfully</p>
-                  </div>
-                )}
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="hasReclaimProof"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="flex flex-col items-center space-y-4">
+                          <p>Scan the QR code to link your bank account</p>
+                          <QRCode value={reclaimRequestUrl} size={256} />
+                          {hasReclaimProof ? (
+                            <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
+                              <svg
+                                className="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              <p className="font-medium">Bank account linked successfully</p>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <p className="animate-pulse">Waiting for completion...</p>
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="creditScoreId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
+                          <p>Score: {creditScore?.score}</p>
+                          <p>
+                            Score Range: {creditScore?.scoreRangeMin} - {creditScore?.scoreRangeMax}
+                          </p>
+                          <p>Score Type: {creditScore?.scoreType}</p>
+                          <p>Credit Bureau: {creditScore?.creditBureau}</p>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             )}
 
@@ -711,53 +780,6 @@ export default function LoanApplicationForm({
                     )}
                   />
                 )}
-              </div>
-            )}
-
-            {step === 4 && (
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="termsAgreement"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>I agree to the terms of service</FormLabel>
-                        <FormDescription>
-                          You agree to our{' '}
-                          <Link href="#" className="text-blue-500 hover:text-blue-600">
-                            Terms of Service
-                          </Link>{' '}
-                          and{' '}
-                          <Link className="text-blue-500 hover:text-blue-600" href="#">
-                            Privacy Policy
-                          </Link>
-                          .
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="riskAcknowledgment"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>I acknowledge the risks involved</FormLabel>
-                        <FormDescription>
-                          You understand and accept the risks associated with decentralized lending.
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
               </div>
             )}
           </form>

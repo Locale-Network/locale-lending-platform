@@ -4,7 +4,7 @@ import { CountryCode, Products, IdentityVerificationGetResponse } from 'plaid';
 import { isAddress } from 'viem';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
-import { Role } from '@prisma/client';
+import { CreditScore, Role } from '@prisma/client';
 import { getKycVerification } from '@/services/db/plaid/kyc';
 import {
   saveItemAccessToken as dbSavePlaidItemAccessToken,
@@ -12,16 +12,21 @@ import {
 } from '@/services/db/plaid/item-access';
 import { revalidatePath } from 'next/cache';
 import { ConnectedBankAccount } from './form';
+import { initialiseLoanApplication as dbInitialiseLoanApplication } from '@/services/db/loan-applications';
+import { redirect } from 'next/navigation';
+import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
+import { getCreditScoreOfLoanApplication as dbGetCreditScoreOfLoanApplication } from '@/services/db/credit-scores';
 
+// TODO: move to global actions
 async function validateRequest(chainAccountAddress: string) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    throw new Error('No session found');
+    redirect('/sign-in');
   }
 
   if (session?.user.role !== Role.BORROWER) {
-    throw new Error('User is not a borrower');
+    redirect(ROLE_REDIRECTS[session.user.role]);
   }
 
   if (session?.address !== chainAccountAddress) {
@@ -252,6 +257,62 @@ export async function createLinkTokenForIdentityVerification(
     return {
       isError: true,
       errorMessage: 'Error creating link token',
+    };
+  }
+}
+
+// return loan application id
+interface InitialiseLoanApplicationResponse {
+  isError: boolean;
+  errorMessage?: string;
+  loanApplicationId?: string;
+}
+export async function initialiseLoanApplication(
+  chainAccountAddress: string
+): Promise<InitialiseLoanApplicationResponse> {
+  try {
+    await validateRequest(chainAccountAddress);
+
+    const loanApplication = await dbInitialiseLoanApplication(chainAccountAddress);
+
+    return {
+      isError: false,
+      loanApplicationId: loanApplication.id,
+    };
+  } catch (error) {
+    return {
+      isError: true,
+      errorMessage: 'Error initiating loan application',
+    };
+  }
+}
+
+interface GetCreditScoreOfLoanApplicationResponse {
+  isError: boolean;
+  errorMessage?: string;
+  creditScore?: Omit<CreditScore, 'loanApplicationId' | 'chainAccountAddress' | 'createdAt' | 'updatedAt'>;
+}
+export async function getCreditScoreOfLoanApplication(
+  loanApplicationId: string
+): Promise<GetCreditScoreOfLoanApplicationResponse> {
+  try {
+    const result = await dbGetCreditScoreOfLoanApplication(loanApplicationId);
+
+    return {
+      isError: false,
+      creditScore: {
+        id: result.id,
+        score: result.score,
+        scoreRangeMin: result.scoreRangeMin,
+        scoreRangeMax: result.scoreRangeMax,
+        scoreType: result.scoreType,
+        creditBureau: result.creditBureau,
+      },
+    };
+  } catch (error) {
+    return {
+      isError: true,
+      errorMessage: 'Error getting credit score of loan application',
     };
   }
 }
