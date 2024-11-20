@@ -22,28 +22,41 @@ export const saveCreditScoreOfLoanApplication = async (args: {
   }
 
   const { chainAccountAddress } = loanApplication;
-  
-  const result = await prisma.creditScore.upsert({
-    where: {
-      loanApplicationId: loanApplicationId,
-    },
-    create: {
-      ...creditScore,
-      loanApplication: {
-        connect: {
-          id: loanApplicationId,
+
+  const result = await prisma.$transaction(async tx => {
+    const creditScoreResult = await tx.creditScore.upsert({
+      where: {
+        loanApplicationId: loanApplicationId,
+      },
+      create: {
+        ...creditScore,
+        loanApplication: {
+          connect: {
+            id: loanApplicationId,
+          },
+        },
+        chainAccount: {
+          connect: {
+            address: chainAccountAddress,
+          },
         },
       },
-      chainAccount: {
-        connect: {
-          address: chainAccountAddress,
-        },
+      update: {
+        ...creditScore,
       },
-    },
-    update: {
-      ...creditScore,
-    },
+    });
+
+    await tx.loanApplication.update({
+      where: {
+        id: loanApplicationId,
+      },
+      data: {
+        creditScoreId: creditScoreResult.id,
+      },
+    });
+
+    return creditScoreResult;
   });
 
-  return result
+  return result;
 };

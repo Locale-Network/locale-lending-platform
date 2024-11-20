@@ -10,7 +10,7 @@ const validateRequest = async (args: {
   accessToken: string;
   itemId: string;
 }) => {
-  const { loanApplicationId, accessToken, itemId } = args;
+  const { loanApplicationId } = args;
 
   const loanApplication = await dbGetLoanApplication({ loanApplicationId });
 

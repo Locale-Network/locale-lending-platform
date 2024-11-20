@@ -187,7 +187,6 @@ export default function LoanApplicationForm({
         const jsonResponse = await response.json();
         if (jsonResponse?.session?.statusV2 === 'PROOF_SUBMITTED') {
           form.setValue('hasReclaimProof', true);
-          stopReclaimProofPolling(intervalId);
         }
       } catch (error) {
         console.error('Error polling status:', error);
@@ -208,6 +207,13 @@ export default function LoanApplicationForm({
       startReclaimProofPolling();
     }
   }, [hasReclaimProof, step]);
+
+    useEffect(() => {
+    if (hasReclaimProof) {
+      stopReclaimProofPolling(intervalId);
+    }
+  }, [hasReclaimProof]);
+
 
   return (
     <Card className="mx-auto w-full max-w-4xl">
