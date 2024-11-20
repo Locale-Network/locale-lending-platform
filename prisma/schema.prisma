@@ -1,46 +1,105 @@
 generator client {
-    provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-    provider  = "postgresql"
-    // Uses connection pooling
-    url       = env("POSTGRES_PRISMA_URL")
-    // Uses direct connection, ⚠️ make sure to keep this to `POSTGRES_URL_NON_POOLING`
-    // or you'll have dangling databases from migrations
-    directUrl = env("POSTGRES_URL_NON_POOLING")
+  provider  = "postgresql"
+  // Uses connection pooling
+  url       = env("POSTGRES_PRISMA_URL")
+  // Uses direct connection, ⚠️ make sure to keep this to `POSTGRES_URL_NON_POOLING`
+  // or you'll have dangling databases from migrations
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 model Proof {
-    id        Int      @id @default(autoincrement())
-    address   String?  @db.VarChar(255)
-    createdAt DateTime @default(now()) @map("created_at")
-    proof     Json
-    context   Json
+  id        Int      @id @default(autoincrement())
+  address   String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  proof     Json
+  context   Json
 
-    @@map("proofs")
+  @@map("proofs")
 }
 
+// https://plaid.com/docs/api/accounts/
 model Account {
-    id           Int      @id @default(autoincrement())
-    accountId    String?  @map("account_id") @db.VarChar(255)
-    name         String?  @db.VarChar(255)
-    officialName String?  @map("official_name") @db.VarChar(255)
-    createdAt    DateTime @default(now()) @map("created_at")
+  id           Int      @id @default(autoincrement())
+  accountId    String?  @map("account_id") @db.VarChar(255)
+  name         String?  @db.VarChar(255)
+  officialName String?  @map("official_name") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at")
 
-    @@map("accounts")
+  @@map("accounts")
 }
 
 model Transaction {
-    id            Int       @id @default(autoincrement())
-    transactionId String?   @map("transaction_id") @db.VarChar(255)
-    accountId     String?   @map("account_id") @db.VarChar(255)
-    amount        Float?
-    currency      String?   @db.VarChar(255)
-    merchant      String?   @db.VarChar(255)
-    merchantId    String?   @map("merchant_id") @db.VarChar(255)
-    date          DateTime? @default(now())
-    isDeleted     Boolean   @default(false) @map("is_deleted")
+  id            Int       @id @default(autoincrement())
+  transactionId String?   @map("transaction_id") @db.VarChar(255)
+  accountId     String?   @map("account_id") @db.VarChar(255)
+  amount        Float?
+  currency      String?   @db.VarChar(255)
+  merchant      String?   @db.VarChar(255)
+  merchantId    String?   @map("merchant_id") @db.VarChar(255)
+  date          DateTime? @default(now())
+  isDeleted     Boolean   @default(false) @map("is_deleted")
 
-    @@map("transactions")
+  @@map("transactions")
+}
+
+// https://plaid.com/docs/api/products/identity-verification/#identity_verificationget
+enum KYCVerificationStatus {
+  active
+  success
+  failed
+  expired
+  canceled
+  pending_review
+}
+
+// chain account identity verification with PLAID
+model KYCVerification {
+  identityVerificationId String                @id @db.VarChar(255) @map("identity_verification_id") 
+  chainAccountAddress    String                @unique @db.VarChar(255) @map("chain_account_address") 
+  status                 KYCVerificationStatus @default(active)
+  createdAt              DateTime              @default(now()) @map("created_at")
+  updatedAt              DateTime              @updatedAt @map("updated_at")
+  attempts               Int                   @default(1)
+  chainAccount           ChainAccount          @relation(fields: [chainAccountAddress], references: [address])
+
+  @@index([chainAccountAddress])
+  @@map("kyc_verifications")
+}
+
+enum Role {
+  BORROWER
+  APPROVER
+  ADMIN
+}
+
+// accounts from the Arbitrum chain
+model ChainAccount {
+  address         String           @id @db.VarChar(255)
+  role            Role             @default(BORROWER)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  KYCVerification KYCVerification?
+  PlaidItemAccessTokens PlaidItemAccessToken[]
+
+  @@map("chain_accounts")
+}
+
+
+// plaid items authorised by chain account
+model PlaidItemAccessToken {
+  id                  Int       @id @default(autoincrement())
+  accessToken         String    @db.VarChar(255) @map("access_token") 
+  itemId              String    @db.VarChar(255) @map("item_id")
+  chainAccountAddress String    @db.VarChar(255) @map("chain_account_address")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address])
+
+  @@index([chainAccountAddress])
+  @@map("plaid_item_access_tokens")
 }
