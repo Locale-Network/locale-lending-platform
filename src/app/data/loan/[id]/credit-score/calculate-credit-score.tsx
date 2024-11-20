@@ -40,8 +40,6 @@ export default function CalculateCreditScore({
     );
   }
 
-  console.log(creditScore);
-
   if (creditScore) {
     return (
       <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
