@@ -103,15 +103,6 @@ const formSchema = z.object({
   hasOutstandingLoans: z.boolean(),
   outstandingLoans: z.array(loanSchema),
   // Step 3: Current loans
-
-  // Step 4: User Acknowledgments
-  termsAgreement: z
-    .boolean()
-    .refine(val => val === true, { message: 'You must agree to the terms of service.' }),
-  riskAcknowledgment: z
-    .boolean()
-    .refine(val => val === true, { message: 'You must acknowledge the risks involved.' }),
-  // Step 4: User Acknowledgments
 });
 
 interface LoanApplicationFormProps {
@@ -126,7 +117,7 @@ export default function LoanApplicationForm({
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer | null>(null);
-  const totalSteps = 4;
+  const totalSteps = 3;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -135,8 +126,6 @@ export default function LoanApplicationForm({
       hasOutstandingLoans: false,
       outstandingLoans: [],
       hasReclaimProof: false,
-      termsAgreement: false,
-      riskAcknowledgment: false,
     },
   });
 
@@ -169,8 +158,6 @@ export default function LoanApplicationForm({
         return 'Cash flow verification';
       case 3:
         return 'Current loans';
-      case 4:
-        return 'User acknowledgments';
       default:
         return 'Loan Application';
     }
@@ -699,53 +686,6 @@ export default function LoanApplicationForm({
                     )}
                   />
                 )}
-              </div>
-            )}
-
-            {step === 4 && (
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="termsAgreement"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>I agree to the terms of service</FormLabel>
-                        <FormDescription>
-                          You agree to our{' '}
-                          <Link href="#" className="text-blue-500 hover:text-blue-600">
-                            Terms of Service
-                          </Link>{' '}
-                          and{' '}
-                          <Link className="text-blue-500 hover:text-blue-600" href="#">
-                            Privacy Policy
-                          </Link>
-                          .
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="riskAcknowledgment"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>I acknowledge the risks involved</FormLabel>
-                        <FormDescription>
-                          You understand and accept the risks associated with decentralized lending.
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
               </div>
             )}
           </form>

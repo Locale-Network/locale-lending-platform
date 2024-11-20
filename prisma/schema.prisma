@@ -113,6 +113,14 @@ model PlaidItemAccessToken {
   @@map("plaid_item_access_tokens")
 }
 
+enum LoanApplicationStatus {
+  DRAFT
+  PENDING
+  ADDITIONAL_INFO_NEEDED
+  APPROVED
+  REJECTED
+}
+
 model LoanApplication {
   id String @id @default(cuid())
 
@@ -140,11 +148,8 @@ model LoanApplication {
   hasOutstandingLoans Boolean           @default(false) @map("has_outstanding_loans")
   outstandingLoans    OutstandingLoan[]
 
-  // User Acknowledgments
-  termsAgreement     Boolean @default(false) @map("terms_agreement")
-  riskAcknowledgment Boolean @default(false) @map("risk_acknowledgment")
-
-  isSubmitted Boolean @default(false) @map("is_submitted")
+  isSubmitted Boolean               @default(false) @map("is_submitted")
+  status      LoanApplicationStatus @default(DRAFT) @map("status")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
