@@ -60,3 +60,13 @@ export const saveCreditScoreOfLoanApplication = async (args: {
 
   return result;
 };
+
+export async function getCreditScoreOfLoanApplication(loanApplicationId: string) {
+  const result = await prisma.creditScore.findUniqueOrThrow({
+    where: {
+      loanApplicationId,
+    },
+  });
+
+  return result;
+}

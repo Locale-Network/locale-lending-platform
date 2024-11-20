@@ -25,9 +25,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
 import {
   BusinessLegalStructure,
   BusinessIndustry,
@@ -35,6 +33,8 @@ import {
   StateMajorCities,
 } from '@/types/business';
 import QRCode from 'react-qr-code';
+import { CreditScore } from '@prisma/client';
+import { getCreditScoreOfLoanApplication } from './actions';
 
 // TODO: terms and privacy links
 // TODO: form submit
@@ -61,8 +61,16 @@ const connectedBankAccountSchema = z.object({
 });
 export type ConnectedBankAccount = z.infer<typeof connectedBankAccountSchema>;
 
-const formSchema = z.object({
+const creditScoreSchema = z.object({
+  id: z.string(),
+  score: z.number(),
+  scoreRangeMin: z.number(),
+  scoreRangeMax: z.number(),
+  scoreType: z.string(),
+  creditBureau: z.string(),
+});
 
+const formSchema = z.object({
   applicationId: z.string(),
 
   // Step 1: Business information
@@ -96,7 +104,7 @@ const formSchema = z.object({
 
   // Step 2: Cash flow verification
   hasReclaimProof: z.boolean(),
-  creditScoreId: z.string(),
+  creditScoreId: z.string().optional(),
   // Step 2: Cash flow verification
 
   // Step 3: Current loans
@@ -116,7 +124,10 @@ export default function LoanApplicationForm({
   reclaimStatusUrl,
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timer | null>(null);
+  const [creditScore, setCreditScore] = useState<Partial<CreditScore> | null>(null);
+  const [reclaimProofIntervalId, setReclaimProofIntervalId] = useState<NodeJS.Timer | null>(null);
+  const [creditScoreIntervalId, setCreditScoreIntervalId] = useState<NodeJS.Timer | null>(null);
+
   const totalSteps = 3;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -126,6 +137,7 @@ export default function LoanApplicationForm({
       hasOutstandingLoans: false,
       outstandingLoans: [],
       hasReclaimProof: false,
+      creditScoreId: undefined,
     },
   });
 
@@ -142,6 +154,11 @@ export default function LoanApplicationForm({
   const hasReclaimProof = useWatch({
     control: form.control,
     name: 'hasReclaimProof',
+  });
+
+  const creditScoreId = useWatch({
+    control: form.control,
+    name: 'creditScoreId',
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -181,12 +198,36 @@ export default function LoanApplicationForm({
     };
 
     const newIntervalId = setInterval(pollStatus, 3000);
-    setIntervalId(newIntervalId);
+    setReclaimProofIntervalId(newIntervalId);
   };
 
   const stopReclaimProofPolling = (intervalId: NodeJS.Timer | null) => {
     clearInterval(intervalId as NodeJS.Timeout);
-    setIntervalId(null);
+    setReclaimProofIntervalId(null);
+  };
+
+  const startCreditScorePolling = async () => {
+    const pollStatus = async () => {
+      try {
+        const response = await getCreditScoreOfLoanApplication(loanApplicationId);
+
+        if (response.creditScore) {
+          const { creditScore } = response;
+          form.setValue('creditScoreId', creditScore.id);
+          setCreditScore(creditScore);
+        }
+      } catch (error) {
+        console.error('Error polling credit score:', error);
+      }
+    };
+
+    const newIntervalId = setInterval(pollStatus, 3000);
+    setCreditScoreIntervalId(newIntervalId);
+  };
+
+  const stopCreditScorePolling = (intervalId: NodeJS.Timer | null) => {
+    clearInterval(intervalId as NodeJS.Timeout);
+    setCreditScoreIntervalId(null);
   };
 
   useEffect(() => {
@@ -195,12 +236,33 @@ export default function LoanApplicationForm({
     }
   }, [hasReclaimProof, step]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (hasReclaimProof) {
-      stopReclaimProofPolling(intervalId);
+      stopReclaimProofPolling(reclaimProofIntervalId);
     }
   }, [hasReclaimProof]);
 
+  useEffect(() => {
+    if (hasReclaimProof) {
+      startCreditScorePolling();
+    }
+
+    return () => {
+      stopCreditScorePolling(creditScoreIntervalId);
+    };
+  }, [hasReclaimProof]);
+
+  useEffect(() => {
+    if (creditScoreId) {
+      stopCreditScorePolling(creditScoreIntervalId);
+    }
+
+    return () => {
+      stopCreditScorePolling(creditScoreIntervalId);
+    };
+  }, [creditScoreId]);
+
+  console.log('creditScore', JSON.stringify(creditScore, null, 2));
 
   return (
     <Card className="mx-auto w-full max-w-4xl">
@@ -460,33 +522,65 @@ export default function LoanApplicationForm({
             )}
 
             {step === 2 && (
-              <div className="flex flex-col items-center space-y-4">
-                <p>Scan the QR code to link your bank account</p>
-                <QRCode value={reclaimRequestUrl} size={256} />
-                {!hasReclaimProof && (
-                  <div className="flex items-center space-x-2">
-                    <p className="animate-pulse">Waiting for completion...</p>
-                  </div>
-                )}
-                {hasReclaimProof && (
-                  <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <p className="font-medium">Bank account linked successfully</p>
-                  </div>
-                )}
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="hasReclaimProof"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="flex flex-col items-center space-y-4">
+                          <p>Scan the QR code to link your bank account</p>
+                          <QRCode value={reclaimRequestUrl} size={256} />
+                          {hasReclaimProof ? (
+                            <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
+                              <svg
+                                className="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              <p className="font-medium">Bank account linked successfully</p>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <p className="animate-pulse">Waiting for completion...</p>
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="creditScoreId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
+                          <p>Score: {creditScore?.score}</p>
+                          <p>
+                            Score Range: {creditScore?.scoreRangeMin} - {creditScore?.scoreRangeMax}
+                          </p>
+                          <p>Score Type: {creditScore?.scoreType}</p>
+                          <p>Credit Bureau: {creditScore?.creditBureau}</p>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             )}
 

@@ -4,7 +4,7 @@ import { CountryCode, Products, IdentityVerificationGetResponse } from 'plaid';
 import { isAddress } from 'viem';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
-import { Role } from '@prisma/client';
+import { CreditScore, Role } from '@prisma/client';
 import { getKycVerification } from '@/services/db/plaid/kyc';
 import {
   saveItemAccessToken as dbSavePlaidItemAccessToken,
@@ -15,6 +15,7 @@ import { ConnectedBankAccount } from './form';
 import { initialiseLoanApplication as dbInitialiseLoanApplication } from '@/services/db/loan-applications';
 import { redirect } from 'next/navigation';
 import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
+import { getCreditScoreOfLoanApplication as dbGetCreditScoreOfLoanApplication } from '@/services/db/credit-scores';
 
 // TODO: move to global actions
 async function validateRequest(chainAccountAddress: string) {
@@ -286,3 +287,32 @@ export async function initialiseLoanApplication(
   }
 }
 
+interface GetCreditScoreOfLoanApplicationResponse {
+  isError: boolean;
+  errorMessage?: string;
+  creditScore?: Omit<CreditScore, 'loanApplicationId' | 'chainAccountAddress' | 'createdAt' | 'updatedAt'>;
+}
+export async function getCreditScoreOfLoanApplication(
+  loanApplicationId: string
+): Promise<GetCreditScoreOfLoanApplicationResponse> {
+  try {
+    const result = await dbGetCreditScoreOfLoanApplication(loanApplicationId);
+
+    return {
+      isError: false,
+      creditScore: {
+        id: result.id,
+        score: result.score,
+        scoreRangeMin: result.scoreRangeMin,
+        scoreRangeMax: result.scoreRangeMax,
+        scoreType: result.scoreType,
+        creditBureau: result.creditBureau,
+      },
+    };
+  } catch (error) {
+    return {
+      isError: true,
+      errorMessage: 'Error getting credit score of loan application',
+    };
+  }
+}
