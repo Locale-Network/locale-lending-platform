@@ -1,19 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import QRCode from "react-qr-code";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { useState, useEffect } from 'react';
+import QRCode from 'react-qr-code';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface VerificationStatusProps {
   signedUrl: string;
   statusUrl: string;
 }
 
-const VerificationStatus: React.FC<VerificationStatusProps> = ({
-  signedUrl,
-  statusUrl,
-}) => {
+const VerificationStatus: React.FC<VerificationStatusProps> = ({ signedUrl, statusUrl }) => {
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
@@ -21,12 +18,12 @@ const VerificationStatus: React.FC<VerificationStatusProps> = ({
       try {
         const response = await fetch(statusUrl);
         const jsonResponse = await response.json();
-        if (jsonResponse?.session?.statusV2 === "PROOF_SUBMITTED") {
+        if (jsonResponse?.session?.statusV2 === 'PROOF_SUBMITTED') {
           setIsVerified(true);
           clearInterval(intervalId);
         }
       } catch (error) {
-        console.error("Error polling status:", error);
+        console.error('Error polling status:', error);
       }
     };
 
@@ -38,11 +35,9 @@ const VerificationStatus: React.FC<VerificationStatusProps> = ({
   }, [statusUrl]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="flex min-h-screen flex-col items-center justify-center">
       {isVerified ? (
-        <div className="text-2xl font-bold text-green-600">
-          Verification Successful!
-        </div>
+        <div className="text-2xl font-bold text-green-600">Verification Successful!</div>
       ) : (
         <>
           <div className="mb-4">
@@ -51,12 +46,10 @@ const VerificationStatus: React.FC<VerificationStatusProps> = ({
           <Link href={signedUrl}>
             <Button>Link Account</Button>
           </Link>
-          <div className="mt-4 text-sm text-gray-500">
-            Waiting for verification...
-          </div>
+          <div className="mt-4 text-sm text-gray-500">Waiting for verification...</div>
           <div>
             <svg
-              className="animate-spin h-5 w-5 text-white"
+              className="h-5 w-5 animate-spin text-white"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"

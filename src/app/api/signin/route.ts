@@ -1,6 +1,6 @@
-import { Reason } from "@/constants/reason.enum";
-import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk";
-import { NextResponse } from "next/server";
+import { Reason } from '@/constants/reason.enum';
+import { ReclaimProofRequest } from '@reclaimprotocol/js-sdk';
+import { NextResponse } from 'next/server';
 
 interface SignInBody {
   providerId: string;
@@ -12,13 +12,13 @@ interface SignInBody {
 export async function POST(request: Request) {
   // Add CORS headers
   const headers = new Headers({
-    "Access-Control-Allow-Origin": "http://localhost:3000",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    'Access-Control-Allow-Origin': 'http://localhost:3000',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
   });
 
   // Handle preflight request
-  if (request.method === "OPTIONS") {
+  if (request.method === 'OPTIONS') {
     return new NextResponse(null, { headers });
   }
 
@@ -33,17 +33,10 @@ export async function POST(request: Request) {
   const appId = process.env.APP_ID;
   const callbackUrl = process.env.RECLAIM_CALLBACK_URL;
   if (!appSecret || !appId || !callbackUrl) {
-    return NextResponse.json(
-      { message: "missing configuration" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: 'missing configuration' }, { status: 500 });
   }
 
-  const reclaimProofRequest = await ReclaimProofRequest.init(
-    appId,
-    appSecret,
-    providerId
-  );
+  const reclaimProofRequest = await ReclaimProofRequest.init(appId, appSecret, providerId);
 
   if (providerId) {
     // await reclaimClient.buildProofRequest(providerId);
@@ -58,16 +51,13 @@ export async function POST(request: Request) {
     // );
 
     if (account) {
-      let message = "";
+      let message = '';
       switch (reason) {
         case Reason.AccountVerification:
-          message = "for account verification ";
+          message = 'for account verification ';
           break;
         default:
-          return NextResponse.json(
-            { message: "reason not found" },
-            { status: 400 }
-          );
+          return NextResponse.json({ message: 'reason not found' }, { status: 400 });
       }
       message += `${account} ${Date.now().toString()}`;
       reclaimProofRequest.addContext(account, message);
@@ -77,7 +67,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        name: "response",
+        name: 'response',
         error: false,
         data: {
           signedUrl,
@@ -91,9 +81,9 @@ export async function POST(request: Request) {
 // Add OPTIONS method handler
 export async function OPTIONS() {
   const headers = new Headers({
-    "Access-Control-Allow-Origin": "http://localhost:3000",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    'Access-Control-Allow-Origin': 'http://localhost:3000',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
   });
 
   return new NextResponse(null, { headers });

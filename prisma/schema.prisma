@@ -1,46 +1,215 @@
 generator client {
-    provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-    provider  = "postgresql"
-    // Uses connection pooling
-    url       = env("POSTGRES_PRISMA_URL")
-    // Uses direct connection, ⚠️ make sure to keep this to `POSTGRES_URL_NON_POOLING`
-    // or you'll have dangling databases from migrations
-    directUrl = env("POSTGRES_URL_NON_POOLING")
+  provider  = "postgresql"
+  // Uses connection pooling
+  url       = env("POSTGRES_PRISMA_URL")
+  // Uses direct connection, ⚠️ make sure to keep this to `POSTGRES_URL_NON_POOLING`
+  // or you'll have dangling databases from migrations
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+// reclaim proof
 model Proof {
-    id        Int      @id @default(autoincrement())
-    address   String?  @db.VarChar(255)
-    createdAt DateTime @default(now()) @map("created_at")
-    proof     Json
-    context   Json
+  id String @id @db.VarChar(255)
 
-    @@map("proofs")
+  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
+  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+
+  proof   Json
+  context Json
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("proofs")
 }
 
+// https://plaid.com/docs/api/accounts/
 model Account {
-    id           Int      @id @default(autoincrement())
-    accountId    String?  @map("account_id") @db.VarChar(255)
-    name         String?  @db.VarChar(255)
-    officialName String?  @map("official_name") @db.VarChar(255)
-    createdAt    DateTime @default(now()) @map("created_at")
+  id           Int      @id @default(autoincrement())
+  accountId    String?  @map("account_id") @db.VarChar(255)
+  name         String?  @db.VarChar(255)
+  officialName String?  @map("official_name") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at")
 
-    @@map("accounts")
+  @@map("accounts")
 }
 
+// https://plaid.com/docs/api/products/transactions/
 model Transaction {
-    id            Int       @id @default(autoincrement())
-    transactionId String?   @map("transaction_id") @db.VarChar(255)
-    accountId     String?   @map("account_id") @db.VarChar(255)
-    amount        Float?
-    currency      String?   @db.VarChar(255)
-    merchant      String?   @db.VarChar(255)
-    merchantId    String?   @map("merchant_id") @db.VarChar(255)
-    date          DateTime? @default(now())
-    isDeleted     Boolean   @default(false) @map("is_deleted")
+  id            Int       @id @default(autoincrement())
+  transactionId String?   @map("transaction_id") @db.VarChar(255)
+  accountId     String?   @map("account_id") @db.VarChar(255)
+  amount        Float?
+  currency      String?   @db.VarChar(255)
+  merchant      String?   @db.VarChar(255)
+  merchantId    String?   @map("merchant_id") @db.VarChar(255)
+  date          DateTime? @default(now())
+  isDeleted     Boolean   @default(false) @map("is_deleted")
 
-    @@map("transactions")
+  @@map("transactions")
+}
+
+// https://plaid.com/docs/api/products/identity-verification/#identity_verificationget
+enum KYCVerificationStatus {
+  active
+  success
+  failed
+  expired
+  canceled
+  pending_review
+}
+
+// chain account identity verification with PLAID
+// https://plaid.com/docs/api/products/identity-verification/
+model KYCVerification {
+  identityVerificationId String @id @map("identity_verification_id") @db.VarChar(255)
+
+  chainAccountAddress String       @unique @map("chain_account_address") @db.VarChar(255)
+  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+
+  status    KYCVerificationStatus @default(active)
+  createdAt DateTime              @default(now()) @map("created_at")
+  updatedAt DateTime              @updatedAt @map("updated_at")
+  attempts  Int                   @default(1)
+
+  @@index([chainAccountAddress])
+  @@map("kyc_verifications")
+}
+
+enum Role {
+  BORROWER
+  APPROVER
+  ADMIN
+}
+
+// accounts from the Arbitrum chain
+model ChainAccount {
+  address               String                 @id @db.VarChar(255)
+  role                  Role                   @default(BORROWER)
+  createdAt             DateTime               @default(now()) @map("created_at")
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+  KYCVerification       KYCVerification?
+  PlaidItemAccessTokens PlaidItemAccessToken[]
+  loanApplications      LoanApplication[]
+  outstandingLoans      OutstandingLoan[]
+  creditScore           CreditScore[]
+  proofs                Proof[]
+
+  @@map("chain_accounts")
+}
+
+// plaid items authorised by chain account
+model PlaidItemAccessToken {
+  id          Int    @id @default(autoincrement())
+  accessToken String @map("access_token") @db.VarChar(255)
+  itemId      String @unique @map("item_id") @db.VarChar(255)
+
+  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
+  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([chainAccountAddress])
+  @@map("plaid_item_access_tokens")
+}
+
+enum LoanApplicationStatus {
+  DRAFT
+  PENDING
+  ADDITIONAL_INFO_NEEDED
+  APPROVED
+  REJECTED
+}
+
+model LoanApplication {
+  id String @id @default(cuid())
+
+  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
+  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+
+  // business information
+  businessLegalName       String  @map("business_legal_name") @db.VarChar(255)
+  businessAddress         String  @map("business_address") @db.VarChar(255)
+  businessState           String  @map("business_state") @db.VarChar(255)
+  businessCity            String  @map("business_city") @db.VarChar(255)
+  businessZipCode         String  @map("business_zip_code") @db.VarChar(255)
+  ein                     String  @map("ein") @db.VarChar(255)
+  businessFoundedYear     Int     @map("business_founded_year")
+  businessLegalStructure  String  @map("business_legal_structure") @db.VarChar(255)
+  businessWebsite         String? @map("business_website")
+  businessPrimaryIndustry String  @map("business_primary_industry") @db.VarChar(255)
+  businessDescription     String  @map("business_description") @db.VarChar(255)
+
+  // Credit Score
+  creditScoreId String?      @unique @map("credit_score_id")
+  creditScore   CreditScore?
+
+  // Current Loans
+  hasOutstandingLoans Boolean           @default(false) @map("has_outstanding_loans")
+  outstandingLoans    OutstandingLoan[]
+
+  isSubmitted Boolean               @default(false) @map("is_submitted")
+  status      LoanApplicationStatus @default(DRAFT) @map("status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([chainAccountAddress])
+  @@map("loan_applications")
+}
+
+model OutstandingLoan {
+  id String @id @default(cuid())
+
+  loanApplicationId String          @map("loan_application_id")
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+
+  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
+  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+
+  lenderName         String   @map("lender_name") @db.VarChar(255)
+  loanType           String   @map("loan_type") @db.VarChar(255)
+  outstandingBalance Float    @map("outstanding_balance")
+  monthlyPayment     Float    @map("monthly_payment")
+  remainingMonths    Int      @map("remaining_months")
+  annualInterestRate Float    @map("annual_interest_rate")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@index([chainAccountAddress])
+  @@index([loanApplicationId])
+  @@map("outstanding_loans")
+}
+
+// credit score associated with a loan application
+// ✅ Create loan application without credit score
+// ✅ Create credit score with loan application
+// ❌ Create credit score without loan application (will fail)
+// ❌ Create credit score for loan application that already has one (will fail)
+model CreditScore {
+  id String @id @default(cuid())
+
+  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
+  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+
+  loanApplicationId String          @unique @map("loan_application_id")
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+
+  score         Int    @map("score")
+  scoreRangeMin Int    @map("score_range_min")
+  scoreRangeMax Int    @map("score_range_max")
+  scoreType     String @map("score_type") @db.VarChar(255) // (e.g., FICO, VantageScore)
+  creditBureau  String @map("credit_bureau") @db.VarChar(255) // (e.g., Equifax, Experian, TransUnion)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([chainAccountAddress])
+  @@index([loanApplicationId])
+  @@map("credit_scores")
 }

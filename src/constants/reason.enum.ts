@@ -1,4 +1,4 @@
 export enum Reason {
-  AccountVerification = "accountVerification",
+  AccountVerification = 'accountVerification',
   // add other reasons here
 }

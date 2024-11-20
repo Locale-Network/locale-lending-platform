@@ -1,28 +1,23 @@
-import client from "@/utils/plaid";
-import { PrismaClient } from "@prisma/client";
-import { NextRequest, NextResponse } from "next/server";
-import { RemovedTransaction, Transaction, TransactionsSyncRequest } from "plaid";
+import client from '@/utils/plaid';
+import prisma from '@prisma/index';
+import { NextRequest, NextResponse } from 'next/server';
+import { RemovedTransaction, Transaction, TransactionsSyncRequest } from 'plaid';
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const prisma = new PrismaClient();
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function GET(req: NextRequest, res: NextResponse) {
   try {
-    let cursor = "";
+    let cursor = '';
     let added: Transaction[] = [];
     let modified: Transaction[] = [];
     let removed: RemovedTransaction[] = [];
     let hasMore = true;
 
     const url = new URL(req?.url);
-    const access_token = url.searchParams.get("access_token");
+    const access_token = url.searchParams.get('access_token');
 
     if (!access_token) {
-      return NextResponse.json(
-        {error: "Access token is required"},
-        {status: 400}
-      );
+      return NextResponse.json({ error: 'Access token is required' }, { status: 400 });
     }
 
     while (hasMore) {
@@ -35,7 +30,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
       const data = response.data;
 
       cursor = data.next_cursor;
-      if (cursor === "") {
+      if (cursor === '') {
         await sleep(2000);
         continue;
       }
@@ -56,15 +51,15 @@ export async function GET(req: NextRequest, res: NextResponse) {
       }
     })();
 
-    return NextResponse.json({latest_transactions: added}, {status: 200});
+    return NextResponse.json({ latest_transactions: added }, { status: 200 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({error: "Internal Server Error"}, {status: 500});
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
 async function insertTransactions(transactions: Transaction[]) {
-  const transactionData = transactions.map((transaction) => ({
+  const transactionData = transactions.map(transaction => ({
     accountId: transaction.account_id,
     amount: transaction.amount,
     currency: transaction.iso_currency_code,

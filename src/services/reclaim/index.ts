@@ -1,5 +1,5 @@
 export enum Reason {
-  AccountVerification = "accountVerification",
+  AccountVerification = 'accountVerification',
   // add other reasons here
 }
 
@@ -22,20 +22,20 @@ export class ReclaimService {
     const body: SignInBody = {
       providerId: this.providerId,
       account,
-      deeplink_url: window.location.href.split("#")[0],
+      deeplink_url: window.location.href.split('#')[0],
       reason: Reason.AccountVerification,
     };
 
     const response = await fetch(`${this.baseUrl}/api/signin`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
     });
 
     if (response.status !== 200) {
-      throw new Error("Invalid response");
+      throw new Error('Invalid response');
     }
 
     const {
