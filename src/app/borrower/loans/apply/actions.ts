@@ -12,7 +12,7 @@ import {
 } from '@/services/db/plaid/item-access';
 import { revalidatePath } from 'next/cache';
 import { ConnectedBankAccount } from './form';
-import { initialiseLoanApplication as dbInitialiseLoanApplication } from '@/services/db/loan-application';
+import { initialiseLoanApplication as dbInitialiseLoanApplication } from '@/services/db/loan-applications';
 import { redirect } from 'next/navigation';
 import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
 
