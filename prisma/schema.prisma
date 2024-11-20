@@ -14,11 +14,15 @@ datasource db {
 
 // reclaim proof
 model Proof {
-  id        Int      @id @default(autoincrement())
-  address   String?  @db.VarChar(255)
+  id String @id @db.VarChar(255)
+
+  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
+  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+
+  proof   Json
+  context Json
+
   createdAt DateTime @default(now()) @map("created_at")
-  proof     Json
-  context   Json
 
   @@map("proofs")
 }
@@ -93,6 +97,7 @@ model ChainAccount {
   loanApplications      LoanApplication[]
   outstandingLoans      OutstandingLoan[]
   creditScore           CreditScore[]
+  proofs                Proof[]
 
   @@map("chain_accounts")
 }
