@@ -38,42 +38,6 @@ export const getLoanApplication = async (args: {
   return result;
 };
 
-export const saveAccessTokenOfLoanApplicationCreator = async (args: {
-  loanApplicationId: string;
-  accessToken: string;
-  itemId: string;
-}): Promise<PlaidItemAccessToken> => {
-  const { loanApplicationId, accessToken, itemId } = args;
-
-  const loanApplication = await getLoanApplication({ loanApplicationId });
-
-  if (!loanApplication) {
-    throw new Error(`Loan application with id ${loanApplicationId} not found`);
-  }
-
-  const { chainAccountAddress } = loanApplication;
-
-  const result = await prisma.plaidItemAccessToken.upsert({
-    where: {
-      itemId: itemId,
-    },
-    create: {
-      accessToken: accessToken,
-      itemId: itemId,
-      chainAccount: {
-        connect: {
-          address: chainAccountAddress,
-        },
-      },
-    },
-    update: {
-      accessToken: accessToken,
-    },
-  });
-
-  return result;
-};
-
 // PENDING MODE
 export const submitLoanApplication = async (
   formData: z.infer<typeof loanApplicationFormSchema>
