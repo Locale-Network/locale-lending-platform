@@ -20,7 +20,8 @@ export default async function Page() {
     return <div>{errorMessage}</div>;
   }
 
-  const redirectUrl = 'https://wallet.kcdollar.org';
+  // TODO: app/reclaim/success page
+  const redirectUrl = 'https://wallet.kcdollar.org'; // TODO: redirect to /reclaim/success page with text to mention they can continue with the loan application
 
   const appSecret = process.env.SECRET_ID;
   const appId = process.env.APP_ID;
@@ -45,6 +46,7 @@ export default async function Page() {
   return (
     <LoanApplicationForm
       loanApplicationId={loanApplicationId}
+      chainAccountAddress={chainAccountAddress}
       reclaimRequestUrl={requestUrl}
       reclaimStatusUrl={statusUrl}
     />

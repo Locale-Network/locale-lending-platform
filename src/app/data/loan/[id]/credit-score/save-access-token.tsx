@@ -16,6 +16,7 @@ export default function SaveAccessToken({
   const [apiError, setApiError] = useState<any | null>(null);
   const [savedToken, setSavedToken] = useState(false);
 
+  // TODO: don't save access token
   useEffect(() => {
     // Save access token once when component mounts
     saveAccessTokenOfLoanApplicationCreator({
