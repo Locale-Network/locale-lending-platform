@@ -28,7 +28,12 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { StateMajorCities, USState, BusinessLegalStructure, BusinessIndustry } from '@/types/business';
+import {
+  StateMajorCities,
+  USState,
+  BusinessLegalStructure,
+  BusinessIndustry,
+} from '@/types/business';
 import QRCode from 'react-qr-code';
 import { CreditScore } from '@prisma/client';
 import { getCreditScoreOfLoanApplication, submitLoanApplication } from './actions';
@@ -39,6 +44,15 @@ import {
   BUSINESS_FOUNDED_YEAR_MAX,
   BUSINESS_FOUNDED_YEAR_MIN,
 } from './form-schema';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface LoanApplicationFormProps {
   loanApplicationId: string;
@@ -54,6 +68,8 @@ export default function LoanApplicationForm({
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
   const [creditScore, setCreditScore] = useState<Partial<CreditScore> | null>(null);
+  const [reclaimProofIntervalId, setReclaimProofIntervalId] = useState<NodeJS.Timer | null>(null);
+  const [creditScoreIntervalId, setCreditScoreIntervalId] = useState<NodeJS.Timer | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -162,75 +178,74 @@ export default function LoanApplicationForm({
   const prevStep = () => setStep(step => Math.max(step - 1, 1));
   const clickStep = (step: number) => setStep(step);
 
-  const createPoller = (
-    pollFn: () => Promise<void>,
-    intervalMs: number = 3000
-  ): { start: () => void; stop: () => void } => {
-    let intervalId: NodeJS.Timer | null = null;
-
-    return {
-      start: () => {
-        if (!intervalId) {
-          // Run immediately, then start polling
-          pollFn();
-          intervalId = setInterval(pollFn, intervalMs);
+  const startReclaimProofPolling = async () => {
+    const pollStatus = async () => {
+      try {
+        const response = await fetch(reclaimStatusUrl);
+        const jsonResponse = await response.json();
+        if (jsonResponse?.session?.statusV2 === 'PROOF_SUBMITTED') {
+          form.setValue('hasReclaimProof', true);
         }
-      },
-      stop: () => {
-        if (intervalId) {
-          clearInterval(intervalId as NodeJS.Timeout);
-          intervalId = null;
-        }
-      },
+      } catch (error) {
+        console.error('Error polling status:', error);
+      }
     };
+
+    const newIntervalId = setInterval(pollStatus, 3000);
+    setReclaimProofIntervalId(newIntervalId);
   };
 
-  const reclaimProofPoller = createPoller(async () => {
-    try {
-      const response = await fetch(reclaimStatusUrl);
-      const jsonResponse = await response.json();
-      if (jsonResponse?.session?.statusV2 === 'PROOF_SUBMITTED') {
-        form.setValue('hasReclaimProof', true);
-      }
-    } catch (error) {
-      console.error('Error polling reclaim status:', error);
-    }
-  });
+  const stopReclaimProofPolling = (intervalId: NodeJS.Timer | null) => {
+    clearInterval(intervalId as NodeJS.Timeout);
+    setReclaimProofIntervalId(null);
+  };
 
-  const creditScorePoller = createPoller(async () => {
-    try {
-      const response = await getCreditScoreOfLoanApplication(loanApplicationId);
-      if (response.creditScore) {
-        const { creditScore } = response;
-        form.setValue('creditScoreId', creditScore.id);
-        setCreditScore(creditScore);
+  const startCreditScorePolling = async () => {
+    const pollStatus = async () => {
+      try {
+        const response = await getCreditScoreOfLoanApplication(loanApplicationId);
+
+        if (response.creditScore) {
+          const { creditScore } = response;
+          form.setValue('creditScoreId', creditScore.id);
+          setCreditScore(creditScore);
+        }
+      } catch (error) {
+        console.error('Error polling credit score:', error);
       }
-    } catch (error) {
-      console.error('Error polling credit score:', error);
-    }
-  });
+    };
+
+    const newIntervalId = setInterval(pollStatus, 3000);
+    setCreditScoreIntervalId(newIntervalId);
+  };
+
+  const stopCreditScorePolling = (intervalId: NodeJS.Timer | null) => {
+    clearInterval(intervalId as NodeJS.Timeout);
+    setCreditScoreIntervalId(null);
+  };
 
   useEffect(() => {
-    // Start/stop Reclaim proof polling
     if (step === 2 && !hasReclaimProof) {
-      reclaimProofPoller.start();
-    } else {
-      reclaimProofPoller.stop();
+      startReclaimProofPolling();
     }
 
-    // Start/stop credit score polling
-    if (hasReclaimProof && !creditScoreId) {
-      creditScorePoller.start();
-    } else {
-      creditScorePoller.stop();
+    if (hasReclaimProof) {
+      stopReclaimProofPolling(reclaimProofIntervalId);
     }
 
-    // Cleanup on unmount
+    if (hasReclaimProof) {
+      startCreditScorePolling();
+    }
+
+    if (creditScoreId) {
+      stopCreditScorePolling(creditScoreIntervalId);
+    }
+
     return () => {
-      reclaimProofPoller.stop();
-      creditScorePoller.stop();
+      stopCreditScorePolling(creditScoreIntervalId);
+      stopReclaimProofPolling(reclaimProofIntervalId);
     };
-  }, [step, hasReclaimProof, creditScoreId]);
+  }, [hasReclaimProof, step, creditScoreId, reclaimProofIntervalId, creditScoreIntervalId]);
 
   return (
     <Card className="mx-auto w-full max-w-4xl">
@@ -509,7 +524,7 @@ export default function LoanApplicationForm({
                     <FormItem>
                       <FormControl>
                         <div className="flex flex-col items-center space-y-4">
-                          <p>Scan the QR code to link your bank account</p>
+                          <p className="text-center">Scan the QR code to link your bank account</p>
                           <QRCode value={reclaimRequestUrl} size={256} />
                           {hasReclaimProof ? (
                             <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
@@ -547,14 +562,34 @@ export default function LoanApplicationForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
-                          <p>Score: {creditScore?.score}</p>
-                          <p>
-                            Score Range: {creditScore?.scoreRangeMin} - {creditScore?.scoreRangeMax}
-                          </p>
-                          <p>Score Type: {creditScore?.scoreType}</p>
-                          <p>Credit Bureau: {creditScore?.creditBureau}</p>
-                        </div>
+                        <>
+                          <p className="text-center">Your credit score</p>
+                          <div className="grid grid-cols-4 gap-4 text-center text-sm">
+                            {/* Headers */}
+                            <div className="font-medium text-muted-foreground">Score</div>
+                            <div className="font-medium text-muted-foreground">Range</div>
+                            <div className="font-medium text-muted-foreground">Type</div>
+                            <div className="font-medium text-muted-foreground">Bureau</div>
+
+                            {/* Values */}
+                            <div className="font-semibold">
+                              {creditScore?.score ?? <LoadingSpinner />}
+                            </div>
+                            <div className="font-semibold">
+                              {creditScore?.scoreRangeMin && creditScore?.scoreRangeMax ? (
+                                `${creditScore.scoreRangeMin}-${creditScore.scoreRangeMax}`
+                              ) : (
+                                <LoadingSpinner />
+                              )}
+                            </div>
+                            <div className="font-semibold">
+                              {creditScore?.scoreType ?? <LoadingSpinner />}
+                            </div>
+                            <div className="font-semibold">
+                              {creditScore?.creditBureau ?? <LoadingSpinner />}
+                            </div>
+                          </div>
+                        </>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -785,3 +820,9 @@ export default function LoanApplicationForm({
     </Card>
   );
 }
+
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center">
+    <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+  </div>
+);

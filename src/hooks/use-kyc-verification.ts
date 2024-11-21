@@ -65,7 +65,6 @@ const useKycVerification = (chainAccountAddress?: string) => {
       if (!hasAttemptedKyc || identityVerificationData?.status !== KYCVerificationStatus.success) {
         generateToken();
       }
-
     };
 
     fetchKycStatus();

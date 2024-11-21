@@ -5,7 +5,8 @@ type Props = {
   params: {
     id: string;
   };
-  searchParams: { // TODO: remove this
+  searchParams: {
+    // TODO: remove this
     access_token?: string;
     item_id?: string;
   };

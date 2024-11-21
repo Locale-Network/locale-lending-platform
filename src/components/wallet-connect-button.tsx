@@ -28,8 +28,6 @@ const WalletConnectButton = ({ label }: WalletConnectButtonProps) => {
     }
   }, [status, isConnected, address, router]);
 
-
-
   if (isConnecting) {
     return (
       <div className="flex items-center gap-2 rounded-xl bg-[#1A1B1F] px-3 py-[12px] font-medium text-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#24262B]">

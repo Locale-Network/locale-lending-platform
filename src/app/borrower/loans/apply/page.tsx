@@ -14,7 +14,8 @@ export default async function Page() {
     return null;
   }
 
-  const { isError, errorMessage, loanApplicationId } = await initialiseLoanApplication(chainAccountAddress);
+  const { isError, errorMessage, loanApplicationId } =
+    await initialiseLoanApplication(chainAccountAddress);
 
   if (isError || !loanApplicationId) {
     return <div>{errorMessage}</div>;
