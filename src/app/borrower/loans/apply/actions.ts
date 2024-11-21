@@ -326,6 +326,7 @@ export async function getCreditScoreOfLoanApplication(
 interface SubmitLoanApplicationResponse {
   isError: boolean;
   errorMessage?: string;
+  redirectTo?: string;
 }
 export async function submitLoanApplication(args: {
   formData: LoanApplicationForm;
@@ -350,10 +351,9 @@ export async function submitLoanApplication(args: {
 
     await dbSubmitLoanApplication(formData);
 
-    // redirect('/borrower/loans');
-
     return {
       isError: false,
+      redirectTo: '/borrower/loans',
     };
   } catch (error) {
     console.error(error);

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,7 @@ export default function LoanApplicationForm({
   const [step, setStep] = useState(1);
   const [creditScore, setCreditScore] = useState<Partial<CreditScore> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const { toast } = useToast();
 
@@ -130,13 +132,14 @@ export default function LoanApplicationForm({
         variant: 'success',
       });
 
-      // form.reset();
+      if (response.redirectTo) {
+        router.replace(response.redirectTo);
+      }
     } catch (error) {
       toast({
         title: 'Error submitting loan application',
         variant: 'destructive',
       });
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -769,9 +772,14 @@ export default function LoanApplicationForm({
         )}
         {step < totalSteps && <Button onClick={nextStep}>Next</Button>}
         {step === totalSteps && (
-          <Button disabled={isSubmitting} onClick={form.handleSubmit(onSubmit)}>
-            {isSubmitting ? 'Submitting...' : 'Submit Application'}
-          </Button>
+          <div>
+            <Button disabled={isSubmitting} onClick={form.handleSubmit(onSubmit)}>
+              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+            </Button>
+            {form.formState.submitCount > 0 && !form.formState.isValid && (
+              <p className="text-red-500">Please fix the errors before submitting</p>
+            )}
+          </div>
         )}
       </CardFooter>
     </Card>
