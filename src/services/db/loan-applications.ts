@@ -5,7 +5,6 @@ import { LoanApplication, LoanApplicationStatus, PlaidItemAccessToken } from '@p
 import { loanApplicationFormSchema } from '@/app/borrower/loans/apply/form-schema';
 import { z } from 'zod';
 
-
 // needed to reference loan application id in reclaim proof. DRAFT MODE
 export const initialiseLoanApplication = async (
   chainAccountAddress: string
@@ -29,7 +28,9 @@ export const initialiseLoanApplication = async (
   return result;
 };
 
-export const getLoanApplication = async (args: { loanApplicationId: string }): Promise<LoanApplication | null> => {
+export const getLoanApplication = async (args: {
+  loanApplicationId: string;
+}): Promise<LoanApplication | null> => {
   const { loanApplicationId } = args;
   const result = await prisma.loanApplication.findUnique({
     where: { id: loanApplicationId },
@@ -74,7 +75,9 @@ export const saveAccessTokenOfLoanApplicationCreator = async (args: {
 };
 
 // PENDING MODE
-export const submitLoanApplication = async (formData: z.infer<typeof loanApplicationFormSchema>): Promise<LoanApplication> => {
+export const submitLoanApplication = async (
+  formData: z.infer<typeof loanApplicationFormSchema>
+): Promise<LoanApplication> => {
   const { outstandingLoans } = formData;
 
   const result = await prisma.loanApplication.update({
@@ -97,7 +100,7 @@ export const submitLoanApplication = async (formData: z.infer<typeof loanApplica
       hasOutstandingLoans: formData.hasOutstandingLoans,
       outstandingLoans: {
         createMany: {
-          data: outstandingLoans.map((outstandingLoan) => ({
+          data: outstandingLoans.map(outstandingLoan => ({
             ...outstandingLoan,
             chainAccountAddress: formData.chainAccountAddress,
           })),

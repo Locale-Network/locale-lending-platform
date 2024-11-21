@@ -13,6 +13,6 @@ export const createKycVerificationRecord = async (
     });
     return response;
   } catch (error: any) {
-    return error
+    return error;
   }
 };

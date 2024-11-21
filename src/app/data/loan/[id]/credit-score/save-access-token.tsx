@@ -30,29 +30,29 @@ export default function SaveAccessToken({
         setSavedToken(true);
       }
     });
-  }, []); 
+  }, []);
 
-    if (apiError) {
-      return (
-        <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-600">
-          <XCircle className="h-5 w-5" />
-          <span>Failed to save access token: {apiError}</span>
-        </div>
-      );
-    }
-
-    if (savedToken) {
-      return (
-        <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
-          <CheckCircle className="h-5 w-5" />
-          <span>Access token saved successfully</span>
-        </div>
-      );
-    }
-
+  if (apiError) {
     return (
-      <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-4 text-gray-600">
-        <span>Saving access token...</span>
+      <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-600">
+        <XCircle className="h-5 w-5" />
+        <span>Failed to save access token: {apiError}</span>
       </div>
     );
+  }
+
+  if (savedToken) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
+        <CheckCircle className="h-5 w-5" />
+        <span>Access token saved successfully</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-4 text-gray-600">
+      <span>Saving access token...</span>
+    </div>
+  );
 }
