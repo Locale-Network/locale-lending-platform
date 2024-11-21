@@ -215,13 +215,12 @@ export async function createLinkTokenForTransactions(
       secret: process.env.PLAID_SECRET,
       user: { client_user_id: chainAccountAddress },
       products: [Products.Transactions],
-      identity_verification: {
-        template_id: process.env.TEMPLATE_ID || '',
+      transactions: {
+        days_requested: 730,
       },
       country_codes: [CountryCode.Us],
       client_name: 'Locale Lending Platform',
       language: 'en',
-      webhook: 'https://webhook.example.com', // TODO: change to actual webhook
     });
 
     return {

@@ -7,17 +7,15 @@ import { CreditScoreApiResponse } from '@/app/api/loan/[id]/credit-score/get';
 export default function CalculateCreditScore({
   loanApplicationId,
   accessToken,
-  itemId,
 }: {
   loanApplicationId: string;
   accessToken: string;
-  itemId: string;
 }) {
   const [apiError, setApiError] = useState<any | null>(null);
   const [creditScore, setCreditScore] = useState<CreditScore | null>(null);
 
   useEffect(() => {
-    if (accessToken && itemId) {
+    if (accessToken) {
       fetch(`/api/loan/${loanApplicationId}/credit-score?access_token=${accessToken}`)
         .then(response => response.json())
         .then((data: CreditScoreApiResponse) => {
@@ -29,7 +27,7 @@ export default function CalculateCreditScore({
         })
         .catch(() => setApiError('Error fetching credit score'));
     }
-  }, [loanApplicationId, accessToken, itemId]);
+  }, [loanApplicationId, accessToken]);
 
   if (apiError) {
     return (
