@@ -21,8 +21,7 @@ export default async function Page() {
     return <div>{errorMessage}</div>;
   }
 
-  // TODO: app/reclaim/success page
-  const redirectUrl = 'https://wallet.kcdollar.org'; // TODO: redirect to /reclaim/success page with text to mention they can continue with the loan application
+  const redirectUrl = process.env.PLAID_REDIRECT_URI ?? '';
 
   const appSecret = process.env.SECRET_ID;
   const appId = process.env.APP_ID;
