@@ -5,7 +5,7 @@ import { KYCVerificationStatus } from '@prisma/client';
 import { Button } from './ui/button';
 
 const KycFeature: React.FC<{ clientUserId?: string }> = props => {
-  const { startKYCFlow, kycStatus , linkToken} = useKycVerification(props.clientUserId);
+  const { startKYCFlow, kycStatus, linkToken } = useKycVerification(props.clientUserId);
 
   return (
     <div>

@@ -1,33 +1,35 @@
-import CalculateCreditScore from './calculate-credit-score';
-import SaveAccessToken from './save-access-token';
+import PlaidLink from './plaid-link';
+import { getLoanApplicationCreator, createLinkTokenForTransactions } from './actions';
 
 type Props = {
   params: {
     id: string;
   };
-  searchParams: {
-    access_token?: string;
-    item_id?: string;
-  };
 };
 
-export default async function Page({ params, searchParams }: Props) {
+export default async function Page({ params }: Props) {
   const { id } = params;
-  const { access_token, item_id } = searchParams;
 
-  if (!access_token) {
-    return <div>No access token</div>;
+  const { isError, errorMessage, account } = await getLoanApplicationCreator(id);
+
+  if (isError || !account) {
+    return <div>{errorMessage}</div>;
   }
 
-  if (!item_id) {
-    return <div>No item id</div>;
+  const { isError: isErrorLinkToken, errorMessage: errorMessageLinkToken, linkToken } =
+    await createLinkTokenForTransactions(account);
+
+  if (isErrorLinkToken || !linkToken) {
+    return <div>{errorMessageLinkToken}</div>;
   }
+
 
   return (
     <div>
-      <p>Credit Score for Loan {id}</p>
-      <SaveAccessToken loanApplicationId={id} accessToken={access_token} itemId={item_id} />
-      <CalculateCreditScore loanApplicationId={id} accessToken={access_token} itemId={item_id} />
+      <p>Credit Score for loan: {id}</p>
+      <p>Loan creator: {account}</p>
+      <p>Link Token: {linkToken}</p>
+      <PlaidLink linkToken={linkToken} loanApplicationId={id} />
     </div>
   );
 }

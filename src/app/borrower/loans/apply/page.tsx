@@ -14,13 +14,14 @@ export default async function Page() {
     return null;
   }
 
-  const { isError, errorMessage, loanApplicationId } = await initialiseLoanApplication(chainAccountAddress);
+  const { isError, errorMessage, loanApplicationId } =
+    await initialiseLoanApplication(chainAccountAddress);
 
   if (isError || !loanApplicationId) {
     return <div>{errorMessage}</div>;
   }
 
-  const redirectUrl = 'https://wallet.kcdollar.org';
+  const redirectUrl = process.env.PLAID_REDIRECT_URI ?? '';
 
   const appSecret = process.env.SECRET_ID;
   const appId = process.env.APP_ID;
@@ -45,6 +46,7 @@ export default async function Page() {
   return (
     <LoanApplicationForm
       loanApplicationId={loanApplicationId}
+      chainAccountAddress={chainAccountAddress}
       reclaimRequestUrl={requestUrl}
       reclaimStatusUrl={statusUrl}
     />

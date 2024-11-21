@@ -12,7 +12,7 @@ export function KycRedirectDialog({ isOpen }: { isOpen: boolean }) {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Retry Identity Verification</DialogTitle>
-          <DialogDescription className='pt-4'>
+          <DialogDescription className="pt-4">
             You will be redirected to identity verification in 3 seconds.
           </DialogDescription>
         </DialogHeader>

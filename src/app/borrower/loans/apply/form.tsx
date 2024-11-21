@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,99 +29,40 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
+  StateMajorCities,
+  USState,
   BusinessLegalStructure,
   BusinessIndustry,
-  USState,
-  StateMajorCities,
 } from '@/types/business';
 import QRCode from 'react-qr-code';
 import { CreditScore } from '@prisma/client';
-import { getCreditScoreOfLoanApplication } from './actions';
-
-// TODO: terms and privacy links
-// TODO: form submit
-
-const loanSchema = z.object({
-  lenderName: z.string().min(1, 'Lender name is required'),
-  loanType: z.string().min(1, 'Loan type is required'),
-  outstandingBalance: z.number().min(0, 'Balance cannot be negative'),
-  monthlyPayment: z.number().min(0, 'Monthly payment cannot be negative'),
-  remainingMonths: z.number().min(0, 'Remaining months cannot be negative').int(),
-  annualInterestRate: z
-    .number()
-    .min(0, 'Interest rate cannot be negative')
-    .max(100, 'Interest rate cannot exceed 100%'),
-});
-
-const connectedBankAccountSchema = z.object({
-  institutionId: z.string(),
-  instituteName: z.string(),
-  accountId: z.string(),
-  accountName: z.string(),
-  accountMask: z.string().nullable(),
-  accountType: z.string(),
-});
-export type ConnectedBankAccount = z.infer<typeof connectedBankAccountSchema>;
-
-const creditScoreSchema = z.object({
-  id: z.string(),
-  score: z.number(),
-  scoreRangeMin: z.number(),
-  scoreRangeMax: z.number(),
-  scoreType: z.string(),
-  creditBureau: z.string(),
-});
-
-const formSchema = z.object({
-  applicationId: z.string(),
-
-  // Step 1: Business information
-  businessLegalName: z.string().min(2, { message: 'Enter the legal name of the business.' }),
-  businessAddress: z.string().min(2, { message: 'Enter the address of the business.' }),
-  businessState: z.nativeEnum(USState),
-  businessCity: z.string().min(2, { message: 'Enter the city of the business.' }),
-  businessZipCode: z.string().regex(/^\d{5}(-\d{4})?$/, {
-    message: 'Enter a valid US zip code (e.g., 12345 or 12345-6789)',
-  }),
-  ein: z.string().min(9, { message: 'Enter the EIN of the business.' }),
-  businessFoundedYear: z
-    .number()
-    .min(1800, { message: 'Year must be 1800 or later.' })
-    .max(new Date().getFullYear(), { message: 'Year cannot be in the future.' })
-    .int()
-    .transform(val => parseInt(val.toString().replace(/^0+/, ''), 10)),
-  businessLegalStructure: z.nativeEnum(BusinessLegalStructure),
-  businessWebsite: z
-    .string()
-    .refine(val => !val || val.startsWith('https://'), {
-      message: 'Website URL must start with https://',
-    })
-    .optional(),
-  businessPrimaryIndustry: z.nativeEnum(BusinessIndustry),
-  businessDescription: z
-    .string()
-    .min(70, { message: 'Description must be at least 70 characters.' })
-    .max(100, { message: 'Description must not exceed 100 characters.' }),
-  // Step 1: Business information
-
-  // Step 2: Cash flow verification
-  hasReclaimProof: z.boolean(),
-  creditScoreId: z.string().optional(),
-  // Step 2: Cash flow verification
-
-  // Step 3: Current loans
-  hasOutstandingLoans: z.boolean(),
-  outstandingLoans: z.array(loanSchema),
-  // Step 3: Current loans
-});
+import { getCreditScoreOfLoanApplication, submitLoanApplication } from './actions';
+import {
+  loanApplicationFormSchema,
+  BUSINESS_DESCRIPTION_MAX_LENGTH,
+  BUSINESS_DESCRIPTION_MIN_LENGTH,
+  BUSINESS_FOUNDED_YEAR_MAX,
+  BUSINESS_FOUNDED_YEAR_MIN,
+} from './form-schema';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface LoanApplicationFormProps {
   loanApplicationId: string;
+  chainAccountAddress: string;
   reclaimRequestUrl: string;
   reclaimStatusUrl: string;
 }
 export default function LoanApplicationForm({
   loanApplicationId,
+  chainAccountAddress,
   reclaimRequestUrl,
   reclaimStatusUrl,
 }: LoanApplicationFormProps) {
@@ -127,18 +70,28 @@ export default function LoanApplicationForm({
   const [creditScore, setCreditScore] = useState<Partial<CreditScore> | null>(null);
   const [reclaimProofIntervalId, setReclaimProofIntervalId] = useState<NodeJS.Timer | null>(null);
   const [creditScoreIntervalId, setCreditScoreIntervalId] = useState<NodeJS.Timer | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const { toast } = useToast();
 
   const totalSteps = 3;
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof loanApplicationFormSchema>>({
+    resolver: zodResolver(loanApplicationFormSchema),
     defaultValues: {
       applicationId: loanApplicationId,
+      chainAccountAddress,
       hasOutstandingLoans: false,
       outstandingLoans: [],
       hasReclaimProof: false,
       creditScoreId: undefined,
     },
+  });
+
+  const businessState = useWatch({
+    control: form.control,
+    name: 'businessState',
   });
 
   const hasOutstandingLoans = useWatch({
@@ -161,10 +114,51 @@ export default function LoanApplicationForm({
     name: 'creditScoreId',
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // Here you would typically send the form data to your backend
-    alert('Form submitted successfully!');
+  async function onSubmit(values: z.infer<typeof loanApplicationFormSchema>) {
+    // if (!values.hasReclaimProof) {
+    //   form.setError('hasReclaimProof', {
+    //     type: 'manual',
+    //     message: 'Please complete bank account verification before submitting',
+    //   });
+    //   return;
+    // }
+
+    // if (!values.creditScoreId) {
+    //   form.setError('creditScoreId', {
+    //     type: 'manual',
+    //     message: 'Please wait for credit score to be calculated',
+    //   });
+    //   return;
+    // }
+
+    try {
+      setIsSubmitting(true);
+
+      const response = await submitLoanApplication({
+        formData: values,
+        chainAccountAddress,
+      });
+
+      if (response.isError) {
+        throw new Error(response.errorMessage);
+      }
+
+      toast({
+        title: 'Loan application submitted',
+        variant: 'success',
+      });
+
+      if (response.redirectTo) {
+        router.replace(response.redirectTo);
+      }
+    } catch (error) {
+      toast({
+        title: 'Error submitting loan application',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function cardTitleForStep(step: number): string {
@@ -234,35 +228,24 @@ export default function LoanApplicationForm({
     if (step === 2 && !hasReclaimProof) {
       startReclaimProofPolling();
     }
-  }, [hasReclaimProof, step]);
 
-  useEffect(() => {
     if (hasReclaimProof) {
       stopReclaimProofPolling(reclaimProofIntervalId);
     }
-  }, [hasReclaimProof]);
 
-  useEffect(() => {
     if (hasReclaimProof) {
       startCreditScorePolling();
     }
 
-    return () => {
-      stopCreditScorePolling(creditScoreIntervalId);
-    };
-  }, [hasReclaimProof]);
-
-  useEffect(() => {
     if (creditScoreId) {
       stopCreditScorePolling(creditScoreIntervalId);
     }
 
     return () => {
       stopCreditScorePolling(creditScoreIntervalId);
+      stopReclaimProofPolling(reclaimProofIntervalId);
     };
-  }, [creditScoreId]);
-
-  console.log('creditScore', JSON.stringify(creditScore, null, 2));
+  }, [hasReclaimProof, step, creditScoreId, reclaimProofIntervalId, creditScoreIntervalId]);
 
   return (
     <Card className="mx-auto w-full max-w-4xl">
@@ -359,7 +342,7 @@ export default function LoanApplicationForm({
 
                   <FormField
                     control={form.control}
-                    name="businessState"
+                    name="businessCity"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>City</FormLabel>
@@ -370,14 +353,12 @@ export default function LoanApplicationForm({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {form.getValues('businessState') &&
-                              StateMajorCities[form.getValues('businessState') as USState].map(
-                                city => (
-                                  <SelectItem key={city} value={city}>
-                                    {city}
-                                  </SelectItem>
-                                )
-                              )}
+                            {businessState &&
+                              StateMajorCities[businessState as USState].map(city => (
+                                <SelectItem key={city} value={city}>
+                                  {city}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormDescription>
@@ -424,8 +405,8 @@ export default function LoanApplicationForm({
                         <FormControl>
                           <Input
                             type="number"
-                            min={1800}
-                            max={new Date().getFullYear()}
+                            min={BUSINESS_FOUNDED_YEAR_MIN}
+                            max={BUSINESS_FOUNDED_YEAR_MAX}
                             {...field}
                             onChange={e => {
                               const value = e.target.value.replace(/^0+/, ''); // Remove leading zeros
@@ -512,8 +493,21 @@ export default function LoanApplicationForm({
                     <FormItem>
                       <FormLabel>Description of your business</FormLabel>
                       <FormControl>
-                        <Textarea className="resize-none" {...field} />
+                        <div className="relative">
+                          <Textarea
+                            className="resize-none"
+                            maxLength={BUSINESS_DESCRIPTION_MAX_LENGTH}
+                            {...field}
+                          />
+                          <div className="absolute bottom-2 right-2 text-sm text-muted-foreground">
+                            {field.value?.length || 0}/{BUSINESS_DESCRIPTION_MAX_LENGTH}
+                          </div>
+                        </div>
                       </FormControl>
+                      <FormDescription>
+                        Minimum {BUSINESS_DESCRIPTION_MIN_LENGTH} characters, maximum{' '}
+                        {BUSINESS_DESCRIPTION_MAX_LENGTH} characters
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -530,7 +524,7 @@ export default function LoanApplicationForm({
                     <FormItem>
                       <FormControl>
                         <div className="flex flex-col items-center space-y-4">
-                          <p>Scan the QR code to link your bank account</p>
+                          <p className="text-center">Scan the QR code to link your bank account</p>
                           <QRCode value={reclaimRequestUrl} size={256} />
                           {hasReclaimProof ? (
                             <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
@@ -568,14 +562,34 @@ export default function LoanApplicationForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
-                          <p>Score: {creditScore?.score}</p>
-                          <p>
-                            Score Range: {creditScore?.scoreRangeMin} - {creditScore?.scoreRangeMax}
-                          </p>
-                          <p>Score Type: {creditScore?.scoreType}</p>
-                          <p>Credit Bureau: {creditScore?.creditBureau}</p>
-                        </div>
+                        <>
+                          <p className="text-center">Your credit score</p>
+                          <div className="grid grid-cols-4 gap-4 text-center text-sm">
+                            {/* Headers */}
+                            <div className="font-medium text-muted-foreground">Score</div>
+                            <div className="font-medium text-muted-foreground">Range</div>
+                            <div className="font-medium text-muted-foreground">Type</div>
+                            <div className="font-medium text-muted-foreground">Bureau</div>
+
+                            {/* Values */}
+                            <div className="font-semibold">
+                              {creditScore?.score ?? <LoadingSpinner />}
+                            </div>
+                            <div className="font-semibold">
+                              {creditScore?.scoreRangeMin && creditScore?.scoreRangeMax ? (
+                                `${creditScore.scoreRangeMin}-${creditScore.scoreRangeMax}`
+                              ) : (
+                                <LoadingSpinner />
+                              )}
+                            </div>
+                            <div className="font-semibold">
+                              {creditScore?.scoreType ?? <LoadingSpinner />}
+                            </div>
+                            <div className="font-semibold">
+                              {creditScore?.creditBureau ?? <LoadingSpinner />}
+                            </div>
+                          </div>
+                        </>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -752,7 +766,7 @@ export default function LoanApplicationForm({
                                 }
                               }}
                             >
-                              Remove {index}
+                              Remove
                             </Button>
                           </div>
                         ))}
@@ -793,9 +807,22 @@ export default function LoanApplicationForm({
         )}
         {step < totalSteps && <Button onClick={nextStep}>Next</Button>}
         {step === totalSteps && (
-          <Button onClick={form.handleSubmit(onSubmit)}>Submit Application</Button>
+          <div>
+            <Button disabled={isSubmitting} onClick={form.handleSubmit(onSubmit)}>
+              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+            </Button>
+            {form.formState.submitCount > 0 && !form.formState.isValid && (
+              <p className="text-red-500">Please fix the errors before submitting</p>
+            )}
+          </div>
         )}
       </CardFooter>
     </Card>
   );
 }
+
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center">
+    <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+  </div>
+);

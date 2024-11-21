@@ -1,9 +1,11 @@
 import 'server-only';
 
 import prisma from '@prisma/index';
-import { LoanApplication, PlaidItemAccessToken } from '@prisma/client';
+import { LoanApplication, LoanApplicationStatus, PlaidItemAccessToken } from '@prisma/client';
+import { loanApplicationFormSchema } from '@/app/borrower/loans/apply/form-schema';
+import { z } from 'zod';
 
-// needed to reference loan application id in reclaim proof
+// needed to reference loan application id in reclaim proof. DRAFT MODE
 export const initialiseLoanApplication = async (
   chainAccountAddress: string
 ): Promise<LoanApplication> => {
@@ -26,7 +28,9 @@ export const initialiseLoanApplication = async (
   return result;
 };
 
-export const getLoanApplication = async (args: { loanApplicationId: string }) => {
+export const getLoanApplication = async (args: {
+  loanApplicationId: string;
+}): Promise<LoanApplication | null> => {
   const { loanApplicationId } = args;
   const result = await prisma.loanApplication.findUnique({
     where: { id: loanApplicationId },
@@ -34,36 +38,40 @@ export const getLoanApplication = async (args: { loanApplicationId: string }) =>
   return result;
 };
 
-export const saveAccessTokenOfLoanApplicationCreator = async (args: {
-  loanApplicationId: string;
-  accessToken: string;
-  itemId: string;
-}): Promise<PlaidItemAccessToken> => {
-  const { loanApplicationId, accessToken, itemId } = args;
+// PENDING MODE
+export const submitLoanApplication = async (
+  formData: z.infer<typeof loanApplicationFormSchema>
+): Promise<LoanApplication> => {
+  const { outstandingLoans } = formData;
 
-  const loanApplication = await getLoanApplication({ loanApplicationId });
-
-  if (!loanApplication) {
-    throw new Error(`Loan application with id ${loanApplicationId} not found`);
-  }
-
-  const { chainAccountAddress } = loanApplication;
-
-  const result = await prisma.plaidItemAccessToken.upsert({
+  const result = await prisma.loanApplication.update({
     where: {
-      itemId: itemId,
+      id: formData.applicationId,
     },
-    create: {
-      accessToken: accessToken,
-      itemId: itemId,
-      chainAccount: {
-        connect: {
-          address: chainAccountAddress,
+    data: {
+      businessLegalName: formData.businessLegalName,
+      businessAddress: formData.businessAddress,
+      businessState: formData.businessState,
+      businessCity: formData.businessCity,
+      businessZipCode: formData.businessZipCode,
+      ein: formData.ein,
+      businessFoundedYear: formData.businessFoundedYear,
+      businessLegalStructure: formData.businessLegalStructure,
+      businessWebsite: formData.businessWebsite,
+      businessPrimaryIndustry: formData.businessPrimaryIndustry,
+      businessDescription: formData.businessDescription,
+      // credit score
+      hasOutstandingLoans: formData.hasOutstandingLoans,
+      outstandingLoans: {
+        createMany: {
+          data: outstandingLoans.map(outstandingLoan => ({
+            ...outstandingLoan,
+            chainAccountAddress: formData.chainAccountAddress,
+          })),
         },
       },
-    },
-    update: {
-      accessToken: accessToken,
+      isSubmitted: true,
+      status: LoanApplicationStatus.PENDING,
     },
   });
 

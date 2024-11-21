@@ -5,7 +5,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import VerificationStatus from '@/containers/VerificationStatus/VerificationStatus';
 import { Suspense } from 'react';
 
-// TODO: convert to server action to download transaction history for credit score calculation
 
 interface ReclaimPageProps {
   searchParams: {

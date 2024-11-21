@@ -10,12 +10,19 @@ import {
   saveItemAccessToken as dbSavePlaidItemAccessToken,
   getItemAccessTokensForChainAccount as dbGetItemAccessTokensForChainAccount,
 } from '@/services/db/plaid/item-access';
-import { revalidatePath } from 'next/cache';
-import { ConnectedBankAccount } from './form';
-import { initialiseLoanApplication as dbInitialiseLoanApplication } from '@/services/db/loan-applications';
+import {
+  ConnectedBankAccount,
+  loanApplicationFormSchema,
+  LoanApplicationForm,
+} from './form-schema';
+import {
+  initialiseLoanApplication as dbInitialiseLoanApplication,
+  submitLoanApplication as dbSubmitLoanApplication,
+} from '@/services/db/loan-applications';
 import { redirect } from 'next/navigation';
 import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
 import { getCreditScoreOfLoanApplication as dbGetCreditScoreOfLoanApplication } from '@/services/db/credit-scores';
+import * as z from 'zod';
 
 // TODO: move to global actions
 async function validateRequest(chainAccountAddress: string) {
@@ -208,13 +215,12 @@ export async function createLinkTokenForTransactions(
       secret: process.env.PLAID_SECRET,
       user: { client_user_id: chainAccountAddress },
       products: [Products.Transactions],
-      identity_verification: {
-        template_id: process.env.TEMPLATE_ID || '',
+      transactions: {
+        days_requested: 730,
       },
       country_codes: [CountryCode.Us],
       client_name: 'Locale Lending Platform',
       language: 'en',
-      webhook: 'https://webhook.example.com', // TODO: change to actual webhook
     });
 
     return {
@@ -290,7 +296,10 @@ export async function initialiseLoanApplication(
 interface GetCreditScoreOfLoanApplicationResponse {
   isError: boolean;
   errorMessage?: string;
-  creditScore?: Omit<CreditScore, 'loanApplicationId' | 'chainAccountAddress' | 'createdAt' | 'updatedAt'>;
+  creditScore?: Omit<
+    CreditScore,
+    'loanApplicationId' | 'chainAccountAddress' | 'createdAt' | 'updatedAt'
+  >;
 }
 export async function getCreditScoreOfLoanApplication(
   loanApplicationId: string
@@ -313,6 +322,47 @@ export async function getCreditScoreOfLoanApplication(
     return {
       isError: true,
       errorMessage: 'Error getting credit score of loan application',
+    };
+  }
+}
+
+interface SubmitLoanApplicationResponse {
+  isError: boolean;
+  errorMessage?: string;
+  redirectTo?: string;
+}
+export async function submitLoanApplication(args: {
+  formData: LoanApplicationForm;
+  chainAccountAddress: string;
+}): Promise<SubmitLoanApplicationResponse> {
+  const { formData, chainAccountAddress } = args;
+  try {
+    await validateRequest(chainAccountAddress);
+
+    if (formData.chainAccountAddress !== chainAccountAddress) {
+      throw new Error('Unauthorized creator of loan application');
+    }
+
+    const result = loanApplicationFormSchema.safeParse(formData);
+
+    if (!result.success) {
+      return {
+        isError: true,
+        errorMessage: 'Invalid form data',
+      };
+    }
+
+    await dbSubmitLoanApplication(formData);
+
+    return {
+      isError: false,
+      redirectTo: '/borrower/loans',
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      isError: true,
+      errorMessage: 'Error submitting loan application',
     };
   }
 }
