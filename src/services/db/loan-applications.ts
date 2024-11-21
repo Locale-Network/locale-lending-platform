@@ -1,9 +1,12 @@
 import 'server-only';
 
 import prisma from '@prisma/index';
-import { LoanApplication, PlaidItemAccessToken } from '@prisma/client';
+import { LoanApplication, LoanApplicationStatus, PlaidItemAccessToken } from '@prisma/client';
+import { loanApplicationFormSchema } from '@/app/borrower/loans/apply/form-schema';
+import { z } from 'zod';
 
-// needed to reference loan application id in reclaim proof
+
+// needed to reference loan application id in reclaim proof. DRAFT MODE
 export const initialiseLoanApplication = async (
   chainAccountAddress: string
 ): Promise<LoanApplication> => {
@@ -26,7 +29,7 @@ export const initialiseLoanApplication = async (
   return result;
 };
 
-export const getLoanApplication = async (args: { loanApplicationId: string }) => {
+export const getLoanApplication = async (args: { loanApplicationId: string }): Promise<LoanApplication | null> => {
   const { loanApplicationId } = args;
   const result = await prisma.loanApplication.findUnique({
     where: { id: loanApplicationId },
@@ -64,6 +67,44 @@ export const saveAccessTokenOfLoanApplicationCreator = async (args: {
     },
     update: {
       accessToken: accessToken,
+    },
+  });
+
+  return result;
+};
+
+// PENDING MODE
+export const submitLoanApplication = async (formData: z.infer<typeof loanApplicationFormSchema>): Promise<LoanApplication> => {
+  const { outstandingLoans } = formData;
+
+  const result = await prisma.loanApplication.update({
+    where: {
+      id: formData.applicationId,
+    },
+    data: {
+      businessLegalName: formData.businessLegalName,
+      businessAddress: formData.businessAddress,
+      businessState: formData.businessState,
+      businessCity: formData.businessCity,
+      businessZipCode: formData.businessZipCode,
+      ein: formData.ein,
+      businessFoundedYear: formData.businessFoundedYear,
+      businessLegalStructure: formData.businessLegalStructure,
+      businessWebsite: formData.businessWebsite,
+      businessPrimaryIndustry: formData.businessPrimaryIndustry,
+      businessDescription: formData.businessDescription,
+      // credit score
+      hasOutstandingLoans: formData.hasOutstandingLoans,
+      outstandingLoans: {
+        createMany: {
+          data: outstandingLoans.map((outstandingLoan) => ({
+            ...outstandingLoan,
+            chainAccountAddress: formData.chainAccountAddress,
+          })),
+        },
+      },
+      isSubmitted: true,
+      status: LoanApplicationStatus.PENDING,
     },
   });
 
