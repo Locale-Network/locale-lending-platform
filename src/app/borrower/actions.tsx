@@ -7,16 +7,18 @@ import { Role } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { CountryCode, IdentityVerificationGetResponse, Products, Strategy } from 'plaid';
 import { isAddress } from 'viem';
+import { redirect } from 'next/navigation';
+import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
 
-async function validateRequest(chainAccountAddress: string) {
+export async function validateRequest(chainAccountAddress: string) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    throw new Error('No session found');
+    redirect('/sign-in');
   }
 
   if (session?.user.role !== Role.BORROWER) {
-    throw new Error('User is not a borrower');
+    redirect(ROLE_REDIRECTS[session.user.role]);
   }
 
   if (session?.address !== chainAccountAddress) {
