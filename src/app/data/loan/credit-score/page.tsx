@@ -2,15 +2,19 @@ import PlaidLink from './plaid-link';
 import { getLoanApplicationCreator, createLinkTokenForTransactions } from './actions';
 
 type Props = {
-  params: {
-    id: string;
+  searchParams: {
+    loan_id: string;
   };
 };
 
-export default async function Page({ params }: Props) {
-  const { id } = params;
+export default async function Page({ searchParams }: Props) {
+  const { loan_id } = searchParams;
 
-  const { isError, errorMessage, account } = await getLoanApplicationCreator(id);
+  if (!loan_id) {
+    return <div>No loan id provided</div>;
+  }
+
+  const { isError, errorMessage, account } = await getLoanApplicationCreator(loan_id);
 
   if (isError || !account) {
     return <div>{errorMessage}</div>;
@@ -26,10 +30,10 @@ export default async function Page({ params }: Props) {
 
   return (
     <div>
-      <p>Credit Score for loan: {id}</p>
+      <p>Credit Score for loan: {loan_id}</p>
       <p>Loan creator: {account}</p>
       <p>Link Token: {linkToken}</p>
-      <PlaidLink linkToken={linkToken} loanApplicationId={id} />
+      <PlaidLink linkToken={linkToken} loanApplicationId={loan_id} />
     </div>
   );
 }
