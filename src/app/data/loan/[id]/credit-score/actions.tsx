@@ -1,6 +1,6 @@
 'use server';
 
-import { getLoanApplication as dbGetLoanApplication } from '@/services/db/loan-applications';
+import { getLoanApplication as dbGetLoanApplication } from '@/services/db/loan-applications/borrower';
 import plaidClient from '@/utils/plaid';
 import { CountryCode, Products } from 'plaid';
 

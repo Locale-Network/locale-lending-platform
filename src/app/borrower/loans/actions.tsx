@@ -1,6 +1,6 @@
 'use server';
 
-import { getLoanApplicationsOfBorrower as dbGetLoanApplicationsOfBorrower } from '@/services/db/loan-applications';
+import { getLoanApplicationsOfBorrower as dbGetLoanApplicationsOfBorrower } from '@/services/db/loan-applications/borrower';
 import { validateRequest as validateBorrowerRequest } from '@/app/borrower/actions';
 import { LoanApplicationsForTable } from './columns';
 

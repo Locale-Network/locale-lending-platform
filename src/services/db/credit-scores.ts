@@ -2,7 +2,7 @@ import 'server-only';
 
 import prisma from '@prisma/index';
 import { CreditScore } from '@prisma/client';
-import { getLoanApplication } from './loan-applications';
+import { getLoanApplication } from './loan-applications/borrower';
 
 export type SmartContractCreditScoreResponse = Omit<
   CreditScore,

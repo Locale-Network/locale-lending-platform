@@ -3,7 +3,7 @@ import {
   SmartContractCreditScoreResponse,
   saveCreditScoreOfLoanApplication,
 } from '@/services/db/credit-scores';
-import { getLoanApplication } from '@/services/db/loan-applications';
+import {getLoanApplication} from '@/services/db/loan-applications/borrower';
 import { CreditScore } from '@prisma/client';
 
 export interface CreditScoreApiResponse {
@@ -31,7 +31,9 @@ export async function GET(request: NextRequest, context: { params: { id: string 
     );
   }
 
-  const loanApplication = await getLoanApplication({ loanApplicationId });
+  const loanApplication = await getLoanApplication({
+    loanApplicationId,
+  });
 
   if (!loanApplication) {
     return NextResponse.json(
