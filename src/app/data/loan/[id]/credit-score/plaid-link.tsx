@@ -5,7 +5,13 @@ import { plaidPublicTokenExchange } from './actions';
 import { usePlaidLink } from 'react-plaid-link';
 import CalculateCreditScore from './calculate-credit-score';
 
-export default function PlaidLink({ linkToken, loanApplicationId }: { linkToken: string; loanApplicationId: string }) {
+export default function PlaidLink({
+  linkToken,
+  loanApplicationId,
+}: {
+  linkToken: string;
+  loanApplicationId: string;
+}) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const onSuccess = useCallback(async (public_token: any) => {
@@ -18,6 +24,8 @@ export default function PlaidLink({ linkToken, loanApplicationId }: { linkToken:
 
   const config: Parameters<typeof usePlaidLink>[0] = {
     token: linkToken,
+    receivedRedirectUri:
+      'https://locale-reclaim.vercel.app/data/loan/cm3scs0ig00038qe3iiqdmw7r/credit-score',
     onSuccess,
   };
   const { open, ready } = usePlaidLink(config);
@@ -32,10 +40,10 @@ export default function PlaidLink({ linkToken, loanApplicationId }: { linkToken:
     return null;
   }
 
-    return (
+  return (
     <>
       <p>Access Token: {accessToken}</p>
       <CalculateCreditScore loanApplicationId={loanApplicationId} accessToken={accessToken} />
     </>
-    );
+  );
 }
