@@ -1,55 +1,14 @@
 import Search from '@/components/custom/url-search';
 import { Suspense } from 'react';
 import Table from '@/components/custom/data-table';
-import { columns, LoanApplication } from './columns';
+import { columns } from './columns';
 import ApplyLoanButton from './apply-loans';
+import { getLoanApplications } from './actions';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/auth-options';
+import { isUndefined } from 'lodash';
 
-const data: LoanApplication[] = [
-  {
-    id: 'LA001',
-    loanType: 'Personal',
-    amountRequested: 10000,
-    applicationDate: '2024-11-01',
-    status: 'Pending',
-    creditScore: 720,
-  },
-  {
-    id: 'LA002',
-    loanType: 'Mortgage',
-    amountRequested: 250000,
-    applicationDate: '2024-11-02',
-    status: 'Approved',
-    creditScore: 780,
-  },
-  {
-    id: 'LA003',
-    loanType: 'Auto',
-    amountRequested: 25000,
-    applicationDate: '2024-11-03',
-    status: 'Rejected',
-    creditScore: 650,
-  },
-  {
-    id: 'LA004',
-    loanType: 'Business',
-    amountRequested: 100000,
-    applicationDate: '2024-11-04',
-    status: 'Under Review',
-    creditScore: 700,
-  },
-  {
-    id: 'LA005',
-    loanType: 'Personal',
-    amountRequested: 15000,
-    applicationDate: '2024-11-05',
-    status: 'Pending',
-    creditScore: 690,
-  },
-];
-
-// TODO: db querying
-
-export default function Page({
+export default async function Page({
   searchParams,
 }: {
   searchParams?: {
@@ -57,8 +16,17 @@ export default function Page({
     page?: string;
   };
 }) {
+  const session = await getServerSession(authOptions);
+  const chainAccountAddress = session?.address;
+
   const query = searchParams?.query || '';
   const currentPage = Number(searchParams?.page) || 1;
+
+  const { loanApplications, isError, errorMessage } = await getLoanApplications(chainAccountAddress!);
+
+  if (isError || isUndefined(loanApplications)) {
+    return <div>{errorMessage}</div>;
+  }
 
   return (
     <>
@@ -70,10 +38,10 @@ export default function Page({
       </div>
       <Suspense key={query + currentPage}>
         <Table
-          rows={data}
+          rows={loanApplications}
           columns={columns}
-          total={data.length}
-          totalPages={Math.ceil(data.length / 10)}
+          total={loanApplications.length}
+          totalPages={Math.ceil(loanApplications.length / 10)}
         />
       </Suspense>
     </>

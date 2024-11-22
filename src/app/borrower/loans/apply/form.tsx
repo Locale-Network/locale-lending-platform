@@ -44,15 +44,6 @@ import {
   BUSINESS_FOUNDED_YEAR_MAX,
   BUSINESS_FOUNDED_YEAR_MIN,
 } from './form-schema';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 
 interface LoanApplicationFormProps {
   loanApplicationId: string;
@@ -134,23 +125,17 @@ export default function LoanApplicationForm({
     try {
       setIsSubmitting(true);
 
-      const response = await submitLoanApplication({
+      await submitLoanApplication({
         formData: values,
         chainAccountAddress,
       });
-
-      if (response.isError) {
-        throw new Error(response.errorMessage);
-      }
 
       toast({
         title: 'Loan application submitted',
         variant: 'success',
       });
 
-      if (response.redirectTo) {
-        router.replace(response.redirectTo);
-      }
+      router.replace('/borrower/loans');
     } catch (error) {
       toast({
         title: 'Error submitting loan application',
@@ -807,14 +792,9 @@ export default function LoanApplicationForm({
         )}
         {step < totalSteps && <Button onClick={nextStep}>Next</Button>}
         {step === totalSteps && (
-          <div>
-            <Button disabled={isSubmitting} onClick={form.handleSubmit(onSubmit)}>
-              {isSubmitting ? 'Submitting...' : 'Submit Application'}
-            </Button>
-            {form.formState.submitCount > 0 && !form.formState.isValid && (
-              <p className="text-red-500">Please fix the errors before submitting</p>
-            )}
-          </div>
+          <Button disabled={isSubmitting} onClick={form.handleSubmit(onSubmit)}>
+            {isSubmitting ? 'Submitting...' : 'Submit Application'}
+          </Button>
         )}
       </CardFooter>
     </Card>
