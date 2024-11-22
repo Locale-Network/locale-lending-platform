@@ -1,7 +1,7 @@
 import 'server-only';
 
 import prisma from '@prisma/index';
-import { LoanApplication, LoanApplicationStatus, PlaidItemAccessToken } from '@prisma/client';
+import { CreditScore, LoanApplication, LoanApplicationStatus } from '@prisma/client';
 import { loanApplicationFormSchema } from '@/app/borrower/loans/apply/form-schema';
 import { z } from 'zod';
 
@@ -34,6 +34,24 @@ export const getLoanApplication = async (args: {
   const { loanApplicationId } = args;
   const result = await prisma.loanApplication.findUnique({
     where: { id: loanApplicationId },
+  });
+  return result;
+};
+
+export const getLoanApplicationsOfBorrower = async (
+  chainAccountAddress: string
+): Promise<(LoanApplication & { creditScore: CreditScore | null })[]> => {
+  const result = await prisma.loanApplication.findMany({
+    where: {
+      chainAccountAddress,
+      isSubmitted: true,
+      status: {
+        not: LoanApplicationStatus.DRAFT,
+      },
+    },
+    include: {
+      creditScore: true,
+    },
   });
   return result;
 };

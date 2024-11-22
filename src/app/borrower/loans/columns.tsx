@@ -1,18 +1,20 @@
 'use client';
 
+import { LoanApplicationStatus } from '@prisma/client';
 import { ColumnDef } from '@tanstack/react-table';
 import Link from 'next/link';
+import { getLoanStatusStyle } from '@/utils/colour';
+import { formatDateToUS } from '@/utils/date';
 
-export type LoanApplication = {
+export type LoanApplicationsForTable = {
   id: string;
-  loanType: string;
-  amountRequested: number;
-  applicationDate: string;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Under Review';
   creditScore: number;
+  status: LoanApplicationStatus;
+  createdDate: Date;
+  updatedDate: Date;
 };
 
-export const columns: ColumnDef<LoanApplication>[] = [
+export const columns: ColumnDef<LoanApplicationsForTable>[] = [
   {
     accessorKey: 'id',
     header: 'Application ID',
@@ -26,33 +28,17 @@ export const columns: ColumnDef<LoanApplication>[] = [
     ),
   },
   {
-    accessorKey: 'loanType',
-    header: 'Loan Type',
-    cell: ({ row }) => <div>{row.getValue('loanType')}</div>,
-  },
-  {
-    accessorKey: 'amountRequested',
-    header: 'Amount Requested',
-    cell: ({ row }) => <div>${row.getValue('amountRequested')}</div>,
-  },
-  {
-    accessorKey: 'applicationDate',
-    header: 'Application Date',
-    cell: ({ row }) => <div>{row.getValue('applicationDate')}</div>,
+    accessorKey: 'creditScore',
+    header: 'Credit Score',
+    cell: ({ row }) => <div>{row.getValue('creditScore')}</div>,
   },
   {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const status = row.getValue('status') as string;
+      const status = row.getValue('status') as LoanApplicationStatus;
 
-      const statusStyles =
-        {
-          Approved: 'bg-green-100 text-green-800',
-          Pending: 'bg-yellow-100 text-yellow-800',
-          Rejected: 'bg-red-100 text-red-800',
-          'Under Review': 'bg-blue-100 text-blue-800',
-        }[status] || 'bg-gray-100 text-gray-800';
+      const statusStyles = getLoanStatusStyle(status);
 
       return (
         <div
@@ -64,8 +50,13 @@ export const columns: ColumnDef<LoanApplication>[] = [
     },
   },
   {
-    accessorKey: 'creditScore',
-    header: 'Credit Score',
-    cell: ({ row }) => <div>{row.getValue('creditScore')}</div>,
+    accessorKey: 'createdDate',
+    header: 'Application Date',
+    cell: ({ row }) => <div>{formatDateToUS(row.getValue('createdDate'))}</div>,
+  },
+  {
+    accessorKey: 'updatedDate',
+    header: 'Updated Date',
+    cell: ({ row }) => <div>{formatDateToUS(row.getValue('updatedDate'))}</div>,
   },
 ];
