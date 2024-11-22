@@ -52,6 +52,10 @@ export const getLoanApplicationsOfBorrower = async (
     include: {
       creditScore: true,
     },
+    orderBy: [
+      { createdAt: 'desc' },
+      { updatedAt: 'desc' },
+    ],
   });
   return result;
 };

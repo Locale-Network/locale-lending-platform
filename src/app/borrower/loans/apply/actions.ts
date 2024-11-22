@@ -18,6 +18,8 @@ import {
 } from '@/services/db/loan-applications';
 import { getCreditScoreOfLoanApplication as dbGetCreditScoreOfLoanApplication } from '@/services/db/credit-scores';
 import { validateRequest as validateBorrowerRequest } from '@/app/borrower/actions';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 // TODO: get KYC status from DB
 interface GetKycStatusResponse {
@@ -300,43 +302,24 @@ export async function getCreditScoreOfLoanApplication(
   }
 }
 
-interface SubmitLoanApplicationResponse {
-  isError: boolean;
-  errorMessage?: string;
-  redirectTo?: string;
-}
 export async function submitLoanApplication(args: {
   formData: LoanApplicationForm;
   chainAccountAddress: string;
-}): Promise<SubmitLoanApplicationResponse> {
+}): Promise<void> {
   const { formData, chainAccountAddress } = args;
-  try {
-    await validateBorrowerRequest(chainAccountAddress);
+  await validateBorrowerRequest(chainAccountAddress);
 
-    if (formData.chainAccountAddress !== chainAccountAddress) {
-      throw new Error('Unauthorized creator of loan application');
-    }
-
-    const result = loanApplicationFormSchema.safeParse(formData);
-
-    if (!result.success) {
-      return {
-        isError: true,
-        errorMessage: 'Invalid form data',
-      };
-    }
-
-    await dbSubmitLoanApplication(formData);
-
-    return {
-      isError: false,
-      redirectTo: '/borrower/loans',
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      isError: true,
-      errorMessage: 'Error submitting loan application',
-    };
+  if (formData.chainAccountAddress !== chainAccountAddress) {
+    throw new Error('Unauthorized creator of loan application');
   }
+
+  const result = loanApplicationFormSchema.safeParse(formData);
+
+  if (!result.success) {
+    throw new Error('Invalid form data');
+  }
+
+  await dbSubmitLoanApplication(formData);
+
+  revalidatePath('/borrower/loans');
 }
