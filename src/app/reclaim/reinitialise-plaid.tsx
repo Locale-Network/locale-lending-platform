@@ -55,7 +55,7 @@ export default function ReinitialisePlaid() {
   return (
     <>
       <p>Access Token: {accessToken}</p>
-      {/* <CalculateCreditScore loanApplicationId={props.loanApplicationId} accessToken={accessToken} /> */}
+      <CalculateCreditScore accessToken={accessToken} />
     </>
   );
 }
