@@ -20,7 +20,7 @@ export default function CalculateCreditScore(props: CalculateCreditScoreProps) {
   }, []);
 
   useEffect(() => {
-    if (accessToken && loanApplicationId) {
+    if (1) {
       /*
           FIXME: add access token
           FIXME: add loan application id
@@ -36,7 +36,8 @@ export default function CalculateCreditScore(props: CalculateCreditScoreProps) {
         })
         .catch(() => setApiError('Error fetching credit score'));
     }
-  }, [loanApplicationId, accessToken]);
+  }, []);
+  // FIXME: add access token and loan application id
 
   if (apiError) {
     return (
