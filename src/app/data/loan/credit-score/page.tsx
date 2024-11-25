@@ -27,13 +27,12 @@ export default async function Page({ searchParams }: Props) {
     return <div>{errorMessageLinkToken}</div>;
   }
 
-
   return (
     <div>
       <p>Credit Score for loan: {loan_id}</p>
       <p>Loan creator: {account}</p>
       <p>Link Token: {linkToken}</p>
-      <PlaidLink linkToken={linkToken} loanApplicationId={loan_id} />
+      <PlaidLink initialLinkToken={linkToken} loanApplicationId={loan_id} />
     </div>
   );
 }

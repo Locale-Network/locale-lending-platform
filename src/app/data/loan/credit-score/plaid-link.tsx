@@ -1,40 +1,66 @@
 'use client';
 
+// https://github.com/plaid/react-plaid-link/blob/master/examples/oauth.tsx
+
 import { useCallback, useEffect, useState } from 'react';
 import { plaidPublicTokenExchange } from './actions';
-import { usePlaidLink } from 'react-plaid-link';
+import { usePlaidLink, PlaidLinkOptions, PlaidLinkOnSuccess } from 'react-plaid-link';
 import CalculateCreditScore from './calculate-credit-score';
 
-export default function PlaidLink({
-  linkToken,
-  loanApplicationId,
-}: {
-  linkToken: string;
+interface PlaidLinkProps {
+  initialLinkToken: string;
   loanApplicationId: string;
-}) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+}
 
-  const onSuccess = useCallback(async (public_token: any) => {
-    const response = await plaidPublicTokenExchange(public_token);
+export default function PlaidLink(props: PlaidLinkProps) {
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [linkToken, setLinkToken] = useState<string | null>(props.initialLinkToken);
+  const [isOAuthRedirect, setIsOAuthRedirect] = useState(false);
+
+  const onSuccess = useCallback<PlaidLinkOnSuccess>(async (publicToken, metadata) => {
+    const response = await plaidPublicTokenExchange(publicToken);
     if (response.isError || !response.accessToken) {
       return;
     }
     setAccessToken(response.accessToken);
+    // TODO: router push
   }, []);
 
-  const config: Parameters<typeof usePlaidLink>[0] = {
+  useEffect(() => {
+    if (isOAuthRedirect) {
+      setLinkToken(localStorage.getItem('link_token'));
+    }
+  }, [isOAuthRedirect]);
+
+  useEffect(() => {
+    setIsOAuthRedirect(window.location.href.includes('?oauth_state_id='));
+  }, []);
+
+  useEffect(() => {
+    // Set link token in localStorage when component mounts
+    if (props.initialLinkToken) {
+      localStorage.setItem('link_token', props.initialLinkToken);
+      setLinkToken(props.initialLinkToken);
+    }
+  }, [props.initialLinkToken]);
+
+  const config: PlaidLinkOptions = {
     token: linkToken,
-    receivedRedirectUri:
-      'https://locale-reclaim.vercel.app/data/loan/cm3scs0ig00038qe3iiqdmw7r/credit-score',
     onSuccess,
   };
+
+  if (isOAuthRedirect) {
+    // receivedRedirectUri must include the query params
+    config.receivedRedirectUri = window.location.href;
+  }
+
   const { open, ready } = usePlaidLink(config);
 
   useEffect(() => {
     if (ready) {
       open();
     }
-  }, [open, ready]);
+  }, [ready, open, isOAuthRedirect]);
 
   if (!accessToken) {
     return null;
@@ -43,7 +69,7 @@ export default function PlaidLink({
   return (
     <>
       <p>Access Token: {accessToken}</p>
-      <CalculateCreditScore loanApplicationId={loanApplicationId} accessToken={accessToken} />
+      <CalculateCreditScore loanApplicationId={props.loanApplicationId} accessToken={accessToken} />
     </>
   );
 }
