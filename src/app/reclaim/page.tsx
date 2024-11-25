@@ -196,7 +196,7 @@ export default function Home() {
   return (
     <main>
       <div>
-        {state.isItemAccess && state.accessToken && (
+        {/* {state.isItemAccess && state.accessToken && (
           <div>
             <div>
               <strong className="title">Account Name :</strong> {user.name}
@@ -205,7 +205,11 @@ export default function Home() {
               <strong className="title">Official name :</strong> {user.officialName}
             </div>
           </div>
-        )}
+        )} */}
+
+        <div>
+          <h1>Redirected here</h1>
+        </div>
       </div>
     </main>
   );
