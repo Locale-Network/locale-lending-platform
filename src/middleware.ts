@@ -33,6 +33,7 @@ export default withAuth(
 );
 
 // routes that will invoke the middleware
+// TODO: add /
 export const config = {
-  matcher: ['/borrower/:path*', '/approver/:path*', '/admin/:path*', '/'],
+  matcher: ['/borrower/:path*', '/approver/:path*', '/admin/:path*'],
 };
