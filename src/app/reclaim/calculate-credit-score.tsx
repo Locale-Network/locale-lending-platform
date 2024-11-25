@@ -5,18 +5,21 @@ import { XCircle } from 'lucide-react';
 import { CreditScore } from '@prisma/client';
 import { CreditScoreApiResponse } from '@/app/api/loan/[id]/credit-score/get';
 export default function CalculateCreditScore({
-  loanApplicationId,
   accessToken,
 }: {
-  loanApplicationId: string;
   accessToken: string;
 }) {
   const [apiError, setApiError] = useState<any | null>(null);
   const [creditScore, setCreditScore] = useState<CreditScore | null>(null);
+  const [loanApplicationId, setLoanApplicationId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (accessToken) {
-      fetch(`/api/loan/${loanApplicationId}/credit-score?access_token=${accessToken}`)
+    setLoanApplicationId(localStorage.getItem('loan_application_id'));
+  }, []);
+
+  useEffect(() => {
+    if (accessToken && loanApplicationId) {
+      fetch(`/api/loan/${loanApplicationId}/credit-score?access_token=access_token`) // TODO: add access token
         .then(response => response.json())
         .then((data: CreditScoreApiResponse) => {
           if (data.status === 'error') {

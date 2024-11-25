@@ -12,27 +12,27 @@ interface PlaidLinkProps {
 }
 
 export default function PlaidLink(props: PlaidLinkProps) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [linkToken, setLinkToken] = useState<string | null>(props.linkToken);
-
   const onSuccess = useCallback<PlaidLinkOnSuccess>(async (publicToken, metadata) => {
     const response = await plaidPublicTokenExchange(publicToken);
     if (response.isError || !response.accessToken) {
       return;
     }
-    setAccessToken(response.accessToken);
   }, []);
 
   useEffect(() => {
-    // Set link token in localStorage when component mounts
     if (props.linkToken) {
       localStorage.setItem('link_token', props.linkToken);
-      setLinkToken(props.linkToken);
     }
   }, [props.linkToken]);
 
+  useEffect(() => {
+    if (props.loanApplicationId) {
+      localStorage.setItem('loan_application_id', props.loanApplicationId);
+    }
+  }, [props.loanApplicationId]);
+
   const config: PlaidLinkOptions = {
-    token: linkToken,
+    token: props.linkToken,
     onSuccess,
   };
 
