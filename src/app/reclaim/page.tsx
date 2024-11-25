@@ -100,27 +100,27 @@ export default function Home() {
     init();
   }, [generateToken, getInfo]);
 
-  useEffect(() => {
-    const init = async () => {
-      await fetch(`/api/transactions?access_token=${state.accessToken}`, {
-        method: 'GET',
-      });
+  // useEffect(() => {
+  //   const init = async () => {
+  //     await fetch(`/api/transactions?access_token=${state.accessToken}`, {
+  //       method: 'GET',
+  //     });
 
-      const response = await fetch(`/api/accounts?access_token=${state.accessToken}`, {
-        method: 'GET',
-      });
+  //     const response = await fetch(`/api/accounts?access_token=${state.accessToken}`, {
+  //       method: 'GET',
+  //     });
 
-      const data = await response.json();
-      console.log(data);
-      setUser({
-        name: data.name,
-        officialName: data.official_name,
-      });
-    };
-    if (state.accessToken) {
-      init();
-    }
-  }, [state.accessToken, state.isItemAccess]);
+  //     const data = await response.json();
+  //     console.log(data);
+  //     setUser({
+  //       name: data.name,
+  //       officialName: data.official_name,
+  //     });
+  //   };
+  //   if (state.accessToken) {
+  //     init();
+  //   }
+  // }, [state.accessToken, state.isItemAccess]);
 
   const { linkToken, isPaymentInitiation } = state;
 
@@ -196,20 +196,16 @@ export default function Home() {
   return (
     <main>
       <div>
-        {/* {state.isItemAccess && state.accessToken && (
+        {state.isItemAccess && state.accessToken && (
           <div>
             <div>
-              <strong className="title">Account Name :</strong> {user.name}
+              <strong className="title">accessToken :</strong> {state.accessToken}
             </div>
             <div>
-              <strong className="title">Official name :</strong> {user.officialName}
+              <strong className="title">itemId :</strong> {state.itemId}
             </div>
           </div>
-        )} */}
-
-        <div>
-          <h1>Redirected here</h1>
-        </div>
+        )}
       </div>
     </main>
   );
