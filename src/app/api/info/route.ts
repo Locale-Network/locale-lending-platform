@@ -1,5 +1,5 @@
-import { PLAID_PRODUCTS } from '@/utils/plaid';
 import { NextRequest, NextResponse } from 'next/server';
+import { Products } from 'plaid';
 
 let ITEM_ID: string | null = null;
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       {
         item_id: ITEM_ID,
         access_token: '',
-        products: PLAID_PRODUCTS,
+        products: [Products.Transactions],
       },
       { status: 200 }
     );

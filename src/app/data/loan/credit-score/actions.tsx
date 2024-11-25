@@ -54,7 +54,7 @@ export async function createLinkTokenForTransactions(
       country_codes: [CountryCode.Us],
       client_name: 'Locale Lending Platform',
       language: 'en',
-      redirect_uri: 'https://locale-reclaim.vercel.app/data/loan/credit-score', // FIXME: cannot have query
+      redirect_uri: process.env.PLAID_REDIRECT_URI,
     });
 
     return {
