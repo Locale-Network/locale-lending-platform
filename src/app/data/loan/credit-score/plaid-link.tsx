@@ -5,17 +5,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { plaidPublicTokenExchange } from './actions';
 import { usePlaidLink, PlaidLinkOptions, PlaidLinkOnSuccess } from 'react-plaid-link';
-import CalculateCreditScore from './calculate-credit-score';
 
 interface PlaidLinkProps {
-  initialLinkToken: string;
+  linkToken: string;
   loanApplicationId: string;
 }
 
 export default function PlaidLink(props: PlaidLinkProps) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [linkToken, setLinkToken] = useState<string | null>(props.initialLinkToken);
-  const [isOAuthRedirect, setIsOAuthRedirect] = useState(false);
+  const [linkToken, setLinkToken] = useState<string | null>(props.linkToken);
 
   const onSuccess = useCallback<PlaidLinkOnSuccess>(async (publicToken, metadata) => {
     const response = await plaidPublicTokenExchange(publicToken);
@@ -23,36 +21,20 @@ export default function PlaidLink(props: PlaidLinkProps) {
       return;
     }
     setAccessToken(response.accessToken);
-    // TODO: router push
-  }, []);
-
-  useEffect(() => {
-    if (isOAuthRedirect) {
-      setLinkToken(localStorage.getItem('link_token'));
-    }
-  }, [isOAuthRedirect]);
-
-  useEffect(() => {
-    setIsOAuthRedirect(window.location.href.includes('?oauth_state_id='));
   }, []);
 
   useEffect(() => {
     // Set link token in localStorage when component mounts
-    if (props.initialLinkToken) {
-      localStorage.setItem('link_token', props.initialLinkToken);
-      setLinkToken(props.initialLinkToken);
+    if (props.linkToken) {
+      localStorage.setItem('link_token', props.linkToken);
+      setLinkToken(props.linkToken);
     }
-  }, [props.initialLinkToken]);
+  }, [props.linkToken]);
 
   const config: PlaidLinkOptions = {
     token: linkToken,
     onSuccess,
   };
-
-  if (isOAuthRedirect) {
-    // receivedRedirectUri must include the query params
-    config.receivedRedirectUri = window.location.href;
-  }
 
   const { open, ready } = usePlaidLink(config);
 
@@ -60,16 +42,7 @@ export default function PlaidLink(props: PlaidLinkProps) {
     if (ready) {
       open();
     }
-  }, [ready, open, isOAuthRedirect]);
+  }, [ready, open]);
 
-  if (!accessToken) {
-    return null;
-  }
-
-  return (
-    <>
-      <p>Access Token: {accessToken}</p>
-      <CalculateCreditScore loanApplicationId={props.loanApplicationId} accessToken={accessToken} />
-    </>
-  );
+  return <></>;
 }
