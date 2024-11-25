@@ -21,7 +21,7 @@ export default async function Page() {
     return <div>{errorMessage}</div>;
   }
 
-  const redirectUrl = process.env.PLAID_REDIRECT_URI ?? '';
+  const redirectUrl = process.env.RECLAIM_SUCCESS_URL ?? '';
 
   const appSecret = process.env.SECRET_ID;
   const appId = process.env.APP_ID;
