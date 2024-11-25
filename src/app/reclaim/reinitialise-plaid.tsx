@@ -48,9 +48,9 @@ export default function ReinitialisePlaid() {
     }
   }, [ready, open, isOAuthRedirect]);
 
-  if (!accessToken) {
-    return null;
-  }
+  // if (!accessToken) {
+  //   return null;
+  // }
 
   return (
     <>
