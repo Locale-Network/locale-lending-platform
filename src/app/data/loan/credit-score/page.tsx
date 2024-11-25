@@ -32,7 +32,7 @@ export default async function Page({ searchParams }: Props) {
       <p>Credit Score for loan: {loan_id}</p>
       <p>Loan creator: {account}</p>
       <p>Link Token: {linkToken}</p>
-      <PlaidLink initialLinkToken={linkToken} loanApplicationId={loan_id} />
+      <PlaidLink linkToken={linkToken} loanApplicationId={loan_id} />
     </div>
   );
 }
