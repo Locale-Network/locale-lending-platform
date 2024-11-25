@@ -28,7 +28,7 @@ export default function CardWithForm() {
         router.replace(redirectPath);
       })();
     }
-  }, [status, isConnected, address, router]);
+  }, [status, isConnected, address, router, session?.user.role]);
 
   return (
     <Card className="w-[350px]">
