@@ -7,6 +7,7 @@ import { authOptions } from '@/app/api/auth/auth-options';
 import { headers } from 'next/headers';
 import Redirect from './redirect';
 import { getLatestLoanApplicationOfBorrower } from '@/services/db/loan-applications';
+import AddressInput from './input-address';
 
 interface Props {
   searchParams: {
@@ -14,14 +15,12 @@ interface Props {
   };
 }
 
-export default async function Page() {
+export default async function Page({ searchParams: { accountAddress } }: Props) {
   // const { isError, errorMessage, account } = await getLoanApplicationCreator(loan_id);
 
   // if (isError || !account) {
   //   return <div>{errorMessage}</div>;
   // }
-
-  const accountAddress = '0xbe9E7b0ed19526544B55b697107231f9467a805f';
 
   console.log('accountAddress', accountAddress);
 
@@ -43,7 +42,7 @@ export default async function Page() {
   }
 
   if (!accountAddress) {
-    return <Redirect accountAddress={accountAddress} />;
+    return <AddressInput />;
   }
 
   const loanApplication = await getLatestLoanApplicationOfBorrower(accountAddress);
