@@ -1,17 +1,19 @@
 import PlaidLink from './plaid-link';
 import { createLinkTokenForTransactions } from './actions';
 import { generateRandomString } from '@/utils/random';
-
-type Props = {
-  searchParams: {};
-};
-
-export default async function Page({ searchParams }: Props) {
+import { debug } from '@/app/actions/debug';
+import { headers } from 'next/headers';
+export default async function Page(props: unknown) {
   // const { isError, errorMessage, account } = await getLoanApplicationCreator(loan_id);
 
   // if (isError || !account) {
   //   return <div>{errorMessage}</div>;
   // }
+
+  const headersList = headers();
+
+  debug(props);
+  debug(headersList);
 
   const {
     isError: isErrorLinkToken,

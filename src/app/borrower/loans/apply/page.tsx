@@ -32,7 +32,9 @@ export default async function Page() {
     throw new Error('Missing reclaim configuration');
   }
 
-  const reclaimProofRequest = await ReclaimProofRequest.init(appId, appSecret, providerId);
+  const reclaimProofRequest = await ReclaimProofRequest.init(appId, appSecret, providerId, {
+    log: true,
+  });
 
   reclaimProofRequest.setRedirectUrl(redirectUrl);
   reclaimProofRequest.setAppCallbackUrl(callbackUrl);
