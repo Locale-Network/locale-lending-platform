@@ -1,11 +1,7 @@
 import PlaidLink from './plaid-link';
 import { createLinkTokenForTransactions } from './actions';
 import { generateRandomString } from '@/utils/random';
-import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/auth-options';
 import { headers } from 'next/headers';
-import Redirect from './redirect';
 import { getLatestLoanApplicationOfBorrower } from '@/services/db/loan-applications';
 import AddressInput from './input-address';
 
