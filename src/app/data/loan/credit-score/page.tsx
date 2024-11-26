@@ -8,7 +8,7 @@ type Props = {
 };
 
 export default async function Page({ searchParams }: Props) {
-  const { loan_id } = searchParams;
+  const { loan_id = 'cm3y51oy00001i0vas8yxoo89' } = searchParams;
 
   if (!loan_id) {
     return <div>No loan id provided</div>;
@@ -20,8 +20,11 @@ export default async function Page({ searchParams }: Props) {
     return <div>{errorMessage}</div>;
   }
 
-  const { isError: isErrorLinkToken, errorMessage: errorMessageLinkToken, linkToken } =
-    await createLinkTokenForTransactions(account);
+  const {
+    isError: isErrorLinkToken,
+    errorMessage: errorMessageLinkToken,
+    linkToken,
+  } = await createLinkTokenForTransactions(account);
 
   if (isErrorLinkToken || !linkToken) {
     return <div>{errorMessageLinkToken}</div>;
