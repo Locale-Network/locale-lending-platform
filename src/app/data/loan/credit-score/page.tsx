@@ -14,12 +14,14 @@ interface Props {
   };
 }
 
-export default async function Page({ searchParams: { accountAddress } }: Props) {
+export default async function Page() {
   // const { isError, errorMessage, account } = await getLoanApplicationCreator(loan_id);
 
   // if (isError || !account) {
   //   return <div>{errorMessage}</div>;
   // }
+
+  const accountAddress = '0xbe9E7b0ed19526544B55b697107231f9467a805f';
 
   console.log('accountAddress', accountAddress);
 
@@ -37,7 +39,7 @@ export default async function Page({ searchParams: { accountAddress } }: Props) 
   } = await createLinkTokenForTransactions(generateRandomString());
 
   if (isErrorLinkToken || !linkToken) {
-    return <div>{errorMessageLinkToken}</div>;
+    return <div>err: {errorMessageLinkToken}</div>;
   }
 
   if (!accountAddress) {
