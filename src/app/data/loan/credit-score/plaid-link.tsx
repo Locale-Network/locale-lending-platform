@@ -14,6 +14,7 @@ interface PlaidLinkProps {
 
 export default function PlaidLink(props: PlaidLinkProps) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
+
   
   const onSuccess = useCallback<PlaidLinkOnSuccess>(async (publicToken, metadata) => {
     const response = await plaidPublicTokenExchange(publicToken);
@@ -44,14 +45,24 @@ export default function PlaidLink(props: PlaidLinkProps) {
   const { open, ready } = usePlaidLink(config);
 
   useEffect(() => {
-    if (ready) {
-      open();
-    }
-  }, [ready, open]);
+    setTimeout(() => {
+      setAccessToken('access-sandbox-9439bf2c-d0c1-4c3e-9a0d-029938544d1c');
+    }, 1000);
+  }, []);
+
+  // useEffect(() => {
+  //   if (ready) {
+  //     open();
+  //   }
+  // }, [ready, open]);
 
    if (!accessToken) {
      return null;
    }
+
+  console.log('accessToken', accessToken);
+
+  
 
   return (
     <>
