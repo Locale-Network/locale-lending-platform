@@ -40,7 +40,7 @@ export default async function Page() {
   const message = `credit score calculation for ${accountAddress} at ${new Date().toISOString()} for loan application ${loanApplicationId}`;
   reclaimProofRequest.addContext(accountAddress, message);
 
-  reclaimProofRequest.setParams({ loan_id: loanApplicationId });
+  reclaimProofRequest.setParams({ URL_PARAMS_1: loanApplicationId });
 
   const requestUrl = await reclaimProofRequest.getRequestUrl();
   const statusUrl = reclaimProofRequest.getStatusUrl();
