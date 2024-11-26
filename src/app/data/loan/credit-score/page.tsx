@@ -8,7 +8,7 @@ type Props = {
 };
 
 export default async function Page({ searchParams }: Props) {
-  const { loan_id = 'cm3y51oy00001i0vas8yxoo89' } = searchParams;
+  const { loan_id } = searchParams;
 
   if (!loan_id) {
     return <div>No loan id provided</div>;
