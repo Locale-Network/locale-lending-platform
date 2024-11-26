@@ -13,7 +13,7 @@ import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
 
 // TODO: add link to terms and privacy
 
-export default function CardWithForm() {
+export default function CardWithForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
   const { status, data: session } = useSession();
   const { isConnected, address } = useAccount();
@@ -25,10 +25,14 @@ export default function CardWithForm() {
 
         const redirectPath = ROLE_REDIRECTS[role];
 
-        router.replace(redirectPath);
+        if (!callbackUrl) {
+          router.replace(redirectPath);
+        } else {
+          router.replace(callbackUrl);
+        }
       })();
     }
-  }, [status, isConnected, address, router, session?.user.role]);
+  }, [status, isConnected, address, router, session?.user.role, callbackUrl]);
 
   return (
     <Card className="w-[350px]">

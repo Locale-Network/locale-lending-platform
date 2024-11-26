@@ -1,9 +1,15 @@
 import WelcomeCard from './welcome-card';
 
-export default function Page() {
+interface Props {
+  searchParams: {
+    callbackUrl: string;
+  };
+}
+
+export default function Page({ searchParams: { callbackUrl } }: Props) {
   return (
     <main className="flex h-screen items-center justify-center">
-      <WelcomeCard />
+      <WelcomeCard callbackUrl={callbackUrl} />
     </main>
   );
 }

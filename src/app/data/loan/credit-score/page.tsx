@@ -1,29 +1,25 @@
 import PlaidLink from './plaid-link';
 import { createLinkTokenForTransactions } from './actions';
 import { generateRandomString } from '@/utils/random';
-import { debug } from '@/app/actions/debug';
-import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/auth-options';
 
-interface Props {
-  params: {
-    id: string;
-  };
-}
-
-export default async function Page({ params }: Props) {
+export default async function Page() {
   // const { isError, errorMessage, account } = await getLoanApplicationCreator(loan_id);
 
   // if (isError || !account) {
   //   return <div>{errorMessage}</div>;
   // }
 
-  const headersList = headers();
+  const session = await getServerSession(authOptions);
+  const accountAddress = session?.address;
 
-  console.log(params);
+  console.log(accountAddress);
 
-  headersList.forEach((value: unknown, key: string) => {
-    console.log(key, value);
-  });
+  if (!accountAddress) {
+    redirect(`/signin?callbackUrl=${window.location.href}`);
+  }
 
   const {
     isError: isErrorLinkToken,
