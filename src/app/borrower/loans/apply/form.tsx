@@ -213,24 +213,33 @@ export default function LoanApplicationForm({
     if (step === 2 && !hasReclaimProof) {
       startReclaimProofPolling();
     }
+  }, [hasReclaimProof, step]);
 
+  useEffect(() => {
     if (hasReclaimProof) {
       stopReclaimProofPolling(reclaimProofIntervalId);
     }
+  }, [hasReclaimProof]);
 
+  useEffect(() => {
     if (hasReclaimProof) {
       startCreditScorePolling();
     }
 
+    return () => {
+      stopCreditScorePolling(creditScoreIntervalId);
+    };
+  }, [hasReclaimProof]);
+
+  useEffect(() => {
     if (creditScoreId) {
       stopCreditScorePolling(creditScoreIntervalId);
     }
 
     return () => {
       stopCreditScorePolling(creditScoreIntervalId);
-      stopReclaimProofPolling(reclaimProofIntervalId);
     };
-  }, [hasReclaimProof, step, creditScoreId, reclaimProofIntervalId, creditScoreIntervalId]);
+  }, [creditScoreId]);
 
   return (
     <Card className="mx-auto w-full max-w-4xl">
