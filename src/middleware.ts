@@ -9,20 +9,22 @@ export default withAuth(
   async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-    if (!token) {
-      return NextResponse.redirect(new URL('/signin', req.url));
-    }
+    return NextResponse.next();
 
-    const role = token.role || 'BORROWER';
-    const pathRole = req.nextUrl.pathname.split('/')[1];
+    // if (!token) {
+    //   return NextResponse.redirect(new URL('/signin', req.url));
+    // }
 
-    if (!role) {
-      return NextResponse.redirect(new URL('/signin', req.url));
-    }
+    // const role = token.role || 'BORROWER';
+    // const pathRole = req.nextUrl.pathname.split('/')[1];
 
-    if (role.toLowerCase() !== pathRole.toLowerCase()) {
-      return NextResponse.redirect(new URL(ROLE_REDIRECTS[role], req.url));
-    }
+    // if (!role) {
+    //   return NextResponse.redirect(new URL('/signin', req.url));
+    // }
+
+    // if (role.toLowerCase() !== pathRole.toLowerCase()) {
+    //   return NextResponse.redirect(new URL(ROLE_REDIRECTS[role], req.url));
+    // }
   },
   {
     callbacks: {

@@ -24,7 +24,7 @@ const WalletConnectButton = ({ label }: WalletConnectButtonProps) => {
     }
 
     if (status === 'unauthenticated' || !isConnected || !address) {
-      router.push('/signin');
+      // router.push('/signin');
     }
   }, [status, isConnected, address, router]);
 

@@ -9,6 +9,7 @@ import CalculateCreditScore from './calculate-credit-score';
 
 interface PlaidLinkProps {
   linkToken: string;
+  loanApplicationId: string;
 }
 
 export default function PlaidLink(props: PlaidLinkProps) {
@@ -51,7 +52,7 @@ export default function PlaidLink(props: PlaidLinkProps) {
   return (
     <>
       <p>Acces s Token: {accessToken}</p>
-      <CalculateCreditScore accessToken={accessToken} />
+      <CalculateCreditScore accessToken={accessToken} loanApplicationId={props.loanApplicationId} />
     </>
   );
 }

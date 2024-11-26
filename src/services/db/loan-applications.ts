@@ -96,3 +96,11 @@ export const submitLoanApplication = async (
 
   return result;
 };
+
+export const getLatestLoanApplicationOfBorrower = async (accountAddress: string) => {
+  const result = await prisma.loanApplication.findFirst({
+    where: { accountAddress, isSubmitted: false, status: LoanApplicationStatus.DRAFT },
+    orderBy: [{ createdAt: 'desc' }, { updatedAt: 'desc' }],
+  });
+  return result;
+};

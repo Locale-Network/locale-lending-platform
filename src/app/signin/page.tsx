@@ -7,9 +7,10 @@ interface Props {
 }
 
 export default function Page({ searchParams: { callbackUrl } }: Props) {
+  console.log(callbackUrl);
   return (
     <main className="flex h-screen items-center justify-center">
-      <WelcomeCard callbackUrl={callbackUrl} />
+      <WelcomeCard callbackUrl={decodeURIComponent(callbackUrl)} />
     </main>
   );
 }
