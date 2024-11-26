@@ -1,10 +1,10 @@
 import 'server-only';
 
 import prisma from '@prisma/index';
-import { ChainAccount } from '@prisma/client';
+import { Account } from '@prisma/client';
 
-export async function upsertChainAccount(address: string): Promise<ChainAccount> {
-  const result = await prisma.chainAccount.upsert({
+export async function upsertAccount(address: string): Promise<Account> {
+  const result = await prisma.account.upsert({
     where: { address },
     create: { address },
     update: {
