@@ -32,16 +32,10 @@ export default function PlaidLink(props: PlaidLinkProps) {
   const { open, ready } = usePlaidLink(config);
 
   useEffect(() => {
-    setTimeout(() => {
-      setAccessToken('access-sandbox-9439bf2c-d0c1-4c3e-9a0d-029938544d1c');
-    }, 1000);
-  }, []);
-
-  // useEffect(() => {
-  //   if (ready) {
-  //     open();
-  //   }
-  // }, [ready, open]);
+    if (ready) {
+      open();
+    }
+  }, [ready, open]);
 
   if (!accessToken) {
     return null;
