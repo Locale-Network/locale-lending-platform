@@ -3,7 +3,7 @@
 // https://github.com/plaid/react-plaid-link/blob/master/examples/oauth.tsx
 
 import { useCallback, useEffect, useState } from 'react';
-import { plaidPublicTokenExchange } from '@/app/data/loan/credit-score/actions';
+import { plaidPublicTokenExchange } from '@/app/data/loan/[id]/credit-score/actions';
 import { usePlaidLink, PlaidLinkOptions, PlaidLinkOnSuccess } from 'react-plaid-link';
 import CalculateCreditScore from './calculate-credit-score';
 
