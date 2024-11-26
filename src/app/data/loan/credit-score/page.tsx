@@ -12,9 +12,11 @@ export default async function Page(props: unknown) {
 
   const headersList = headers();
 
-  debug(props);
-  debug(headersList.keys());
-  debug(headersList.values());
+  console.log(props);
+
+  headersList.forEach((value: unknown, key: string) => {
+    console.log(key, value);
+  });
 
   const {
     isError: isErrorLinkToken,
