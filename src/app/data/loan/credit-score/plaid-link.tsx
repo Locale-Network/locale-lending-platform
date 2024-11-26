@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { plaidPublicTokenExchange } from './actions';
 import { usePlaidLink, PlaidLinkOptions, PlaidLinkOnSuccess } from 'react-plaid-link';
+import CalculateCreditScore from './calculate-credit-score';
 
 interface PlaidLinkProps {
   linkToken: string;
@@ -12,11 +13,15 @@ interface PlaidLinkProps {
 }
 
 export default function PlaidLink(props: PlaidLinkProps) {
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  
   const onSuccess = useCallback<PlaidLinkOnSuccess>(async (publicToken, metadata) => {
     const response = await plaidPublicTokenExchange(publicToken);
     if (response.isError || !response.accessToken) {
       return;
     }
+
+    setAccessToken(response.accessToken);
   }, []);
 
   useEffect(() => {
@@ -44,5 +49,14 @@ export default function PlaidLink(props: PlaidLinkProps) {
     }
   }, [ready, open]);
 
-  return <></>;
+   if (!accessToken) {
+     return null;
+   }
+
+  return (
+    <>
+      <p>Acces s Token: {accessToken}</p>
+      <CalculateCreditScore loanApplicationId={props.loanApplicationId} accessToken={accessToken} />
+    </>
+  );
 }
