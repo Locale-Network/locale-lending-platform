@@ -4,6 +4,7 @@ import { generateRandomString } from '@/utils/random';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
+import { headers } from 'next/headers';
 
 export default async function Page() {
   // const { isError, errorMessage, account } = await getLoanApplicationCreator(loan_id);
@@ -17,8 +18,13 @@ export default async function Page() {
 
   console.log(accountAddress);
 
+  const headersList = headers();
+  const fullUrl = headersList.get('x-url') || headersList.get('referer') || '/';
+
+  console.log(fullUrl);
+
   if (!accountAddress) {
-    redirect(`/signin?callbackUrl=${window.location.href}`);
+    redirect(`/signin?callbackUrl=${fullUrl}`);
   }
 
   const {
