@@ -12,7 +12,6 @@ export default function AddressInput() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submitted address:', address);
     router.push(`/data/loan/credit-score?accountAddress=${address}`);
   };
 
