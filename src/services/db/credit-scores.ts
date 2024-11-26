@@ -6,7 +6,7 @@ import { getLoanApplication } from './loan-applications';
 
 export type SmartContractCreditScoreResponse = Omit<
   CreditScore,
-  'createdAt' | 'updatedAt' | 'id' | 'chainAccountAddress' | 'loanApplicationId'
+  'createdAt' | 'updatedAt' | 'id' | 'accountAddress' | 'loanApplicationId'
 >;
 
 export const saveCreditScoreOfLoanApplication = async (args: {
@@ -21,7 +21,7 @@ export const saveCreditScoreOfLoanApplication = async (args: {
     throw new Error(`Loan application with id ${loanApplicationId} not found`);
   }
 
-  const { chainAccountAddress } = loanApplication;
+  const { accountAddress } = loanApplication;
 
   const result = await prisma.$transaction(async tx => {
     const creditScoreResult = await tx.creditScore.upsert({
@@ -35,9 +35,9 @@ export const saveCreditScoreOfLoanApplication = async (args: {
             id: loanApplicationId,
           },
         },
-        chainAccount: {
+        account: {
           connect: {
-            address: chainAccountAddress,
+            address: accountAddress,
           },
         },
       },

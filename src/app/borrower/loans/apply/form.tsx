@@ -47,13 +47,13 @@ import {
 
 interface LoanApplicationFormProps {
   loanApplicationId: string;
-  chainAccountAddress: string;
+  accountAddress: string;
   reclaimRequestUrl: string;
   reclaimStatusUrl: string;
 }
 export default function LoanApplicationForm({
   loanApplicationId,
-  chainAccountAddress,
+  accountAddress,
   reclaimRequestUrl,
   reclaimStatusUrl,
 }: LoanApplicationFormProps) {
@@ -72,7 +72,7 @@ export default function LoanApplicationForm({
     resolver: zodResolver(loanApplicationFormSchema),
     defaultValues: {
       applicationId: loanApplicationId,
-      chainAccountAddress,
+      accountAddress,
       hasOutstandingLoans: false,
       outstandingLoans: [],
       hasReclaimProof: false,
@@ -127,7 +127,7 @@ export default function LoanApplicationForm({
 
       await submitLoanApplication({
         formData: values,
-        chainAccountAddress,
+        accountAddress,
       });
 
       toast({
