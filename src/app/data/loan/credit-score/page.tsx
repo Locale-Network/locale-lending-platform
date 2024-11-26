@@ -13,7 +13,8 @@ export default async function Page(props: unknown) {
   const headersList = headers();
 
   debug(props);
-  debug(headersList);
+  debug(headersList.keys());
+  debug(headersList.values());
 
   const {
     isError: isErrorLinkToken,
