@@ -15,7 +15,7 @@ import {
 import {
   initialiseLoanApplication as dbInitialiseLoanApplication,
   submitLoanApplication as dbSubmitLoanApplication,
-} from '@/services/db/loan-applications';
+} from '@/services/db/loan-applications/borrower';
 import { getCreditScoreOfLoanApplication as dbGetCreditScoreOfLoanApplication } from '@/services/db/credit-scores';
 import { validateRequest as validateBorrowerRequest } from '@/app/borrower/actions';
 import { revalidatePath } from 'next/cache';

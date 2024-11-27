@@ -14,9 +14,7 @@ export default function Page() {
           <p className="text-muted-foreground">
             Your bank account has been successfully connected.
           </p>
-          <p>
-            You can now continue with your application.
-          </p>
+          <p>You can now continue with your application.</p>
         </div>
       </Card>
     </div>

@@ -3,7 +3,7 @@
 import {
   getLoanApplication as dbGetLoanApplication,
   getLatestLoanApplicationOfBorrower as dbGetLatestLoanApplicationOfBorrower,
-} from '@/services/db/loan-applications';
+} from '@/services/db/loan-applications/borrower';
 import plaidClient from '@/utils/plaid';
 import { CountryCode, Products } from 'plaid';
 
@@ -35,7 +35,6 @@ export async function createLinkTokenForTransactions(
       linkToken: response.data.link_token,
     };
   } catch (error) {
-    
     return {
       isError: true,
       errorMessage: 'Error creating link token',

@@ -5,7 +5,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import VerificationStatus from '@/containers/VerificationStatus/VerificationStatus';
 import { Suspense } from 'react';
 
-
 interface ReclaimPageProps {
   searchParams: {
     account: string;

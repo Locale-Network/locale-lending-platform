@@ -1,6 +1,6 @@
 import { withAuth } from 'next-auth/middleware';
 import { authPages } from '@/app/api/auth/auth-options';
-import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
+import { ROLE_REDIRECTS, ROLE_ACCESS } from '@/app/api/auth/auth-options';
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
@@ -20,9 +20,10 @@ export default withAuth(
       return NextResponse.redirect(new URL('/signin', req.url));
     }
 
-    if (role.toLowerCase() !== pathRole.toLowerCase()) {
-      return NextResponse.redirect(new URL(ROLE_REDIRECTS[role], req.url));
-    }
+     const allowedPaths = ROLE_ACCESS[role as keyof typeof ROLE_ACCESS] || [];
+     if (!allowedPaths.includes(pathRole.toLowerCase())) {
+       return NextResponse.redirect(new URL(ROLE_REDIRECTS[role], req.url));
+     }
   },
   {
     callbacks: {
@@ -34,5 +35,5 @@ export default withAuth(
 
 // routes that will invoke the middleware
 export const config = {
-  matcher: ['/borrower/:path*', '/approver/:path*', '/admin/:path*','/'],
+  matcher: ['/borrower/:path*', '/approver/:path*', '/admin/:path*', '/'],
 };
