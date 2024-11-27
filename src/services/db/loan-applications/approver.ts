@@ -1,7 +1,7 @@
 import 'server-only';
 
 import prisma from '@prisma/index';
-import { ChainAccount, CreditScore, LoanApplication, LoanApplicationStatus } from '@prisma/client';
+import { Account, CreditScore, LoanApplication, LoanApplicationStatus } from '@prisma/client';
 
 export const getLoanApplication = async (args: {
   loanApplicationId: string;
@@ -16,7 +16,7 @@ export const getLoanApplication = async (args: {
 export const getSubmittedLoanApplications = async (): Promise<
   (LoanApplication & {
     creditScore: CreditScore | null;
-    chainAccount: ChainAccount;
+    account: Account;
   })[]
 > => {
   const result = await prisma.loanApplication.findMany({
@@ -28,7 +28,7 @@ export const getSubmittedLoanApplications = async (): Promise<
     },
     include: {
       creditScore: true,
-      chainAccount: true,
+      account: true,
     },
     orderBy: [{ createdAt: 'desc' }, { updatedAt: 'desc' }],
   });
