@@ -36,7 +36,10 @@ import {
 } from '@/types/business';
 import QRCode from 'react-qr-code';
 import { CreditScore } from '@prisma/client';
-import { getCreditScoreOfLoanApplication, submitLoanApplication } from './actions';
+import {
+  getCreditScoreOfLoanApplication,
+  submitLoanApplication,
+} from './actions/loan-application-actions';
 import {
   loanApplicationFormSchema,
   BUSINESS_DESCRIPTION_MAX_LENGTH,
