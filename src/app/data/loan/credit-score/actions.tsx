@@ -3,7 +3,7 @@
 import {
   getLoanApplication as dbGetLoanApplication,
   getLatestLoanApplicationOfBorrower as dbGetLatestLoanApplicationOfBorrower,
-} from '@/services/db/loan-applications';
+} from '@/services/db/loan-applications/borrower';
 import plaidClient from '@/utils/plaid';
 import { CountryCode, Products } from 'plaid';
 

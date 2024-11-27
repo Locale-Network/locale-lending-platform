@@ -88,7 +88,7 @@ model Account {
   creditScore           CreditScore[]
   proofs                Proof[]
 
-  @@map("chain_accounts")
+  @@map("accounts")
 }
 
 // plaid items authorised by chain account
