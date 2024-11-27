@@ -20,10 +20,10 @@ export default withAuth(
       return NextResponse.redirect(new URL('/signin', req.url));
     }
 
-     const allowedPaths = ROLE_ACCESS[role as keyof typeof ROLE_ACCESS] || [];
-     if (!allowedPaths.includes(pathRole.toLowerCase())) {
-       return NextResponse.redirect(new URL(ROLE_REDIRECTS[role], req.url));
-     }
+    const allowedPaths = ROLE_ACCESS[role as keyof typeof ROLE_ACCESS] || [];
+    if (!allowedPaths.includes(pathRole.toLowerCase())) {
+      return NextResponse.redirect(new URL(ROLE_REDIRECTS[role], req.url));
+    }
   },
   {
     callbacks: {
