@@ -35,7 +35,7 @@ export async function createLinkTokenForTransactions(
       linkToken: response.data.link_token,
     };
   } catch (error) {
-    console.log('error : ', error);
+    
     return {
       isError: true,
       errorMessage: 'Error creating link token',

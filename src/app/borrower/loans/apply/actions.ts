@@ -108,7 +108,6 @@ interface GetConnectedBankAccountsResponse {
 export async function getConnectedBankAccounts(
   accountAddress: string
 ): Promise<GetConnectedBankAccountsResponse> {
-  console.log('getConnectedBankAccounts');
   try {
     await validateBorrowerRequest(accountAddress);
 
