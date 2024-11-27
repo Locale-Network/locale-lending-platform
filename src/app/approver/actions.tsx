@@ -19,8 +19,9 @@ export async function validateRequest(chainAccountAddress: string) {
   if (!session) {
     redirect('/sign-in');
   }
+
   if (session.user.role !== Role.APPROVER && session.user.role !== Role.ADMIN) {
-    redirect(ROLE_REDIRECTS[session.user.role as Role]);
+    redirect(ROLE_REDIRECTS[session.user.role]);
   }
 
   if (session?.address !== chainAccountAddress) {
