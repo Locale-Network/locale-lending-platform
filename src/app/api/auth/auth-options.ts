@@ -94,17 +94,22 @@ export const authOptions: NextAuthOptions = {
   pages: authPages,
   secret: NEXTAUTH_SECRET,
   callbacks: {
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       session.address = token.sub;
       session.user.name = token.sub;
-      session.user.role = token.role;
+      session.user.role = token.role ?? Role.BORROWER;
 
       return session;
     },
-    async jwt({ token, user }: { token: any; user: any }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = user.role;
       }
+
+      if (trigger === 'update') {
+        token.role = session.user.role;
+      }
+
       return token;
     },
   },

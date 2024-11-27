@@ -116,7 +116,6 @@ export async function retryIdentityVerification(
   }
 }
 
-
 export const createKycVerificationRecord = async (
   accountAddress: string,
   identityVerificationId: string
@@ -128,5 +127,3 @@ export const createKycVerificationRecord = async (
 
   revalidatePath('/borrower/loans/apply');
 };
-
-

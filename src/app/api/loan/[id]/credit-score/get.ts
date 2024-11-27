@@ -3,7 +3,7 @@ import {
   SmartContractCreditScoreResponse,
   saveCreditScoreOfLoanApplication,
 } from '@/services/db/credit-scores';
-import {getLoanApplication} from '@/services/db/loan-applications/borrower';
+import { getLoanApplication } from '@/services/db/loan-applications/borrower';
 import { CreditScore } from '@prisma/client';
 
 export interface CreditScoreApiResponse {
