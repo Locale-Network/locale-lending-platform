@@ -35,7 +35,6 @@ export async function createLinkTokenForTransactions(
       linkToken: response.data.link_token,
     };
   } catch (error) {
-    
     return {
       isError: true,
       errorMessage: 'Error creating link token',
