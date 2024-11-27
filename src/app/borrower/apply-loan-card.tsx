@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 export default function ApplyLoanCard() {
   const router = useRouter();
 
-  const handleClick = async () => {
+  const handleClick = () => {
     router.push('/borrower/loans/apply');
   };
 
