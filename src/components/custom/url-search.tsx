@@ -11,16 +11,20 @@ export default function Search() {
 
   // Create the debounced version of handleSearch
   const debouncedSearch = useCallback(
-    debounce((term: string) => {
-      const params = new URLSearchParams(searchParams);
-      params.set('page', '1');
-      if (term) {
-        params.set('query', term);
-      } else {
-        params.delete('query');
-      }
-      replace(`${pathname}?${params.toString()}`);
-    }, 300),
+    (t: string) => {
+      const d = debounce((term: string) => {
+        const params = new URLSearchParams(searchParams);
+        params.set('page', '1');
+        if (term) {
+          params.set('query', term);
+        } else {
+          params.delete('query');
+        }
+        replace(`${pathname}?${params.toString()}`);
+      }, 300);
+
+      d(t);
+    },
     [searchParams, pathname, replace]
   );
 

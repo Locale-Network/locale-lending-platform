@@ -6,18 +6,18 @@ import { KYCVerificationStatus } from '@prisma/client';
 import { useCallback, useEffect, useState } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 
-const useKycVerification = (chainAccountAddress?: string) => {
+const useKycVerification = (accountAddress?: string) => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [kycStatus, setKycStatus] = useState<KYCVerificationStatus | 'initial' | ''>('');
 
   const generateToken = useCallback(async () => {
-    if (chainAccountAddress) {
-      const data = await createKycLinkToken(chainAccountAddress);
+    if (accountAddress) {
+      const data = await createKycLinkToken(accountAddress);
       if (data) {
         setLinkToken(data.link_token);
       }
     }
-  }, [chainAccountAddress]);
+  }, [accountAddress]);
 
   /**
    * returns a shareable url, which can use to navigate user to a separate
@@ -25,8 +25,8 @@ const useKycVerification = (chainAccountAddress?: string) => {
    * status will be updated by the webhook
    */
   const retryKycVerification = async () => {
-    if (chainAccountAddress) {
-      const data = await retryKyc(chainAccountAddress);
+    if (accountAddress) {
+      const data = await retryKyc(accountAddress);
       return data;
     }
     return null;
@@ -35,7 +35,7 @@ const useKycVerification = (chainAccountAddress?: string) => {
   const config = {
     token: linkToken || '',
     onSuccess: async (_data: any, metadata: any) => {
-      await createKycVerificationRecord(chainAccountAddress || '', metadata.link_session_id);
+      await createKycVerificationRecord(accountAddress || '', metadata.link_session_id);
     },
     onExit: (err: any, metadata: any) => {
       console.log(
@@ -55,9 +55,9 @@ const useKycVerification = (chainAccountAddress?: string) => {
 
   useEffect(() => {
     const fetchKycStatus = async () => {
-      if (!chainAccountAddress) return;
+      if (!accountAddress) return;
 
-      const { identityVerificationData, hasAttemptedKyc } = await getKycStatus(chainAccountAddress);
+      const { identityVerificationData, hasAttemptedKyc } = await getKycStatus(accountAddress);
 
       setKycStatus(identityVerificationData?.status || '');
 
@@ -68,7 +68,7 @@ const useKycVerification = (chainAccountAddress?: string) => {
     };
 
     fetchKycStatus();
-  }, [chainAccountAddress, generateToken]);
+  }, [accountAddress, generateToken]);
 
   return { linkToken, retryKycVerification, kycStatus, startKYCFlow };
 };

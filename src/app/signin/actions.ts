@@ -3,10 +3,10 @@ import { isAddress } from 'viem';
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
-import { upsertChainAccount } from '@/services/db/chain-accounts';
-import { ChainAccount } from '@prisma/client';
+import { upsertAccount } from '@/services/db/accounts';
+import { Account } from '@prisma/client';
 
-export async function signIn(address: string): Promise<ChainAccount | null> {
+export async function signIn(address: string): Promise<Account | null> {
   try {
     const session = await getServerSession(authOptions);
 
@@ -14,9 +14,9 @@ export async function signIn(address: string): Promise<ChainAccount | null> {
       return null;
     }
 
-    const chainAccount = await upsertChainAccount(address);
+    const account = await upsertAccount(address);
 
-    return chainAccount;
+    return account;
   } catch (error) {
     console.error('Error in signIn action:', error);
     return null;

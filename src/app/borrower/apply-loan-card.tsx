@@ -12,9 +12,9 @@ import { useAccount } from 'wagmi';
 export default function ApplyLoanCard() {
   const router = useRouter();
 
-  const { address: chainAccountAddress } = useAccount();
+  const { address: accountAddress } = useAccount();
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
-  const { startKYCFlow, kycStatus, retryKycVerification } = useKycVerification(chainAccountAddress);
+  const { startKYCFlow, kycStatus, retryKycVerification } = useKycVerification(accountAddress);
 
   const handleClick = async () => {
     router.push('/borrower/loans/apply');

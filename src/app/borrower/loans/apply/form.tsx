@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
@@ -47,20 +47,20 @@ import {
 
 interface LoanApplicationFormProps {
   loanApplicationId: string;
-  chainAccountAddress: string;
+  accountAddress: string;
   reclaimRequestUrl: string;
   reclaimStatusUrl: string;
 }
 export default function LoanApplicationForm({
   loanApplicationId,
-  chainAccountAddress,
+  accountAddress,
   reclaimRequestUrl,
   reclaimStatusUrl,
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
   const [creditScore, setCreditScore] = useState<Partial<CreditScore> | null>(null);
-  const [reclaimProofIntervalId, setReclaimProofIntervalId] = useState<NodeJS.Timer | null>(null);
-  const [creditScoreIntervalId, setCreditScoreIntervalId] = useState<NodeJS.Timer | null>(null);
+  const reclaimProofIntervalIdRef = useRef<NodeJS.Timer | null>(null);
+  const creditScoreIntervalIdRef = useRef<NodeJS.Timer | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -72,7 +72,7 @@ export default function LoanApplicationForm({
     resolver: zodResolver(loanApplicationFormSchema),
     defaultValues: {
       applicationId: loanApplicationId,
-      chainAccountAddress,
+      accountAddress,
       hasOutstandingLoans: false,
       outstandingLoans: [],
       hasReclaimProof: false,
@@ -127,7 +127,7 @@ export default function LoanApplicationForm({
 
       await submitLoanApplication({
         formData: values,
-        chainAccountAddress,
+        accountAddress,
       });
 
       toast({
@@ -163,7 +163,7 @@ export default function LoanApplicationForm({
   const prevStep = () => setStep(step => Math.max(step - 1, 1));
   const clickStep = (step: number) => setStep(step);
 
-  const startReclaimProofPolling = async () => {
+  const startReclaimProofPolling = useCallback(async () => {
     const pollStatus = async () => {
       try {
         const response = await fetch(reclaimStatusUrl);
@@ -177,15 +177,15 @@ export default function LoanApplicationForm({
     };
 
     const newIntervalId = setInterval(pollStatus, 3000);
-    setReclaimProofIntervalId(newIntervalId);
-  };
+    reclaimProofIntervalIdRef.current = newIntervalId;
+  }, [reclaimStatusUrl, form]);
 
   const stopReclaimProofPolling = (intervalId: NodeJS.Timer | null) => {
     clearInterval(intervalId as NodeJS.Timeout);
-    setReclaimProofIntervalId(null);
+    reclaimProofIntervalIdRef.current = null;
   };
 
-  const startCreditScorePolling = async () => {
+  const startCreditScorePolling = useCallback(async () => {
     const pollStatus = async () => {
       try {
         const response = await getCreditScoreOfLoanApplication(loanApplicationId);
@@ -201,36 +201,45 @@ export default function LoanApplicationForm({
     };
 
     const newIntervalId = setInterval(pollStatus, 3000);
-    setCreditScoreIntervalId(newIntervalId);
-  };
+    creditScoreIntervalIdRef.current = newIntervalId;
+  }, [loanApplicationId, form]);
 
   const stopCreditScorePolling = (intervalId: NodeJS.Timer | null) => {
     clearInterval(intervalId as NodeJS.Timeout);
-    setCreditScoreIntervalId(null);
+    creditScoreIntervalIdRef.current = null;
   };
 
   useEffect(() => {
     if (step === 2 && !hasReclaimProof) {
       startReclaimProofPolling();
     }
+  }, [hasReclaimProof, step, startReclaimProofPolling]);
 
+  useEffect(() => {
     if (hasReclaimProof) {
-      stopReclaimProofPolling(reclaimProofIntervalId);
+      stopReclaimProofPolling(reclaimProofIntervalIdRef.current);
     }
+  }, [hasReclaimProof]);
 
+  useEffect(() => {
     if (hasReclaimProof) {
       startCreditScorePolling();
     }
 
+    return () => {
+      stopCreditScorePolling(creditScoreIntervalIdRef.current);
+    };
+  }, [hasReclaimProof, startCreditScorePolling]);
+
+  useEffect(() => {
     if (creditScoreId) {
-      stopCreditScorePolling(creditScoreIntervalId);
+      stopCreditScorePolling(creditScoreIntervalIdRef.current);
     }
 
     return () => {
-      stopCreditScorePolling(creditScoreIntervalId);
-      stopReclaimProofPolling(reclaimProofIntervalId);
+      stopCreditScorePolling(creditScoreIntervalIdRef.current);
     };
-  }, [hasReclaimProof, step, creditScoreId, reclaimProofIntervalId, creditScoreIntervalId]);
+  }, [creditScoreId]);
 
   return (
     <Card className="mx-auto w-full max-w-4xl">

@@ -17,12 +17,12 @@ export default async function Page({
   };
 }) {
   const session = await getServerSession(authOptions);
-  const chainAccountAddress = session?.address;
+  const accountAddress = session?.address;
 
   const query = searchParams?.query || '';
   const currentPage = Number(searchParams?.page) || 1;
 
-  const { loanApplications, isError, errorMessage } = await getLoanApplications(chainAccountAddress!);
+  const { loanApplications, isError, errorMessage } = await getLoanApplications(accountAddress!);
 
   if (isError || isUndefined(loanApplications)) {
     return <div>{errorMessage}</div>;

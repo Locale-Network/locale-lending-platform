@@ -10,21 +10,19 @@ interface GetLoanApplicationsResponse {
   loanApplications?: LoanApplicationsForTable[];
 }
 export const getLoanApplications = async (
-  chainAccountAddress: string
+  accountAddress: string
 ): Promise<GetLoanApplicationsResponse> => {
   try {
-    await validateBorrowerRequest(chainAccountAddress);
-      const loans = await dbGetLoanApplicationsOfBorrower(chainAccountAddress);
+    await validateBorrowerRequest(accountAddress);
+    const loans = await dbGetLoanApplicationsOfBorrower(accountAddress);
 
-      const loansForTable: LoanApplicationsForTable[] = loans.map((loan) => ({
-        id: loan.id,
-        creditScore: loan.creditScore?.score ?? 0,
-        status: loan.status,
-        createdDate: loan.createdAt,
-        updatedDate: loan.updatedAt,
-      }));
-
-      
+    const loansForTable: LoanApplicationsForTable[] = loans.map(loan => ({
+      id: loan.id,
+      creditScore: loan.creditScore?.score ?? 0,
+      status: loan.status,
+      createdDate: loan.createdAt,
+      updatedDate: loan.updatedAt,
+    }));
 
     return {
       isError: false,

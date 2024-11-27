@@ -3,12 +3,12 @@
 import { createKycVerification } from '@/services/db/plaid/kyc';
 
 export const createKycVerificationRecord = async (
-  chainAccountAddress: string,
+  accountAddress: string,
   identityVerificationId: string
 ) => {
   try {
     const response = await createKycVerification({
-      chainAccountAddress,
+      accountAddress,
       identityVerificationId,
     });
     return response;

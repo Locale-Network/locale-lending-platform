@@ -8,20 +8,20 @@ import { initialiseLoanApplication } from './actions';
 
 export default async function Page() {
   const session = await getServerSession(authOptions);
-  const chainAccountAddress = session?.address;
+  const accountAddress = session?.address;
 
-  if (!chainAccountAddress) {
+  if (!accountAddress) {
     return null;
   }
 
   const { isError, errorMessage, loanApplicationId } =
-    await initialiseLoanApplication(chainAccountAddress);
+    await initialiseLoanApplication(accountAddress);
 
   if (isError || !loanApplicationId) {
     return <div>{errorMessage}</div>;
   }
 
-  const redirectUrl = process.env.PLAID_REDIRECT_URI ?? '';
+  const redirectUrl = process.env.RECLAIM_SUCCESS_URL ?? '';
 
   const appSecret = process.env.SECRET_ID;
   const appId = process.env.APP_ID;
@@ -32,13 +32,15 @@ export default async function Page() {
     throw new Error('Missing reclaim configuration');
   }
 
-  const reclaimProofRequest = await ReclaimProofRequest.init(appId, appSecret, providerId);
+  const reclaimProofRequest = await ReclaimProofRequest.init(appId, appSecret, providerId, {
+    log: true,
+  });
 
   reclaimProofRequest.setRedirectUrl(redirectUrl);
   reclaimProofRequest.setAppCallbackUrl(callbackUrl);
 
-  const message = `credit score calculation for ${chainAccountAddress} at ${new Date().toISOString()} for loan application ${loanApplicationId}`;
-  reclaimProofRequest.addContext(chainAccountAddress, message);
+  const message = `credit score calculation for ${accountAddress} at ${new Date().toISOString()} for loan application ${loanApplicationId}`;
+  reclaimProofRequest.addContext(accountAddress, message);
 
   const requestUrl = await reclaimProofRequest.getRequestUrl();
   const statusUrl = reclaimProofRequest.getStatusUrl();
@@ -46,7 +48,7 @@ export default async function Page() {
   return (
     <LoanApplicationForm
       loanApplicationId={loanApplicationId}
-      chainAccountAddress={chainAccountAddress}
+      accountAddress={accountAddress}
       reclaimRequestUrl={requestUrl}
       reclaimStatusUrl={statusUrl}
     />

@@ -10,7 +10,7 @@ import { isAddress } from 'viem';
 import { redirect } from 'next/navigation';
 import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
 
-export async function validateRequest(chainAccountAddress: string) {
+export async function validateRequest(accountAddress: string) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -21,11 +21,11 @@ export async function validateRequest(chainAccountAddress: string) {
     redirect(ROLE_REDIRECTS[session.user.role]);
   }
 
-  if (session?.address !== chainAccountAddress) {
+  if (session?.address !== accountAddress) {
     throw new Error('User address does not match chain account address');
   }
 
-  if (!isAddress(chainAccountAddress)) {
+  if (!isAddress(accountAddress)) {
     throw new Error('Invalid chain account address');
   }
 }
@@ -43,10 +43,10 @@ export async function plaidKycStatus(identity_verification_id: string) {
   });
 }
 
-export async function getKycStatus(chainAccountAddress: string): Promise<GetKycStatusResponse> {
+export async function getKycStatus(accountAddress: string): Promise<GetKycStatusResponse> {
   try {
-    await validateRequest(chainAccountAddress);
-    const kycVerification = await getKycVerification({ chainAccountAddress });
+    await validateRequest(accountAddress);
+    const kycVerification = await getKycVerification({ accountAddress });
 
     if (!kycVerification) {
       return { isError: false, hasAttemptedKyc: false };
@@ -63,12 +63,12 @@ export async function getKycStatus(chainAccountAddress: string): Promise<GetKycS
   }
 }
 
-export async function retryKyc(chainAccountAddress: string) {
+export async function retryKyc(accountAddress: string) {
   try {
-    await validateRequest(chainAccountAddress);
+    await validateRequest(accountAddress);
 
     const response = await plaidClient.identityVerificationRetry({
-      client_user_id: chainAccountAddress,
+      client_user_id: accountAddress,
       template_id: process.env.TEMPLATE_ID || '',
       strategy: Strategy.Reset,
       secret: process.env.PLAID_SECRET,
@@ -81,12 +81,12 @@ export async function retryKyc(chainAccountAddress: string) {
   }
 }
 
-export async function createKycLinkToken(chainAccountAddress: string) {
+export async function createKycLinkToken(accountAddress: string) {
   try {
-    await validateRequest(chainAccountAddress);
+    await validateRequest(accountAddress);
 
     const response = await plaidClient.linkTokenCreate({
-      user: { client_user_id: chainAccountAddress },
+      user: { client_user_id: accountAddress },
       products: [Products.IdentityVerification],
       identity_verification: {
         template_id: process.env.TEMPLATE_ID || '',

@@ -4,7 +4,7 @@ import { KYCVerification, KYCVerificationStatus } from '@prisma/client';
 import prisma from '@prisma/index';
 
 export const createKycVerification = async (data: {
-  chainAccountAddress: string;
+  accountAddress: string;
   identityVerificationId: string;
 }) => {
   return prisma.kYCVerification.create({ data: { ...data, updatedAt: new Date() } });
@@ -36,24 +36,24 @@ export const updateKyVerification = async (data: {
 };
 
 export const getKycVerification = async ({
-  chainAccountAddress,
+  accountAddress,
   identityVerificationId,
 }: {
-  chainAccountAddress?: string;
+  accountAddress?: string;
   identityVerificationId?: string;
 }): Promise<KYCVerification | null> => {
-  if (!chainAccountAddress && !identityVerificationId) {
-    throw new Error('Either chainAccountAddress or identityVerificationId is required');
+  if (!accountAddress && !identityVerificationId) {
+    throw new Error('Either accountAddress or identityVerificationId is required');
   }
 
   /*
-    query by chainAccountAddress AND identityVerificationId if both are provided
-    otherwise query by either chainAccountAddress or identityVerificationId
+    query by accountAddress AND identityVerificationId if both are provided
+    otherwise query by either accountAddress or identityVerificationId
   */
   const record = await prisma.kYCVerification.findFirst({
     where: {
       OR: [
-        ...(chainAccountAddress ? [{ chainAccountAddress }] : []),
+        ...(accountAddress ? [{ accountAddress }] : []),
         ...(identityVerificationId ? [{ identityVerificationId }] : []),
       ],
     },
