@@ -1,38 +1,11 @@
 'use server';
 
-import { getLoanApplication as dbGetLoanApplication } from '@/services/db/loan-applications';
+import {
+  getLoanApplication as dbGetLoanApplication,
+  getLatestLoanApplicationOfBorrower as dbGetLatestLoanApplicationOfBorrower,
+} from '@/services/db/loan-applications';
 import plaidClient from '@/utils/plaid';
 import { CountryCode, Products } from 'plaid';
-
-interface GetLoanApplicationCreatorResponse {
-  isError: boolean;
-  errorMessage?: string;
-  account?: string;
-}
-export const getLoanApplicationCreator = async (
-  loanApplicationId: string
-): Promise<GetLoanApplicationCreatorResponse> => {
-  try {
-    const loanApplication = await dbGetLoanApplication({ loanApplicationId });
-
-    if (!loanApplication) {
-      return {
-        isError: true,
-        errorMessage: `Loan application with id ${loanApplicationId} not found`,
-      };
-    }
-
-    return {
-      isError: false,
-      account: loanApplication.accountAddress,
-    };
-  } catch (error) {
-    return {
-      isError: true,
-      errorMessage: 'Failed to get loan application creator',
-    };
-  }
-};
 
 interface CreateLinkTokenResponse {
   isError: boolean;
@@ -62,7 +35,7 @@ export async function createLinkTokenForTransactions(
       linkToken: response.data.link_token,
     };
   } catch (error) {
-    console.log('error : ', error);
+    
     return {
       isError: true,
       errorMessage: 'Error creating link token',
@@ -93,5 +66,24 @@ export async function plaidPublicTokenExchange(
       isError: true,
       errorMessage: 'Error exchanging public token for access token',
     };
+  }
+}
+
+interface GetLatestLoanApplicationOfBorrowerResponse {
+  isError: boolean;
+  errorMessage?: string;
+  loanApplicationId?: string;
+}
+export async function getLatestLoanApplicationOfBorrower(
+  accountAddress: string
+): Promise<GetLatestLoanApplicationOfBorrowerResponse> {
+  try {
+    const loanApplication = await dbGetLatestLoanApplicationOfBorrower(accountAddress);
+    return {
+      isError: false,
+      loanApplicationId: loanApplication?.id,
+    };
+  } catch (error) {
+    return { isError: true, errorMessage: 'Failed to get latest loan application of borrower' };
   }
 }

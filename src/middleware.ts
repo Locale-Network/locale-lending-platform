@@ -9,22 +9,20 @@ export default withAuth(
   async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-    return NextResponse.next();
+    if (!token) {
+      return NextResponse.redirect(new URL('/signin', req.url));
+    }
 
-    // if (!token) {
-    //   return NextResponse.redirect(new URL('/signin', req.url));
-    // }
+    const role = token.role || 'BORROWER';
+    const pathRole = req.nextUrl.pathname.split('/')[1];
 
-    // const role = token.role || 'BORROWER';
-    // const pathRole = req.nextUrl.pathname.split('/')[1];
+    if (!role) {
+      return NextResponse.redirect(new URL('/signin', req.url));
+    }
 
-    // if (!role) {
-    //   return NextResponse.redirect(new URL('/signin', req.url));
-    // }
-
-    // if (role.toLowerCase() !== pathRole.toLowerCase()) {
-    //   return NextResponse.redirect(new URL(ROLE_REDIRECTS[role], req.url));
-    // }
+    if (role.toLowerCase() !== pathRole.toLowerCase()) {
+      return NextResponse.redirect(new URL(ROLE_REDIRECTS[role], req.url));
+    }
   },
   {
     callbacks: {
@@ -36,5 +34,5 @@ export default withAuth(
 
 // routes that will invoke the middleware
 export const config = {
-  matcher: ['/borrower/:path*', '/approver/:path*', '/admin/:path*'],
+  matcher: ['/borrower/:path*', '/approver/:path*', '/admin/:path*','/'],
 };

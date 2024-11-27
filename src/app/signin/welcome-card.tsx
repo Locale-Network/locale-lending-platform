@@ -13,32 +13,20 @@ import { ROLE_REDIRECTS } from '@/app/api/auth/auth-options';
 
 // TODO: add link to terms and privacy
 
-export default function CardWithForm({ callbackUrl }: { callbackUrl: string }) {
+export default function CardWithForm() {
   const router = useRouter();
   const { status, data: session } = useSession();
   const { isConnected, address } = useAccount();
 
   React.useEffect(() => {
-    console.log('status', status);
-    console.log('isConnected', isConnected);
-    console.log('address', address);
-    console.log('callbackUrl', callbackUrl);
-
     if (status === 'authenticated' && isConnected && address) {
-      console.log('NAVIGATING...');
       (async function () {
         const role = session?.user.role;
-
         const redirectPath = ROLE_REDIRECTS[role];
-
-        if (!callbackUrl) {
-          router.replace(redirectPath);
-        } else {
-          router.replace(`${callbackUrl}?accountAddress=${address}`);
-        }
+        router.replace(redirectPath);
       })();
     }
-  }, [status, isConnected, address, router, session?.user.role, callbackUrl]);
+  }, [status, isConnected, address, router, session?.user.role]);
 
   return (
     <Card className="w-[350px]">

@@ -41,8 +41,6 @@ export default function PlaidLink(props: PlaidLinkProps) {
     return null;
   }
 
-  console.log('accessToken', accessToken);
-
   return (
     <>
       <p>Access Token: {accessToken}</p>
