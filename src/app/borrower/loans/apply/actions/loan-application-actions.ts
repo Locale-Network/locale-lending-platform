@@ -1,8 +1,7 @@
 'use server';
 import plaidClient from '@/utils/plaid';
-import { CountryCode, Products, IdentityVerificationGetResponse } from 'plaid';
+import { CountryCode, Products } from 'plaid';
 import { CreditScore } from '@prisma/client';
-import { getKycVerification } from '@/services/db/plaid/kyc';
 import {
   saveItemAccessToken as dbSavePlaidItemAccessToken,
   getItemAccessTokensForChainAccount as dbGetItemAccessTokensForChainAccount,
@@ -11,7 +10,7 @@ import {
   ConnectedBankAccount,
   loanApplicationFormSchema,
   LoanApplicationForm,
-} from './form-schema';
+} from '../form-schema';
 import {
   initialiseLoanApplication as dbInitialiseLoanApplication,
   submitLoanApplication as dbSubmitLoanApplication,
@@ -19,36 +18,6 @@ import {
 import { getCreditScoreOfLoanApplication as dbGetCreditScoreOfLoanApplication } from '@/services/db/credit-scores';
 import { validateRequest as validateBorrowerRequest } from '@/app/borrower/actions';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-
-// TODO: get KYC status from DB
-interface GetKycStatusResponse {
-  isError: boolean;
-  errorMessage?: string;
-  hasAttemptedKyc: boolean;
-  identityVerificationData?: IdentityVerificationGetResponse;
-}
-export async function getKycStatus(accountAddress: string): Promise<GetKycStatusResponse> {
-  try {
-    await validateBorrowerRequest(accountAddress);
-
-    const kycVerification = await getKycVerification({ accountAddress });
-
-    if (!kycVerification) {
-      return { isError: false, hasAttemptedKyc: false };
-    }
-
-    const identityVerificationId = kycVerification.identityVerificationId;
-
-    const response = await plaidClient.identityVerificationGet({
-      identity_verification_id: identityVerificationId,
-    });
-
-    return { isError: false, hasAttemptedKyc: true, identityVerificationData: response.data };
-  } catch (error: any) {
-    return { isError: true, hasAttemptedKyc: false, errorMessage: 'Error getting KYC status' };
-  }
-}
 
 // exchange Plaid public token for access token for item
 interface PlaidPublicTokenExchangeResponse {
@@ -178,7 +147,6 @@ interface CreateLinkTokenResponse {
   errorMessage?: string;
   linkToken?: string;
 }
-
 export async function createLinkTokenForTransactions(
   accountAddress: string
 ): Promise<CreateLinkTokenResponse> {
@@ -196,38 +164,6 @@ export async function createLinkTokenForTransactions(
       country_codes: [CountryCode.Us],
       client_name: 'Locale Lending Platform',
       language: 'en',
-    });
-
-    return {
-      isError: false,
-      linkToken: response.data.link_token,
-    };
-  } catch (error) {
-    return {
-      isError: true,
-      errorMessage: 'Error creating link token',
-    };
-  }
-}
-
-export async function createLinkTokenForIdentityVerification(
-  accountAddress: string
-): Promise<CreateLinkTokenResponse> {
-  try {
-    await validateBorrowerRequest(accountAddress);
-
-    const response = await plaidClient.linkTokenCreate({
-      client_id: process.env.PLAID_CLIENT_ID,
-      secret: process.env.PLAID_SECRET,
-      user: { client_user_id: accountAddress },
-      products: [Products.IdentityVerification],
-      identity_verification: {
-        template_id: process.env.TEMPLATE_ID || '',
-      },
-      country_codes: [CountryCode.Us],
-      client_name: 'Locale Lending Platform',
-      language: 'en',
-      webhook: 'https://webhook.example.com',
     });
 
     return {
