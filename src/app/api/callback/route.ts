@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     // TODO: with a proof (ex: credit_score) we can filter out private data from the context and reference it later
     await saveReclaimProof({
-      chainAccountAddress: context.contextAddress,
+      accountAddress: context.contextAddress,
       proof,
       context,
     });

@@ -22,9 +22,7 @@ export default function CardWithForm() {
     if (status === 'authenticated' && isConnected && address) {
       (async function () {
         const role = session?.user.role;
-
         const redirectPath = ROLE_REDIRECTS[role];
-
         router.replace(redirectPath);
       })();
     }

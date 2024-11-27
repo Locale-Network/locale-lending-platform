@@ -5,11 +5,11 @@ import { XCircle } from 'lucide-react';
 import { CreditScore } from '@prisma/client';
 import { CreditScoreApiResponse } from '@/app/api/loan/[id]/credit-score/get';
 export default function CalculateCreditScore({
-  loanApplicationId,
   accessToken,
+  loanApplicationId,
 }: {
-  loanApplicationId: string;
   accessToken: string;
+  loanApplicationId: string;
 }) {
   const [apiError, setApiError] = useState<any | null>(null);
   const [creditScore, setCreditScore] = useState<CreditScore | null>(null);

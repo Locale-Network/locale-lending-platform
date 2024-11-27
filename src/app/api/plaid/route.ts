@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   try {
     const data: {
-      chainAccountAddress: string;
+      accountAddress: string;
       identityVerificationId: string;
       status: KYCVerificationStatus;
     } = await req.json();

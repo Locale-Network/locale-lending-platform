@@ -32,7 +32,7 @@ export const BUSINESS_FOUNDED_YEAR_MAX = new Date().getFullYear();
 
 export const loanApplicationFormSchema = z.object({
   applicationId: z.string(),
-  chainAccountAddress: z.string(),
+  accountAddress: z.string(),
 
   // Step 1: Business information
   businessLegalName: z.string().min(2, { message: 'Enter the legal name of the business.' }),

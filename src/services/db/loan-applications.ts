@@ -7,11 +7,11 @@ import { z } from 'zod';
 
 // needed to reference loan application id in reclaim proof. DRAFT MODE
 export const initialiseLoanApplication = async (
-  chainAccountAddress: string
+  accountAddress: string
 ): Promise<LoanApplication> => {
   const result = await prisma.loanApplication.create({
     data: {
-      chainAccountAddress,
+      accountAddress,
       businessLegalName: '',
       businessAddress: '',
       businessState: '',
@@ -39,11 +39,11 @@ export const getLoanApplication = async (args: {
 };
 
 export const getLoanApplicationsOfBorrower = async (
-  chainAccountAddress: string
+  accountAddress: string
 ): Promise<(LoanApplication & { creditScore: CreditScore | null })[]> => {
   const result = await prisma.loanApplication.findMany({
     where: {
-      chainAccountAddress,
+      accountAddress,
       isSubmitted: true,
       status: {
         not: LoanApplicationStatus.DRAFT,
@@ -52,10 +52,7 @@ export const getLoanApplicationsOfBorrower = async (
     include: {
       creditScore: true,
     },
-    orderBy: [
-      { createdAt: 'desc' },
-      { updatedAt: 'desc' },
-    ],
+    orderBy: [{ createdAt: 'desc' }, { updatedAt: 'desc' }],
   });
   return result;
 };
@@ -88,7 +85,7 @@ export const submitLoanApplication = async (
         createMany: {
           data: outstandingLoans.map(outstandingLoan => ({
             ...outstandingLoan,
-            chainAccountAddress: formData.chainAccountAddress,
+            accountAddress: formData.accountAddress,
           })),
         },
       },
@@ -97,5 +94,13 @@ export const submitLoanApplication = async (
     },
   });
 
+  return result;
+};
+
+export const getLatestLoanApplicationOfBorrower = async (accountAddress: string) => {
+  const result = await prisma.loanApplication.findFirst({
+    where: { accountAddress, isSubmitted: false, status: LoanApplicationStatus.DRAFT },
+    orderBy: [{ createdAt: 'desc' }, { updatedAt: 'desc' }],
+  });
   return result;
 };

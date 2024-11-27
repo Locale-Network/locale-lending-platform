@@ -10,9 +10,9 @@ import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 export default function ApplyLoanButton() {
-  const { address: chainAccountAddress } = useAccount();
+  const { address: accountAddress } = useAccount();
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
-  const { startKYCFlow, kycStatus, retryKycVerification } = useKycVerification(chainAccountAddress);
+  const { startKYCFlow, kycStatus, retryKycVerification } = useKycVerification(accountAddress);
   const router = useRouter();
 
   const handleClick = async () => {

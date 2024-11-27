@@ -28,11 +28,11 @@ interface GetKycStatusResponse {
   hasAttemptedKyc: boolean;
   identityVerificationData?: IdentityVerificationGetResponse;
 }
-export async function getKycStatus(chainAccountAddress: string): Promise<GetKycStatusResponse> {
+export async function getKycStatus(accountAddress: string): Promise<GetKycStatusResponse> {
   try {
-    await validateBorrowerRequest(chainAccountAddress);
+    await validateBorrowerRequest(accountAddress);
 
-    const kycVerification = await getKycVerification({ chainAccountAddress });
+    const kycVerification = await getKycVerification({ accountAddress });
 
     if (!kycVerification) {
       return { isError: false, hasAttemptedKyc: false };
@@ -59,11 +59,11 @@ interface PlaidPublicTokenExchangeResponse {
 }
 export async function plaidPublicTokenExchange(args: {
   publicToken: string;
-  chainAccountAddress: string;
+  accountAddress: string;
 }): Promise<PlaidPublicTokenExchangeResponse> {
-  const { publicToken, chainAccountAddress } = args;
+  const { publicToken, accountAddress } = args;
   try {
-    await validateBorrowerRequest(chainAccountAddress);
+    await validateBorrowerRequest(accountAddress);
 
     const response = await plaidClient.itemPublicTokenExchange({ public_token: publicToken });
     const accessToken = response.data.access_token;
@@ -86,16 +86,16 @@ export async function plaidPublicTokenExchange(args: {
 export async function savePlaidItemAccessToken(args: {
   accessToken: string;
   itemId: string;
-  chainAccountAddress: string;
+  accountAddress: string;
 }) {
-  const { accessToken, itemId, chainAccountAddress } = args;
+  const { accessToken, itemId, accountAddress } = args;
   try {
-    await validateBorrowerRequest(chainAccountAddress);
+    await validateBorrowerRequest(accountAddress);
 
     await dbSavePlaidItemAccessToken({
       accessToken,
       itemId,
-      chainAccountAddress,
+      accountAddress,
     });
   } catch (error) {}
 }
@@ -106,13 +106,12 @@ interface GetConnectedBankAccountsResponse {
   connectedBankAccounts?: ConnectedBankAccount[];
 }
 export async function getConnectedBankAccounts(
-  chainAccountAddress: string
+  accountAddress: string
 ): Promise<GetConnectedBankAccountsResponse> {
-  console.log('getConnectedBankAccounts');
   try {
-    await validateBorrowerRequest(chainAccountAddress);
+    await validateBorrowerRequest(accountAddress);
 
-    const result = await dbGetItemAccessTokensForChainAccount(chainAccountAddress);
+    const result = await dbGetItemAccessTokensForChainAccount(accountAddress);
 
     const accessTokens = result.map(token => token.accessToken);
 
@@ -181,15 +180,15 @@ interface CreateLinkTokenResponse {
 }
 
 export async function createLinkTokenForTransactions(
-  chainAccountAddress: string
+  accountAddress: string
 ): Promise<CreateLinkTokenResponse> {
   try {
-    await validateBorrowerRequest(chainAccountAddress);
+    await validateBorrowerRequest(accountAddress);
 
     const response = await plaidClient.linkTokenCreate({
       client_id: process.env.PLAID_CLIENT_ID,
       secret: process.env.PLAID_SECRET,
-      user: { client_user_id: chainAccountAddress },
+      user: { client_user_id: accountAddress },
       products: [Products.Transactions],
       transactions: {
         days_requested: 730,
@@ -212,15 +211,15 @@ export async function createLinkTokenForTransactions(
 }
 
 export async function createLinkTokenForIdentityVerification(
-  chainAccountAddress: string
+  accountAddress: string
 ): Promise<CreateLinkTokenResponse> {
   try {
-    await validateBorrowerRequest(chainAccountAddress);
+    await validateBorrowerRequest(accountAddress);
 
     const response = await plaidClient.linkTokenCreate({
       client_id: process.env.PLAID_CLIENT_ID,
       secret: process.env.PLAID_SECRET,
-      user: { client_user_id: chainAccountAddress },
+      user: { client_user_id: accountAddress },
       products: [Products.IdentityVerification],
       identity_verification: {
         template_id: process.env.TEMPLATE_ID || '',
@@ -250,12 +249,12 @@ interface InitialiseLoanApplicationResponse {
   loanApplicationId?: string;
 }
 export async function initialiseLoanApplication(
-  chainAccountAddress: string
+  accountAddress: string
 ): Promise<InitialiseLoanApplicationResponse> {
   try {
-    await validateBorrowerRequest(chainAccountAddress);
+    await validateBorrowerRequest(accountAddress);
 
-    const loanApplication = await dbInitialiseLoanApplication(chainAccountAddress);
+    const loanApplication = await dbInitialiseLoanApplication(accountAddress);
 
     return {
       isError: false,
@@ -274,7 +273,7 @@ interface GetCreditScoreOfLoanApplicationResponse {
   errorMessage?: string;
   creditScore?: Omit<
     CreditScore,
-    'loanApplicationId' | 'chainAccountAddress' | 'createdAt' | 'updatedAt'
+    'loanApplicationId' | 'accountAddress' | 'createdAt' | 'updatedAt'
   >;
 }
 export async function getCreditScoreOfLoanApplication(
@@ -304,12 +303,12 @@ export async function getCreditScoreOfLoanApplication(
 
 export async function submitLoanApplication(args: {
   formData: LoanApplicationForm;
-  chainAccountAddress: string;
+  accountAddress: string;
 }): Promise<void> {
-  const { formData, chainAccountAddress } = args;
-  await validateBorrowerRequest(chainAccountAddress);
+  const { formData, accountAddress } = args;
+  await validateBorrowerRequest(accountAddress);
 
-  if (formData.chainAccountAddress !== chainAccountAddress) {
+  if (formData.accountAddress !== accountAddress) {
     throw new Error('Unauthorized creator of loan application');
   }
 

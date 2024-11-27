@@ -1,38 +1,44 @@
 import PlaidLink from './plaid-link';
-import { getLoanApplicationCreator, createLinkTokenForTransactions } from './actions';
+import { createLinkTokenForTransactions, getLatestLoanApplicationOfBorrower } from './actions';
+import AddressInput from './input-address';
 
-type Props = {
+interface Props {
   searchParams: {
-    loan_id: string;
+    accountAddress: string;
   };
-};
+}
 
-export default async function Page({ searchParams }: Props) {
-  const { loan_id } = searchParams;
-
-  if (!loan_id) {
-    return <div>No loan id provided</div>;
+export default async function Page({ searchParams: { accountAddress } }: Props) {
+  if (!accountAddress) {
+    return <AddressInput />;
   }
 
-  const { isError, errorMessage, account } = await getLoanApplicationCreator(loan_id);
-
-  if (isError || !account) {
-    return <div>{errorMessage}</div>;
-  }
-
-  const { isError: isErrorLinkToken, errorMessage: errorMessageLinkToken, linkToken } =
-    await createLinkTokenForTransactions(account);
+  const {
+    isError: isErrorLinkToken,
+    errorMessage: errorMessageLinkToken,
+    linkToken,
+  } = await createLinkTokenForTransactions(accountAddress);
 
   if (isErrorLinkToken || !linkToken) {
-    return <div>{errorMessageLinkToken}</div>;
+    return <div>err: {errorMessageLinkToken}</div>;
+  }
+
+  const {
+    isError: isErrorLoanApplication,
+    errorMessage: errorMessageLoanApplication,
+    loanApplicationId,
+  } = await getLatestLoanApplicationOfBorrower(accountAddress); // DRAFT application
+
+  if (isErrorLoanApplication || !loanApplicationId) {
+    return <div>{errorMessageLoanApplication}</div>;
   }
 
   return (
     <div>
-      <p>Credit Score for loan: {loan_id}</p>
-      <p>Loan creator: {account}</p>
+      <p>Loan ID: {loanApplicationId}</p>
+      <p>Loan creator: {accountAddress}</p>
       <p>Link Token: {linkToken}</p>
-      <PlaidLink linkToken={linkToken} loanApplicationId={loan_id} />
+      <PlaidLink linkToken={linkToken} loanApplicationId={loanApplicationId} />
     </div>
   );
 }

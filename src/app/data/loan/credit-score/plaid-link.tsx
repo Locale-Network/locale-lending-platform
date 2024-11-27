@@ -15,7 +15,6 @@ interface PlaidLinkProps {
 export default function PlaidLink(props: PlaidLinkProps) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  
   const onSuccess = useCallback<PlaidLinkOnSuccess>(async (publicToken, metadata) => {
     const response = await plaidPublicTokenExchange(publicToken);
     if (response.isError || !response.accessToken) {
@@ -25,18 +24,6 @@ export default function PlaidLink(props: PlaidLinkProps) {
     setAccessToken(response.accessToken);
   }, []);
 
-  useEffect(() => {
-    if (props.linkToken) {
-      localStorage.setItem('link_token', props.linkToken);
-    }
-  }, [props.linkToken]);
-
-  useEffect(() => {
-    if (props.loanApplicationId) {
-      localStorage.setItem('loan_application_id', props.loanApplicationId);
-    }
-  }, [props.loanApplicationId]);
-
   const config: PlaidLinkOptions = {
     token: props.linkToken,
     onSuccess,
@@ -45,29 +32,19 @@ export default function PlaidLink(props: PlaidLinkProps) {
   const { open, ready } = usePlaidLink(config);
 
   useEffect(() => {
-    setTimeout(() => {
-      setAccessToken('access-sandbox-9439bf2c-d0c1-4c3e-9a0d-029938544d1c');
-    }, 1000);
-  }, []);
+    if (ready) {
+      open();
+    }
+  }, [ready, open]);
 
-  // useEffect(() => {
-  //   if (ready) {
-  //     open();
-  //   }
-  // }, [ready, open]);
-
-   if (!accessToken) {
-     return null;
-   }
-
-  console.log('accessToken', accessToken);
-
-  
+  if (!accessToken) {
+    return null;
+  }
 
   return (
     <>
-      <p>Acces s Token: {accessToken}</p>
-      <CalculateCreditScore loanApplicationId={props.loanApplicationId} accessToken={accessToken} />
+      <p>Access Token: {accessToken}</p>
+      <CalculateCreditScore accessToken={accessToken} loanApplicationId={props.loanApplicationId} />
     </>
   );
 }

@@ -16,8 +16,8 @@ datasource db {
 model Proof {
   id String @id @db.VarChar(255)
 
-  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
-  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+  accountAddress String  @map("account_address") @db.VarChar(255)
+  account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
 
   proof   Json
   context Json
@@ -25,17 +25,6 @@ model Proof {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("proofs")
-}
-
-// https://plaid.com/docs/api/accounts/
-model Account {
-  id           Int      @id @default(autoincrement())
-  accountId    String?  @map("account_id") @db.VarChar(255)
-  name         String?  @db.VarChar(255)
-  officialName String?  @map("official_name") @db.VarChar(255)
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  @@map("accounts")
 }
 
 // https://plaid.com/docs/api/products/transactions/
@@ -68,15 +57,15 @@ enum KYCVerificationStatus {
 model KYCVerification {
   identityVerificationId String @id @map("identity_verification_id") @db.VarChar(255)
 
-  chainAccountAddress String       @unique @map("chain_account_address") @db.VarChar(255)
-  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+  accountAddress String  @unique @map("account_address") @db.VarChar(255)
+  account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
 
   status    KYCVerificationStatus @default(active)
   createdAt DateTime              @default(now()) @map("created_at")
   updatedAt DateTime              @updatedAt @map("updated_at")
   attempts  Int                   @default(1)
 
-  @@index([chainAccountAddress])
+  @@index([accountAddress])
   @@map("kyc_verifications")
 }
 
@@ -87,7 +76,7 @@ enum Role {
 }
 
 // accounts from the Arbitrum chain
-model ChainAccount {
+model Account {
   address               String                 @id @db.VarChar(255)
   role                  Role                   @default(BORROWER)
   createdAt             DateTime               @default(now()) @map("created_at")
@@ -108,13 +97,13 @@ model PlaidItemAccessToken {
   accessToken String @map("access_token") @db.VarChar(255)
   itemId      String @unique @map("item_id") @db.VarChar(255)
 
-  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
-  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+  accountAddress String  @map("account_address") @db.VarChar(255)
+  account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([chainAccountAddress])
+  @@index([accountAddress])
   @@map("plaid_item_access_tokens")
 }
 
@@ -129,8 +118,8 @@ enum LoanApplicationStatus {
 model LoanApplication {
   id String @id @default(cuid())
 
-  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
-  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+  accountAddress String  @map("account_address") @db.VarChar(255)
+  account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
 
   // business information
   businessLegalName       String  @map("business_legal_name") @db.VarChar(255)
@@ -159,7 +148,7 @@ model LoanApplication {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([chainAccountAddress])
+  @@index([accountAddress])
   @@map("loan_applications")
 }
 
@@ -169,8 +158,8 @@ model OutstandingLoan {
   loanApplicationId String          @map("loan_application_id")
   loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
 
-  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
-  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+  accountAddress String  @map("account_address") @db.VarChar(255)
+  account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
 
   lenderName         String   @map("lender_name") @db.VarChar(255)
   loanType           String   @map("loan_type") @db.VarChar(255)
@@ -181,7 +170,7 @@ model OutstandingLoan {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  @@index([chainAccountAddress])
+  @@index([accountAddress])
   @@index([loanApplicationId])
   @@map("outstanding_loans")
 }
@@ -194,8 +183,8 @@ model OutstandingLoan {
 model CreditScore {
   id String @id @default(cuid())
 
-  chainAccountAddress String       @map("chain_account_address") @db.VarChar(255)
-  chainAccount        ChainAccount @relation(fields: [chainAccountAddress], references: [address], onDelete: Cascade)
+  accountAddress String  @map("account_address") @db.VarChar(255)
+  account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
 
   loanApplicationId String          @unique @map("loan_application_id")
   loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
@@ -209,7 +198,7 @@ model CreditScore {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([chainAccountAddress])
+  @@index([accountAddress])
   @@index([loanApplicationId])
   @@map("credit_scores")
 }

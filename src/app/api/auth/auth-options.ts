@@ -64,7 +64,7 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          const chainAccount = await prisma.chainAccount.findUnique({
+          const chainAccount = await prisma.account.findUnique({
             where: {
               address: siwe.address,
             },

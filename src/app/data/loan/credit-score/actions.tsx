@@ -1,38 +1,11 @@
 'use server';
 
-import { getLoanApplication as dbGetLoanApplication } from '@/services/db/loan-applications';
+import {
+  getLoanApplication as dbGetLoanApplication,
+  getLatestLoanApplicationOfBorrower as dbGetLatestLoanApplicationOfBorrower,
+} from '@/services/db/loan-applications';
 import plaidClient from '@/utils/plaid';
 import { CountryCode, Products } from 'plaid';
-
-interface GetLoanApplicationCreatorResponse {
-  isError: boolean;
-  errorMessage?: string;
-  account?: string;
-}
-export const getLoanApplicationCreator = async (
-  loanApplicationId: string
-): Promise<GetLoanApplicationCreatorResponse> => {
-  try {
-    const loanApplication = await dbGetLoanApplication({ loanApplicationId });
-
-    if (!loanApplication) {
-      return {
-        isError: true,
-        errorMessage: `Loan application with id ${loanApplicationId} not found`,
-      };
-    }
-
-    return {
-      isError: false,
-      account: loanApplication.chainAccountAddress,
-    };
-  } catch (error) {
-    return {
-      isError: true,
-      errorMessage: 'Failed to get loan application creator',
-    };
-  }
-};
 
 interface CreateLinkTokenResponse {
   isError: boolean;
@@ -40,13 +13,13 @@ interface CreateLinkTokenResponse {
   linkToken?: string;
 }
 export async function createLinkTokenForTransactions(
-  chainAccountAddress: string
+  accountAddress: string
 ): Promise<CreateLinkTokenResponse> {
   try {
     const response = await plaidClient.linkTokenCreate({
       client_id: process.env.PLAID_CLIENT_ID,
       secret: process.env.PLAID_SECRET,
-      user: { client_user_id: chainAccountAddress },
+      user: { client_user_id: accountAddress },
       products: [Products.Transactions],
       transactions: {
         days_requested: 730,
@@ -62,7 +35,7 @@ export async function createLinkTokenForTransactions(
       linkToken: response.data.link_token,
     };
   } catch (error) {
-    console.log('error : ', error);
+    
     return {
       isError: true,
       errorMessage: 'Error creating link token',
@@ -76,9 +49,10 @@ interface PlaidPublicTokenExchangeResponse {
   accessToken?: string;
   itemId?: string;
 }
-export async function plaidPublicTokenExchange(publicToken: string): Promise<PlaidPublicTokenExchangeResponse> {
+export async function plaidPublicTokenExchange(
+  publicToken: string
+): Promise<PlaidPublicTokenExchangeResponse> {
   try {
-    
     const response = await plaidClient.itemPublicTokenExchange({ public_token: publicToken });
     const accessToken = response.data.access_token;
     const itemId = response.data.item_id;
@@ -92,5 +66,24 @@ export async function plaidPublicTokenExchange(publicToken: string): Promise<Pla
       isError: true,
       errorMessage: 'Error exchanging public token for access token',
     };
+  }
+}
+
+interface GetLatestLoanApplicationOfBorrowerResponse {
+  isError: boolean;
+  errorMessage?: string;
+  loanApplicationId?: string;
+}
+export async function getLatestLoanApplicationOfBorrower(
+  accountAddress: string
+): Promise<GetLatestLoanApplicationOfBorrowerResponse> {
+  try {
+    const loanApplication = await dbGetLatestLoanApplicationOfBorrower(accountAddress);
+    return {
+      isError: false,
+      loanApplicationId: loanApplication?.id,
+    };
+  } catch (error) {
+    return { isError: true, errorMessage: 'Failed to get latest loan application of borrower' };
   }
 }
