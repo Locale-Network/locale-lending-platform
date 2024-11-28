@@ -8,13 +8,15 @@ import { formatDateToUS } from '@/utils/date';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Loader2, MoreHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { MoreHorizontal } from 'lucide-react';
 import { updateLoanApplicationStatus } from './actions';
+import { useOptimistic } from 'react';
 
 export type LoanApplicationsForTable = {
   id: string;
@@ -25,37 +27,36 @@ export type LoanApplicationsForTable = {
   updatedDate: Date;
 };
 
-const Spinner = () => <Loader2 className="mr-2 h-4 w-4 animate-spin" />;
-
 const ActionsCell: React.FC<{ loanApplication: LoanApplicationsForTable }> = ({
   loanApplication,
 }) => {
-  const [isApproving, setIsApproving] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
-  const [isRequestingMoreInfo, setIsRequestingMoreInfo] = useState(false);
+  const [optimisticState, addOptimistic] = useOptimistic(
+    { loanStatus: loanApplication.status },
+    // updateFn
+    (currentState, newLoanStatus: LoanApplicationStatus) => {
+      return { loanStatus: newLoanStatus };
+    }
+  );
 
   const onApprove = async () => {
-    setIsApproving(true);
+    addOptimistic(LoanApplicationStatus.APPROVED);
     await updateLoanApplicationStatus(loanApplication.id, LoanApplicationStatus.APPROVED);
-    setIsApproving(false);
   };
 
   const onReject = async () => {
-    setIsRejecting(true);
+    addOptimistic(LoanApplicationStatus.REJECTED);
     await updateLoanApplicationStatus(loanApplication.id, LoanApplicationStatus.REJECTED);
-    setIsRejecting(false);
   };
 
   const onAddtionalInfoNeeded = async () => {
-    setIsRequestingMoreInfo(true);
+    addOptimistic(LoanApplicationStatus.ADDITIONAL_INFO_NEEDED);
     await updateLoanApplicationStatus(
       loanApplication.id,
       LoanApplicationStatus.ADDITIONAL_INFO_NEEDED
     );
-    setIsRequestingMoreInfo(false);
   };
 
-  const disabled = isApproving || isRejecting || isRequestingMoreInfo;
+  loanApplication.status = optimisticState.loanStatus;
 
   return (
     <DropdownMenu>
@@ -65,18 +66,12 @@ const ActionsCell: React.FC<{ loanApplication: LoanApplicationsForTable }> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem disabled={disabled} onClick={onApprove}>
-          Approve
-          {isApproving && <Spinner />}
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled={disabled} onClick={onReject}>
-          Reject
-          {isRejecting && <Spinner />}
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled={disabled} onClick={onAddtionalInfoNeeded}>
-          Request More Info
-          {isRequestingMoreInfo && <Spinner />}
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem onClick={onApprove}>Approve</DropdownMenuItem>
+          <DropdownMenuItem onClick={onReject}>Reject</DropdownMenuItem>
+          <DropdownMenuItem onClick={onAddtionalInfoNeeded}>Request More Info</DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -88,7 +83,7 @@ export const columns: ColumnDef<LoanApplicationsForTable>[] = [
     header: 'Application ID',
     cell: ({ row }) => (
       <Link
-        href={`/borrower/loans/${row.getValue('id')}`}
+        href={`/approver/loans/${row.getValue('id')}`}
         className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-sm font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 hover:bg-blue-100 hover:text-blue-800"
       >
         {row.getValue('id')}
