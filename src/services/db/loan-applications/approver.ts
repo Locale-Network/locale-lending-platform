@@ -1,14 +1,31 @@
 import 'server-only';
 
 import prisma from '@prisma/index';
-import { Account, CreditScore, LoanApplication, LoanApplicationStatus } from '@prisma/client';
+import {
+  Account,
+  CreditScore,
+  LoanApplication,
+  LoanApplicationStatus,
+  OutstandingLoan,
+} from '@prisma/client';
+
+export type LoanApplicationDetails = LoanApplication & {
+  creditScore: CreditScore | null;
+  account: Account;
+  outstandingLoans: OutstandingLoan[];
+};
 
 export const getLoanApplication = async (args: {
   loanApplicationId: string;
-}): Promise<LoanApplication | null> => {
+}): Promise<LoanApplicationDetails | null> => {
   const { loanApplicationId } = args;
   const result = await prisma.loanApplication.findUnique({
     where: { id: loanApplicationId },
+    include: {
+      creditScore: true,
+      account: true,
+      outstandingLoans: true,
+    },
   });
   return result;
 };

@@ -13,7 +13,7 @@ import { redirect } from 'next/navigation';
 import { Address, isAddress } from 'viem';
 import { revalidatePath } from 'next/cache';
 
-export async function validateRequest(chainAccountAddress: string) {
+export async function validateRequest(accountAddress: string) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -24,11 +24,11 @@ export async function validateRequest(chainAccountAddress: string) {
     redirect(ROLE_REDIRECTS[session.user.role]);
   }
 
-  if (session?.address !== chainAccountAddress) {
+  if (session?.address !== accountAddress) {
     throw new Error('User address does not match chain account address');
   }
 
-  if (!isAddress(chainAccountAddress)) {
+  if (!isAddress(accountAddress)) {
     throw new Error('Invalid chain account address');
   }
 }
@@ -39,10 +39,10 @@ interface GetSubmittedLoanApplicationsResponse {
   loanApplications?: LoanApplicationsForTable[];
 }
 export const getSubmittedLoanApplications = async (
-  chainAccountAddress: string
+  accountAddress: string
 ): Promise<GetSubmittedLoanApplicationsResponse> => {
   try {
-    await validateRequest(chainAccountAddress);
+    await validateRequest(accountAddress);
 
     const loanApplications = await dbGetSubmittedLoanApplications();
 
@@ -67,11 +67,28 @@ export const getSubmittedLoanApplications = async (
   }
 };
 
-export const updateLoanApplicationStatus = async (
-  loanApplicationId: string,
-  status: LoanApplicationStatus
-) => {
-  await dbUpdateLoanApplication({ loanApplicationId, loanApplication: { status } });
+interface UpdateLoanApplicationStatusResponse {
+  isError: boolean;
+  errorMessage?: string;
+}
+export const updateLoanApplicationStatus = async (args: {
+  loanApplicationId: string;
+  status: LoanApplicationStatus;
+}): Promise<UpdateLoanApplicationStatusResponse> => {
+  try {
+    const { loanApplicationId, status } = args;
 
-  revalidatePath('/approver');
+    await dbUpdateLoanApplication({ loanApplicationId, loanApplication: { status } });
+
+    revalidatePath('/approver');
+
+    return {
+      isError: false,
+    };
+  } catch (error) {
+    return {
+      isError: true,
+      errorMessage: 'Failed to update loan application status',
+    };
+  }
 };
