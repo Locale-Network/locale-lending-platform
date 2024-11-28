@@ -58,6 +58,7 @@ export const getLoanApplicationsOfBorrower = async (
 };
 
 // PENDING MODE
+// TODO: refer techi task management
 export const submitLoanApplication = async (
   formData: z.infer<typeof loanApplicationFormSchema>
 ): Promise<LoanApplication> => {
