@@ -16,7 +16,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
 import { updateLoanApplicationStatus } from './actions';
-import { useOptimistic } from 'react';
+import { useTransition } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export type LoanApplicationsForTable = {
   id: string;
@@ -30,33 +31,52 @@ export type LoanApplicationsForTable = {
 const ActionsCell: React.FC<{ loanApplication: LoanApplicationsForTable }> = ({
   loanApplication,
 }) => {
-  const [optimisticState, addOptimistic] = useOptimistic(
-    { loanStatus: loanApplication.status },
-    // updateFn
-    (currentState, newLoanStatus: LoanApplicationStatus) => {
-      return { loanStatus: newLoanStatus };
-    }
-  );
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
+  const onApprove = () => {
+    startTransition(async () => {
+      const { isError, errorMessage } = await updateLoanApplicationStatus({
+        loanApplicationId: loanApplication.id,
+        status: LoanApplicationStatus.APPROVED,
+      });
 
-  const onApprove = async () => {
-    addOptimistic(LoanApplicationStatus.APPROVED);
-    await updateLoanApplicationStatus(loanApplication.id, LoanApplicationStatus.APPROVED);
+      if (isError) {
+        toast({ variant: 'destructive', title: 'Error', description: errorMessage });
+      } else {
+        toast({ title: 'Success', description: 'Loan application approved' });
+      }
+    });
   };
 
-  const onReject = async () => {
-    addOptimistic(LoanApplicationStatus.REJECTED);
-    await updateLoanApplicationStatus(loanApplication.id, LoanApplicationStatus.REJECTED);
+  const onReject = () => {
+    startTransition(async () => {
+      const { isError, errorMessage } = await updateLoanApplicationStatus({
+        loanApplicationId: loanApplication.id,
+        status: LoanApplicationStatus.REJECTED,
+      });
+
+      if (isError) {
+        toast({ variant: 'destructive', title: 'Error', description: errorMessage });
+      } else {
+        toast({ title: 'Success', description: 'Loan application rejected' });
+      }
+    });
   };
 
-  const onAddtionalInfoNeeded = async () => {
-    addOptimistic(LoanApplicationStatus.ADDITIONAL_INFO_NEEDED);
-    await updateLoanApplicationStatus(
-      loanApplication.id,
-      LoanApplicationStatus.ADDITIONAL_INFO_NEEDED
-    );
-  };
+  const onAddtionalInfoNeeded = () => {
+    startTransition(async () => {
+      const { isError, errorMessage } = await updateLoanApplicationStatus({
+        loanApplicationId: loanApplication.id,
+        status: LoanApplicationStatus.ADDITIONAL_INFO_NEEDED,
+      });
 
-  loanApplication.status = optimisticState.loanStatus;
+      if (isError) {
+        toast({ variant: 'destructive', title: 'Error', description: errorMessage });
+      } else {
+        toast({ title: 'Success', description: 'Loan application needs more info' });
+      }
+    });
+  };
 
   return (
     <DropdownMenu>
@@ -68,9 +88,15 @@ const ActionsCell: React.FC<{ loanApplication: LoanApplicationsForTable }> = ({
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={onApprove}>Approve</DropdownMenuItem>
-          <DropdownMenuItem onClick={onReject}>Reject</DropdownMenuItem>
-          <DropdownMenuItem onClick={onAddtionalInfoNeeded}>Request More Info</DropdownMenuItem>
+          <DropdownMenuItem disabled={isPending} onClick={onApprove}>
+            Approve
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={isPending} onClick={onReject}>
+            Reject
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={isPending} onClick={onAddtionalInfoNeeded}>
+            Request More Info
+          </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -107,13 +133,13 @@ export const columns: ColumnDef<LoanApplicationsForTable>[] = [
     cell: ({ row }) => {
       const status = row.getValue('status') as LoanApplicationStatus;
 
-      const statusStyles = getLoanStatusStyle(status);
+      const statusStyle = getLoanStatusStyle(status);
 
       return (
         <div
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles}`}
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyle}`}
         >
-          {status}
+          {status.replace(/_/g, ' ')}
         </div>
       );
     },
