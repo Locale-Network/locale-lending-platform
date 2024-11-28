@@ -1,9 +1,27 @@
 import 'server-only';
 
 import prisma from '@prisma/index';
-import { CreditScore, LoanApplication, LoanApplicationStatus } from '@prisma/client';
-import { loanApplicationFormSchema } from '@/app/borrower/loans/apply/form-schema';
-import { z } from 'zod';
+import {
+  CreditScore,
+  LoanApplication,
+  LoanApplicationStatus,
+  OutstandingLoan,
+} from '@prisma/client';
+
+export type BusinessInfo = Pick<
+  LoanApplication,
+  | 'businessLegalName'
+  | 'businessAddress'
+  | 'businessState'
+  | 'businessCity'
+  | 'businessZipCode'
+  | 'ein'
+  | 'businessFoundedYear'
+  | 'businessLegalStructure'
+  | 'businessWebsite'
+  | 'businessPrimaryIndustry'
+  | 'businessDescription'
+>;
 
 // needed to reference loan application id in reclaim proof. DRAFT MODE
 export const initialiseLoanApplication = async (
@@ -58,35 +76,35 @@ export const getLoanApplicationsOfBorrower = async (
 };
 
 // PENDING MODE
-// TODO: refer techi task management
-export const submitLoanApplication = async (
-  formData: z.infer<typeof loanApplicationFormSchema>
-): Promise<LoanApplication> => {
-  const { outstandingLoans } = formData;
+export const submitLoanApplication = async (data: {
+  id: string;
+  accountAddress: string;
+  businessInfo: BusinessInfo;
+  outstandingLoans: Pick<
+    OutstandingLoan,
+    | 'annualInterestRate'
+    | 'outstandingBalance'
+    | 'monthlyPayment'
+    | 'remainingMonths'
+    | 'lenderName'
+    | 'loanType'
+  >[];
+}): Promise<any> => {
+  const { id, accountAddress, businessInfo, outstandingLoans } = data;
 
   const result = await prisma.loanApplication.update({
     where: {
-      id: formData.applicationId,
+      id,
     },
     data: {
-      businessLegalName: formData.businessLegalName,
-      businessAddress: formData.businessAddress,
-      businessState: formData.businessState,
-      businessCity: formData.businessCity,
-      businessZipCode: formData.businessZipCode,
-      ein: formData.ein,
-      businessFoundedYear: formData.businessFoundedYear,
-      businessLegalStructure: formData.businessLegalStructure,
-      businessWebsite: formData.businessWebsite,
-      businessPrimaryIndustry: formData.businessPrimaryIndustry,
-      businessDescription: formData.businessDescription,
+      ...businessInfo,
       // credit score
-      hasOutstandingLoans: formData.hasOutstandingLoans,
+      hasOutstandingLoans: outstandingLoans.length > 0,
       outstandingLoans: {
         createMany: {
           data: outstandingLoans.map(outstandingLoan => ({
             ...outstandingLoan,
-            accountAddress: formData.accountAddress,
+            accountAddress,
           })),
         },
       },

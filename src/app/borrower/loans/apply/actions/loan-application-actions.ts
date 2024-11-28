@@ -254,7 +254,24 @@ export async function submitLoanApplication(args: {
     throw new Error('Invalid form data');
   }
 
-  await dbSubmitLoanApplication(formData);
+  await dbSubmitLoanApplication({
+    id: formData.applicationId,
+    accountAddress,
+    businessInfo: {
+      businessLegalName: formData.businessLegalName,
+      businessAddress: formData.businessAddress,
+      businessState: formData.businessState,
+      businessCity: formData.businessCity,
+      businessZipCode: formData.businessZipCode,
+      businessWebsite: formData.businessWebsite || null,
+      ein: formData.ein,
+      businessFoundedYear: formData.businessFoundedYear,
+      businessLegalStructure: formData.businessLegalStructure,
+      businessPrimaryIndustry: formData.businessPrimaryIndustry,
+      businessDescription: formData.businessDescription,
+    },
+    outstandingLoans: formData.outstandingLoans,
+  });
 
   revalidatePath('/borrower/loans');
 }
