@@ -23,7 +23,7 @@ export type BusinessInfo = Pick<
   | 'businessDescription'
 >;
 
-// needed to reference loan application id in reclaim proof. DRAFT MODE
+// DRAFT MODE
 export const initialiseLoanApplication = async (
   accountAddress: string
 ): Promise<LoanApplication> => {

@@ -18,26 +18,24 @@ interface Props {
 }
 
 export default function OutstandingLoans({ loans }: Props) {
-  if (loans.length === 0) {
-    return null;
-  }
-
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
 
   React.useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap() + 1);
-
-    api.on('select', () => {
+    if (api) {
+      setCount(api.scrollSnapList().length);
       setCurrent(api.selectedScrollSnap() + 1);
-    });
+
+      api.on('select', () => {
+        setCurrent(api.selectedScrollSnap() + 1);
+      });
+    }
   }, [api]);
+
+  if (loans.length === 0) {
+    return null;
+  }
 
   return (
     <Card className="mx-auto w-full max-w-2xl">
