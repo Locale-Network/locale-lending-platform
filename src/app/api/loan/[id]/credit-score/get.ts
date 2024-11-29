@@ -19,6 +19,10 @@ export async function GET(request: NextRequest, context: { params: { id: string 
   const { searchParams } = new URL(request.url);
 
   const accessToken = searchParams.get('access_token');
+  /*
+    TODO:
+    - save accessToken in DB. Upsert by loan creator adress
+  */
 
   if (!accessToken) {
     return NextResponse.json(
