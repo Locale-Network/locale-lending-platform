@@ -17,8 +17,8 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: 'Locale Lending Platform',
-  description: 'Locale Lending Platform',
+  title: 'Locale Lending',
+  description: 'Empowering local communities through Decentralized Finance',
 };
 
 export default async function RootLayout({

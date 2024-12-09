@@ -25,7 +25,7 @@ export async function createLinkTokenForTransactions(
         days_requested: 730,
       },
       country_codes: [CountryCode.Us],
-      client_name: 'Locale Lending Platform',
+      client_name: 'Locale Lending',
       language: 'en',
       redirect_uri: process.env.PLAID_REDIRECT_URI,
     });

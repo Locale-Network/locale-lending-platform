@@ -40,12 +40,11 @@ export default function CardWithForm() {
             className="object-cover"
           />
         </div>
-        <CardTitle className="text-center">Locale Network</CardTitle>
+        <CardTitle className="text-center">Locale Lending</CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-center text-sm text-muted-foreground">
-          Locale is a Layer-3 Rollup Network designed for Empowering Communities through DeFi &
-          Smart City Services
+          Empowering local communities through Decentralized Finance
         </p>
       </CardContent>
       <CardFooter className="flex flex-col items-center space-y-4">
