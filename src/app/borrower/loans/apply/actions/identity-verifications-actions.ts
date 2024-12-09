@@ -70,7 +70,7 @@ export async function createLinkTokenForIdentityVerification(
         template_id: process.env.TEMPLATE_ID || '',
       },
       country_codes: [CountryCode.Us],
-      client_name: 'Locale Lending Platform',
+      client_name: 'Locale Lending',
       language: 'en',
     });
 

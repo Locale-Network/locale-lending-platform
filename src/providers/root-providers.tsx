@@ -17,7 +17,7 @@ import { config } from '@/utils/wagmi';
 import { arbitrum } from 'wagmi/chains';
 
 const getSiweMessageOptions: GetSiweMessageOptions = () => ({
-  statement: 'Sign in to Locale Lending Platform',
+  statement: 'Sign in to Locale Lending',
 });
 
 const queryClient = new QueryClient();
@@ -37,7 +37,7 @@ const Disclaimer: DisclaimerComponent = ({ Text, Link }) => (
 );
 
 const appInfo = {
-  appName: 'Locale Network',
+  appName: 'Locale Lending',
   learnMoreUrl: 'https://locale.network',
   disclaimer: Disclaimer,
 };
