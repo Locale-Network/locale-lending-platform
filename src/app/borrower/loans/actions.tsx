@@ -18,7 +18,6 @@ export const getLoanApplications = async (
 
     const loansForTable: LoanApplicationsForTable[] = loans.map(loan => ({
       id: loan.id,
-      creditScore: loan.creditScore?.score ?? 0,
       status: loan.status,
       createdDate: loan.createdAt,
       updatedDate: loan.updatedAt,

@@ -8,7 +8,6 @@ import { formatDateToUS } from '@/utils/date';
 
 export type LoanApplicationsForTable = {
   id: string;
-  creditScore: number;
   status: LoanApplicationStatus;
   createdDate: Date;
   updatedDate: Date;
@@ -26,11 +25,6 @@ export const columns: ColumnDef<LoanApplicationsForTable>[] = [
         {row.getValue('id')}
       </Link>
     ),
-  },
-  {
-    accessorKey: 'creditScore',
-    header: 'Credit Score',
-    cell: ({ row }) => <div>{row.getValue('creditScore')}</div>,
   },
   {
     accessorKey: 'status',
