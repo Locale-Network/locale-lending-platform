@@ -22,12 +22,12 @@ export type BusinessInfo = Pick<
   | 'businessWebsite'
   | 'businessPrimaryIndustry'
   | 'businessDescription'
-  >;
+>;
 
-  export type LoanApplicationDetails = LoanApplication & {
-    account: Account;
-    outstandingLoans: OutstandingLoan[];
-  };
+export type LoanApplicationDetails = LoanApplication & {
+  account: Account;
+  outstandingLoans: OutstandingLoan[];
+};
 
 // DRAFT MODE
 export const initialiseLoanApplication = async (
@@ -68,7 +68,7 @@ export const getLoanApplication = async (args: {
 
 export const getLoanApplicationsOfBorrower = async (
   accountAddress: string
-): Promise<(LoanApplication)[]> => {
+): Promise<LoanApplication[]> => {
   const result = await prisma.loanApplication.findMany({
     where: {
       accountAddress,
