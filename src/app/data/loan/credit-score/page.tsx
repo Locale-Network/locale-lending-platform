@@ -1,6 +1,8 @@
 import PlaidLink from './plaid-link';
 import { createLinkTokenForTransactions, getLatestLoanApplicationOfBorrower } from './actions';
 import AddressInput from './input-address';
+import { formatAddress } from '@/utils/string';
+import { Address } from 'viem';
 
 interface Props {
   searchParams: {
@@ -36,8 +38,7 @@ export default async function Page({ searchParams: { accountAddress } }: Props) 
   return (
     <div>
       <p>Loan ID: {loanApplicationId}</p>
-      <p>Loan creator: {accountAddress}</p>
-      <p>Link Token: {linkToken}</p>
+      <p>Loan creator: {formatAddress(accountAddress as Address)}</p>
       <PlaidLink linkToken={linkToken} loanApplicationId={loanApplicationId} />
     </div>
   );
