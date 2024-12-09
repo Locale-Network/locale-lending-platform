@@ -539,7 +539,7 @@ export default function LoanApplicationForm({
                                   d="M5 13l4 4L19 7"
                                 />
                               </svg>
-                              <p className="font-medium">Bank account linked successfully</p>
+                              <p className="font-medium">You&apos;ve been prequalified</p>
                             </div>
                           ) : (
                             <div className="flex items-center space-x-2">
@@ -547,46 +547,6 @@ export default function LoanApplicationForm({
                             </div>
                           )}
                         </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="creditScoreId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <>
-                          <p className="text-center">Your credit score</p>
-                          <div className="grid grid-cols-4 gap-4 text-center text-sm">
-                            {/* Headers */}
-                            <div className="font-medium text-muted-foreground">Score</div>
-                            <div className="font-medium text-muted-foreground">Range</div>
-                            <div className="font-medium text-muted-foreground">Type</div>
-                            <div className="font-medium text-muted-foreground">Bureau</div>
-
-                            {/* Values */}
-                            <div className="font-semibold">
-                              {creditScore?.score ?? <LoadingSpinner />}
-                            </div>
-                            <div className="font-semibold">
-                              {creditScore?.scoreRangeMin && creditScore?.scoreRangeMax ? (
-                                `${creditScore.scoreRangeMin}-${creditScore.scoreRangeMax}`
-                              ) : (
-                                <LoadingSpinner />
-                              )}
-                            </div>
-                            <div className="font-semibold">
-                              {creditScore?.scoreType ?? <LoadingSpinner />}
-                            </div>
-                            <div className="font-semibold">
-                              {creditScore?.creditBureau ?? <LoadingSpinner />}
-                            </div>
-                          </div>
-                        </>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

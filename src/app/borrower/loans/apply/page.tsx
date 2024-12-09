@@ -21,44 +21,44 @@ export default async function Page() {
   }
 
   /*KYC STATUS CHECK*/
-  const {
-    isError: isIdentityVerificationError,
-    errorMessage: identityVerificationErrorMessage,
-    hasAttemptedKyc,
-    identityVerificationData,
-  } = await getIdentityVerificationStatus(accountAddress);
+  // const {
+  //   isError: isIdentityVerificationError,
+  //   errorMessage: identityVerificationErrorMessage,
+  //   hasAttemptedKyc,
+  //   identityVerificationData,
+  // } = await getIdentityVerificationStatus(accountAddress);
 
-  if (isIdentityVerificationError) {
-    return <div>{identityVerificationErrorMessage}</div>;
-  }
+  // if (isIdentityVerificationError) {
+  //   return <div>{identityVerificationErrorMessage}</div>;
+  // }
 
-  if (!hasAttemptedKyc || !identityVerificationData) {
-    const { isError, errorMessage, linkToken } =
-      await createLinkTokenForIdentityVerification(accountAddress);
+  // if (!hasAttemptedKyc || !identityVerificationData) {
+  //   const { isError, errorMessage, linkToken } =
+  //     await createLinkTokenForIdentityVerification(accountAddress);
 
-    if (isError || !linkToken) {
-      return <div>{errorMessage}</div>;
-    }
+  //   if (isError || !linkToken) {
+  //     return <div>{errorMessage}</div>;
+  //   }
 
-    return <CompleteIdentityVerification linkToken={linkToken} accountAddress={accountAddress} />;
-  }
+  //   return <CompleteIdentityVerification linkToken={linkToken} accountAddress={accountAddress} />;
+  // }
 
-  if (hasAttemptedKyc && identityVerificationData.status === KYCVerificationStatus.failed) {
-    const { isError, errorMessage, retryIdentityVerificationData } =
-      await retryIdentityVerification(accountAddress);
+  // if (hasAttemptedKyc && identityVerificationData.status === KYCVerificationStatus.failed) {
+  //   const { isError, errorMessage, retryIdentityVerificationData } =
+  //     await retryIdentityVerification(accountAddress);
 
-    if (isError || !retryIdentityVerificationData) {
-      return <div>{errorMessage}</div>;
-    }
+  //   if (isError || !retryIdentityVerificationData) {
+  //     return <div>{errorMessage}</div>;
+  //   }
 
-    return (
-      <RetryIdentityVerification
-        accountAddress={accountAddress}
-        retryIdentityVerificationData={retryIdentityVerificationData}
-        identityVerificationData={identityVerificationData}
-      />
-    );
-  }
+  //   return (
+  //     <RetryIdentityVerification
+  //       accountAddress={accountAddress}
+  //       retryIdentityVerificationData={retryIdentityVerificationData}
+  //       identityVerificationData={identityVerificationData}
+  //     />
+  //   );
+  // }
   /*KYC STATUS CHECK*/
 
   const { isError, errorMessage, loanApplicationId } =
