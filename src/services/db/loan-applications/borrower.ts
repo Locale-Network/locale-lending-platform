@@ -2,6 +2,7 @@ import 'server-only';
 
 import prisma from '@prisma/index';
 import {
+  Account,
   CreditScore,
   LoanApplication,
   LoanApplicationStatus,
@@ -21,7 +22,12 @@ export type BusinessInfo = Pick<
   | 'businessWebsite'
   | 'businessPrimaryIndustry'
   | 'businessDescription'
->;
+  >;
+
+  export type LoanApplicationDetails = LoanApplication & {
+    account: Account;
+    outstandingLoans: OutstandingLoan[];
+  };
 
 // DRAFT MODE
 export const initialiseLoanApplication = async (
@@ -48,17 +54,21 @@ export const initialiseLoanApplication = async (
 
 export const getLoanApplication = async (args: {
   loanApplicationId: string;
-}): Promise<LoanApplication | null> => {
+}): Promise<LoanApplicationDetails | null> => {
   const { loanApplicationId } = args;
   const result = await prisma.loanApplication.findUnique({
     where: { id: loanApplicationId },
+    include: {
+      account: true,
+      outstandingLoans: true,
+    },
   });
   return result;
 };
 
 export const getLoanApplicationsOfBorrower = async (
   accountAddress: string
-): Promise<(LoanApplication & { creditScore: CreditScore | null })[]> => {
+): Promise<(LoanApplication)[]> => {
   const result = await prisma.loanApplication.findMany({
     where: {
       accountAddress,
@@ -66,9 +76,6 @@ export const getLoanApplicationsOfBorrower = async (
       status: {
         not: LoanApplicationStatus.DRAFT,
       },
-    },
-    include: {
-      creditScore: true,
     },
     orderBy: [{ createdAt: 'desc' }, { updatedAt: 'desc' }],
   });
