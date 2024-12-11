@@ -3,34 +3,31 @@ import 'server-only';
 import { KYCVerification, KYCVerificationStatus } from '@prisma/client';
 import prisma from '@prisma/index';
 
-export const createKycVerification = async (data: {
-  accountAddress: string;
-  identityVerificationId: string;
-}) => {
+export const createKycVerification = async (
+  data: Pick<KYCVerification, 'accountAddress' | 'identityVerificationId'>
+) => {
   return prisma.kYCVerification.create({ data: { ...data, updatedAt: new Date() } });
 };
 
-export const updateKyVerification = async (data: {
+// plaid webhook increments the attempts count of the kyc verification
+export const incrementAttemptsCountOfKycVerification = async (identityVerificationId: string) => {
+  return prisma.kYCVerification.update({
+    where: { identityVerificationId },
+    data: { attempts: { increment: 1 } },
+  });
+};
+
+// plaid webhook updates the status of the kyc verification
+export const updateStatusOfKycVerification = async (data: {
   identityVerificationId: string;
   status: KYCVerificationStatus;
-  userAttempted?: boolean;
 }) => {
-  const existingRecord = await prisma.kYCVerification.findUnique({
-    where: { identityVerificationId: data.identityVerificationId },
-  });
-
-  if (!existingRecord) {
-    throw 'KYC verification record not found';
-  }
-
   return prisma.kYCVerification.update({
-    data: {
-      status: data.status,
-      updatedAt: new Date(),
-      attempts: data.userAttempted ? existingRecord.attempts + 1 : existingRecord.attempts,
-    },
     where: {
       identityVerificationId: data.identityVerificationId,
+    },
+    data: {
+      status: data.status,
     },
   });
 };
