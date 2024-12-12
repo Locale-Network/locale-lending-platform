@@ -1,6 +1,6 @@
 'use client';
 
-import { HandCoins, Home } from 'lucide-react';
+import { HandCoins, Home, User } from 'lucide-react';
 import { usePathname } from 'next/navigation'; // Add this import
 import { getRoleOfAccount } from '@/app/actions';
 import { useSession } from 'next-auth/react';
@@ -30,6 +30,11 @@ const items = [
     title: 'Loans',
     url: '/borrower/loans',
     icon: HandCoins,
+  },
+  {
+    title: 'Account',
+    url: '/borrower/account',
+    icon: User,
   },
 ];
 
