@@ -10,7 +10,7 @@ import {
   ConnectedBankAccount,
   loanApplicationFormSchema,
   LoanApplicationForm,
-} from '../form-schema';
+} from './form-schema';
 import {
   initialiseLoanApplication as dbInitialiseLoanApplication,
   submitLoanApplication as dbSubmitLoanApplication,
