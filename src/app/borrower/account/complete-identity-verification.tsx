@@ -2,7 +2,7 @@
 
 import { usePlaidLink, PlaidLinkOptions, PlaidLinkOnSuccess } from 'react-plaid-link';
 import { useCallback } from 'react';
-import { createKycVerificationRecord } from './actions/identity-verifications-actions';
+import { createKycVerificationRecord } from './actions';
 import {
   Card,
   CardContent,
@@ -42,7 +42,7 @@ export default function CompleteIdentityVerification(props: CompleteIdentityVeri
   const { open, ready } = usePlaidLink(config);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-screen items-center justify-center">
       <Card className="w-[350px]">
         <CardHeader>
           <div className="flex items-center space-x-2">

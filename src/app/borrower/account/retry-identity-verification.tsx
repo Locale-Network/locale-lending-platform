@@ -36,7 +36,7 @@ export default function RetryIdentityVerification(props: RetryIdentityVerificati
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-screen items-center justify-center">
       <Card className="w-[350px] overflow-hidden">
         <CardHeader className="border-b border-red-100 bg-red-50">
           <div className="flex items-center space-x-2">

@@ -10,6 +10,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/borrower/loans': 'My Loans',
   '/borrower/loans/apply': 'Apply for Loan',
   '/borrower/loans/[id]': 'Loan Details',
+  '/borrower/account': 'Account',
 };
 
 export default function BorrowerHeader() {

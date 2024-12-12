@@ -1,16 +1,11 @@
-import LoanApplicationForm from './loan-application-form';
-import CompleteIdentityVerification from './complete-identity-verification';
-import RetryIdentityVerification from './retry-identity-verification';
+import LoanApplicationForm from './form';
 import { ReclaimProofRequest } from '@reclaimprotocol/js-sdk';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
-import { initialiseLoanApplication } from './actions/loan-application-actions';
-import {
-  getIdentityVerificationStatus,
-  createLinkTokenForIdentityVerification,
-  retryIdentityVerification,
-} from './actions/identity-verifications-actions';
+import { initialiseLoanApplication } from './actions';
+import { getIdentityVerificationStatus } from '@/app/borrower/account/actions';
 import { KYCVerificationStatus } from '@prisma/client';
+import { redirect } from 'next/navigation';
 
 export default async function Page() {
   const session = await getServerSession(authOptions);
@@ -20,46 +15,19 @@ export default async function Page() {
     return null;
   }
 
-  /*KYC STATUS CHECK*/
-  const {
-    isError: isIdentityVerificationError,
-    errorMessage: identityVerificationErrorMessage,
-    hasAttemptedKyc,
-    identityVerificationData,
-  } = await getIdentityVerificationStatus(accountAddress);
+  const { hasAttemptedKyc, identityVerificationData } =
+    await getIdentityVerificationStatus(accountAddress);
 
-  if (isIdentityVerificationError) {
-    return <div>{identityVerificationErrorMessage}</div>;
+  if (
+    !hasAttemptedKyc ||
+    !identityVerificationData ||
+    identityVerificationData.status === KYCVerificationStatus.active ||
+    identityVerificationData.status === KYCVerificationStatus.canceled ||
+    identityVerificationData.status === KYCVerificationStatus.expired ||
+    identityVerificationData.status === KYCVerificationStatus.failed
+  ) {
+    redirect('/borrower/account');
   }
-
-  if (!hasAttemptedKyc || !identityVerificationData) {
-    const { isError, errorMessage, linkToken } =
-      await createLinkTokenForIdentityVerification(accountAddress);
-
-    if (isError || !linkToken) {
-      return <div>{errorMessage}</div>;
-    }
-
-    return <CompleteIdentityVerification linkToken={linkToken} accountAddress={accountAddress} />;
-  }
-
-  if (hasAttemptedKyc && identityVerificationData.status === KYCVerificationStatus.failed) {
-    const { isError, errorMessage, retryIdentityVerificationData } =
-      await retryIdentityVerification(accountAddress);
-
-    if (isError || !retryIdentityVerificationData) {
-      return <div>{errorMessage}</div>;
-    }
-
-    return (
-      <RetryIdentityVerification
-        accountAddress={accountAddress}
-        retryIdentityVerificationData={retryIdentityVerificationData}
-        identityVerificationData={identityVerificationData}
-      />
-    );
-  }
-  /*KYC STATUS CHECK*/
 
   const { isError, errorMessage, loanApplicationId } =
     await initialiseLoanApplication(accountAddress);
