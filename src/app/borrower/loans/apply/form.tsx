@@ -58,7 +58,6 @@ export default function LoanApplicationForm({
   reclaimStatusUrl,
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
-  const [creditScore, setCreditScore] = useState<Partial<CreditScore> | null>(null);
   const reclaimProofIntervalIdRef = useRef<NodeJS.Timer | null>(null);
   const creditScoreIntervalIdRef = useRef<NodeJS.Timer | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,21 +105,21 @@ export default function LoanApplicationForm({
   });
 
   async function onSubmit(values: z.infer<typeof loanApplicationFormSchema>) {
-    // if (!values.hasReclaimProof) {
-    //   form.setError('hasReclaimProof', {
-    //     type: 'manual',
-    //     message: 'Please complete bank account verification before submitting',
-    //   });
-    //   return;
-    // }
+    if (!values.hasReclaimProof) {
+      form.setError('hasReclaimProof', {
+        type: 'manual',
+        message: 'Please complete bank account verification before submitting',
+      });
+      return;
+    }
 
-    // if (!values.creditScoreId) {
-    //   form.setError('creditScoreId', {
-    //     type: 'manual',
-    //     message: 'Please wait for credit score to be calculated',
-    //   });
-    //   return;
-    // }
+    if (!values.creditScoreId) {
+      form.setError('creditScoreId', {
+        type: 'manual',
+        message: 'Please wait for credit score to be calculated',
+      });
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -193,7 +192,6 @@ export default function LoanApplicationForm({
         if (response.creditScore) {
           const { creditScore } = response;
           form.setValue('creditScoreId', creditScore.id);
-          setCreditScore(creditScore);
         }
       } catch (error) {
         console.error('Error polling credit score:', error);
