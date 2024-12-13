@@ -6,6 +6,24 @@ import {
 import { getLoanApplication } from '@/services/db/loan-applications/borrower';
 import { CreditScore } from '@prisma/client';
 
+/**
+ * API endpoint is called automatically at the end of Reclaim flow after user's Bank Account is connected
+ * Reclaim flow: src/app/data/loan/credit-score/page.tsx
+ * 
+ * @route GET /api/loan/[id]/credit-score
+ * @param {string} id - The loan application ID
+ * @param {string} access_token - Plaid access token for transaction data
+ * 
+ * @returns {Promise<CreditScoreApiResponse>} JSON response containing:
+ * - status: 'success' or 'error'
+ * - message: Description of the result
+ * - data: Object containing credit score data or null
+ * 
+ * @throws {400} - When access token is missing
+ * @throws {404} - When loan application is not found
+ * @throws {500} - When credit score fetch fails
+ */
+
 export interface CreditScoreApiResponse {
   status: 'success' | 'error';
   message: string;
