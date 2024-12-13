@@ -18,14 +18,7 @@ export default async function Page() {
   const { hasAttemptedKyc, identityVerificationData } =
     await getIdentityVerificationStatus(accountAddress);
 
-  if (
-    !hasAttemptedKyc ||
-    !identityVerificationData ||
-    identityVerificationData.status === KYCVerificationStatus.active ||
-    identityVerificationData.status === KYCVerificationStatus.canceled ||
-    identityVerificationData.status === KYCVerificationStatus.expired ||
-    identityVerificationData.status === KYCVerificationStatus.failed
-  ) {
+  if (!hasAttemptedKyc || !identityVerificationData) {
     redirect('/borrower/account');
   }
 
