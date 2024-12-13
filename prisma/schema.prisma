@@ -91,6 +91,7 @@ model Account {
   @@map("accounts")
 }
 
+// TODO: create relation with loan application
 // plaid items authorised by chain account
 model PlaidItemAccessToken {
   id          Int    @id @default(autoincrement())
