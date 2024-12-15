@@ -10,10 +10,7 @@ export default function Page() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">Connection Successful!</h1>
-          <p className="text-muted-foreground">
-            Your bank account has been successfully connected.
-          </p>
+          <h1 className="text-2xl font-semibold">Success!</h1>
           <p>You can now continue with your application.</p>
         </div>
       </Card>
