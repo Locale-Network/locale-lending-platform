@@ -157,7 +157,7 @@ export default function LoanApplicationForm({
       case 2:
         return 'Connect your bank account';
       case 3:
-        return 'Connect your credit karma account';
+        return 'Connect your Intuit Credit Karma';
       case 4:
         return 'Current loans';
       default:
