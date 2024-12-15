@@ -4,6 +4,14 @@ import AddressInput from './input-address';
 import { formatAddress } from '@/utils/string';
 import { Address } from 'viem';
 
+/**
+ * This page offers a Plaid Link session for users to connect to their bank account.
+ * This page is wrapped inside the Reclaim flow.
+ * After bank account is successfully connected, an access token is generated for the user's transaction history.
+ * The transaction history to used to calculated debt-service/ interest rate
+ */
+
+
 interface Props {
   searchParams: {
     accountAddress: string;

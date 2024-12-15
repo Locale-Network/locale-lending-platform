@@ -33,7 +33,7 @@ export default function PlaidLink(props: PlaidLinkProps) {
 
   useEffect(() => {
     if (ready) {
-      open();
+      open(); // open Plaid Link
     }
   }, [ready, open]);
 

@@ -16,6 +16,7 @@ export default function CalculateCreditScore({
 
   useEffect(() => {
     if (accessToken) {
+      // TODO: change to debt-service api
       fetch(`/api/loan/${loanApplicationId}/credit-score?access_token=${accessToken}`)
         .then(response => response.json())
         .then((data: CreditScoreApiResponse) => {
@@ -48,7 +49,7 @@ export default function CalculateCreditScore({
 
   return (
     <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-4 text-gray-600">
-      <span>Calculating credit score...</span>
+      <span>Calculating debt service...</span>
     </div>
   );
 }
