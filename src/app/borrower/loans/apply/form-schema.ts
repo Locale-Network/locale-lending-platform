@@ -70,14 +70,19 @@ export const loanApplicationFormSchema = z.object({
     }),
   // Step 1: Business information
 
-  // Step 2: Cash flow verification
-  hasReclaimProof: z.boolean(),
-  creditScoreId: z.string().optional(),
-  // Step 2: Cash flow verification
+  // Step 2: Plaid
+  hasPlaidProof: z.boolean(),
+  plaidProofId: z.string().optional(),
+  // Step 2: Plaid
 
-  // Step 3: Current loans
+  // Step 3: Credit Karma
+  hasCreditKarmaProof: z.boolean(),
+  creditKarmaProofId: z.string().optional(),
+  // Step 3: Credit Karma
+
+  // Step 4: Current loans
   hasOutstandingLoans: z.boolean(),
   outstandingLoans: z.array(currentLoanSchema),
-  // Step 3: Current loans
+  // Step 4: Current loans
 });
 export type LoanApplicationForm = z.infer<typeof loanApplicationFormSchema>;
