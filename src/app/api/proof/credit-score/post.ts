@@ -2,6 +2,8 @@ import { Context, Proof, verifyProof } from '@reclaimprotocol/js-sdk';
 import { NextResponse } from 'next/server';
 import { saveReclaimProof } from '@/services/db/reclaim-proof';
 
+// called as part of Reclaim's Credit Karma flow
+
 export async function POST(req: Request) {
   try {
     console.log('req', req);
@@ -32,7 +34,6 @@ export async function POST(req: Request) {
     console.log('ctx', context);
     console.log('extractedParameterValues', extractedParameterValues);
 
-    // TODO: with a proof (ex: credit_score) we can filter out private data from the context and reference it later
     await saveReclaimProof({
       accountAddress: context.contextAddress,
       proof,
