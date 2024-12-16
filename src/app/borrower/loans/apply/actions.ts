@@ -9,7 +9,7 @@ import { getCreditScoreOfLoanApplication as dbGetCreditScoreOfLoanApplication } 
 import { getDebtServiceOfLoanApplication as dbGetDebtServiceOfLoanApplication } from '@/services/db/debt-service';
 import { validateRequest as validateBorrowerRequest } from '@/app/borrower/actions';
 import { revalidatePath } from 'next/cache';
-
+import { redirect } from 'next/navigation';
 // return loan application id
 interface InitialiseLoanApplicationResponse {
   isError: boolean;
@@ -124,5 +124,5 @@ export async function submitLoanApplication(args: {
     outstandingLoans: formData.outstandingLoans,
   });
 
-  revalidatePath('/borrower/loans');
+  redirect('/borrower/loans');
 }
