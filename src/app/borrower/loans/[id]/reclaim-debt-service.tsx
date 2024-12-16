@@ -19,20 +19,20 @@ interface Props {
   statusUrl: string;
 }
 
-export default function ReclaimPlaid({ loanApplicationId, requestUrl, statusUrl }: Props) {
-  const [hasPlaidProof, setHasPlaidProof] = React.useState(false);
+export default function ReclaimDebtService({ loanApplicationId, requestUrl, statusUrl }: Props) {
+  const [hasDebtServiceProof, setHasDebtServiceProof] = React.useState(false);
   const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
-    const pollPlaidStatus = async () => {
+    const pollDebtServiceStatus = async () => {
       try {
         const response = await fetch(statusUrl);
         const data = await response.json();
 
         if (data?.session?.statusV2 === 'PROOF_SUBMITTED') {
-          setHasPlaidProof(true);
+          setHasDebtServiceProof(true);
           clearInterval(intervalId);
           await revalidateLoanApplication(loanApplicationId);
         }
@@ -41,13 +41,13 @@ export default function ReclaimPlaid({ loanApplicationId, requestUrl, statusUrl 
       }
     };
 
-    if (isOpen && !hasPlaidProof) {
+    if (isOpen && !hasDebtServiceProof) {
       // Only poll when dialog is open
       // Poll every 3 seconds
-      intervalId = setInterval(pollPlaidStatus, 3000);
+      intervalId = setInterval(pollDebtServiceStatus, 3000);
 
       // Initial check
-      pollPlaidStatus();
+      pollDebtServiceStatus();
     }
 
     // Cleanup function
@@ -56,7 +56,7 @@ export default function ReclaimPlaid({ loanApplicationId, requestUrl, statusUrl 
         clearInterval(intervalId);
       }
     };
-  }, [hasPlaidProof, statusUrl, isOpen, loanApplicationId]);
+  }, [hasDebtServiceProof, statusUrl, isOpen, loanApplicationId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -77,7 +77,7 @@ export default function ReclaimPlaid({ loanApplicationId, requestUrl, statusUrl 
         </DialogHeader>
         <div className="flex flex-col items-center space-y-4">
           <QRCode value={requestUrl} size={256} />
-          {hasPlaidProof ? (
+          {hasDebtServiceProof ? (
             <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
               <svg
                 className="h-5 w-5"
