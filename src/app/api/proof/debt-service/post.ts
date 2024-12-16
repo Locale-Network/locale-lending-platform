@@ -1,13 +1,12 @@
 import { Context, Proof, verifyProof } from '@reclaimprotocol/js-sdk';
 import { NextResponse } from 'next/server';
 import { saveDebtServiceProof } from '@/services/db/reclaim-proof';
+import { getLoanApplication } from '@/services/db/loan-applications/borrower';
 
 // called as part of Reclaim's Debt Service flow
 
 export async function POST(req: Request) {
   try {
-    console.log('req', req);
-
     const rawProof = await req.text();
 
     const decodedProof = decodeURIComponent(rawProof);
@@ -27,22 +26,44 @@ export async function POST(req: Request) {
     }
 
     const rawContext = proof.claimData.context;
-    const context = JSON.parse(rawContext) as Context;
+    const context = JSON.parse(rawContext) as Context & {
+      extractedParameters: Record<string, string>;
+    };
 
-    const extractedParameters = proof.extractedParameterValues;
+    /*
+     extractedParameters: {
+    URL_PARAMS_1: 'cm4r27onf0005uitnop2ty8rf',
+    dscr: '10',
+    netOperatingIncome: '100000',
+    totalDebtService: '10000'
+  }
+    */
+    const loanApplicationId = context.extractedParameters.URL_PARAMS_1;
 
     console.log('proof identifier', proof.identifier);
     console.log('ctx', context);
-    console.log('extractedParameters', extractedParameters);
+    console.log('loanApplicationId', loanApplicationId);
 
-    // TODO: from loan id get debt service id
+    const loanApplication = await getLoanApplication({
+      loanApplicationId,
+    });
 
-    // TODO: uncomment this
-    // await saveDebtServiceProof({
-    //   debtServiceId: context.contextAddress,
-    //   proof,
-    //   context,
-    // });
+    if (!loanApplication) {
+      return NextResponse.json(
+        {
+          message: 'Loan application not found',
+        },
+        { status: 404 }
+      );
+    }
+
+    const debtServiceId = loanApplication.debtServiceId ?? '';
+
+    await saveDebtServiceProof({
+      debtServiceId,
+      proof,
+      context,
+    });
 
     return NextResponse.json(
       {
