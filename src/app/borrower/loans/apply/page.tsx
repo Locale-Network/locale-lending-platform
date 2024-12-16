@@ -1,10 +1,10 @@
 import LoanApplicationForm from './form';
-import { ReclaimProofRequest } from '@reclaimprotocol/js-sdk';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
 import { initialiseLoanApplication } from './actions';
 import { getIdentityVerificationStatus } from '@/app/borrower/account/actions';
 import { redirect } from 'next/navigation';
+import { initialiseReclaimCreditKarmaProof, initialiseReclaimPlaidProof } from './actions-reclaim';
 
 export default async function Page() {
   const session = await getServerSession(authOptions);
@@ -28,73 +28,19 @@ export default async function Page() {
     return <div>{errorMessage}</div>;
   }
 
-  const reclaimSuccessUrl = process.env.RECLAIM_SUCCESS_URL ?? '';
-
   // reclaim credit karma proof
-  const reclaimCreditKarmaAppId = process.env.RECLAIM_CREDIT_KARMA_APP_ID;
-  const reclaimCreditKarmaSecretId = process.env.RECLAIM_CREDIT_KARMA_SECRET_ID;
-  const reclaimCreditKarmaProviderId = process.env.RECLAIM_CREDIT_KARMA_PROVIDER_ID;
-  const reclaimCreditKarmaCallbackUrl = process.env.RECLAIM_CREDIT_KARMA_CALLBACK_URL;
-
-  if (
-    !reclaimCreditKarmaAppId ||
-    !reclaimCreditKarmaSecretId ||
-    !reclaimCreditKarmaProviderId ||
-    !reclaimCreditKarmaCallbackUrl
-  ) {
-    throw new Error('Missing credit karma reclaim configuration');
-  }
-
-  const reclaimCreditKarmaProofRequest = await ReclaimProofRequest.init(
-    reclaimCreditKarmaAppId,
-    reclaimCreditKarmaSecretId,
-    reclaimCreditKarmaProviderId,
-    {
-      log: false,
-    }
-  );
-
-  reclaimCreditKarmaProofRequest.setRedirectUrl(reclaimSuccessUrl);
-  reclaimCreditKarmaProofRequest.setAppCallbackUrl(reclaimCreditKarmaCallbackUrl);
-
-  const reclaimCreditKarmaMessage = `credit score calculation for ${accountAddress} at ${new Date().toISOString()} for loan application ${loanApplicationId}`;
-  reclaimCreditKarmaProofRequest.addContext(accountAddress, reclaimCreditKarmaMessage);
-
-  const reclaimCreditKarmaRequestUrl = await reclaimCreditKarmaProofRequest.getRequestUrl();
-  const reclaimCreditKarmaStatusUrl = reclaimCreditKarmaProofRequest.getStatusUrl();
+  const { requestUrl: reclaimCreditKarmaRequestUrl, statusUrl: reclaimCreditKarmaStatusUrl } =
+    await initialiseReclaimCreditKarmaProof({
+      accountAddress,
+      loanApplicationId,
+    });
 
   // reclaim plaid proof
-  const reclaimPlaidAppId = process.env.RECLAIM_PLAID_APP_ID;
-  const reclaimPlaidSecretId = process.env.RECLAIM_PLAID_SECRET_ID;
-  const reclaimPlaidProviderId = process.env.RECLAIM_PLAID_PROVIDER_ID;
-  const reclaimPlaidCallbackUrl = process.env.RECLAIM_PLAID_CALLBACK_URL;
-
-  if (
-    !reclaimPlaidAppId ||
-    !reclaimPlaidSecretId ||
-    !reclaimPlaidProviderId ||
-    !reclaimPlaidCallbackUrl
-  ) {
-    throw new Error('Missing plaid reclaim configuration');
-  }
-
-  const reclaimPlaidProofRequest = await ReclaimProofRequest.init(
-    reclaimPlaidAppId,
-    reclaimPlaidSecretId,
-    reclaimPlaidProviderId,
-    {
-      log: false,
-    }
-  );
-
-  reclaimPlaidProofRequest.setRedirectUrl(reclaimSuccessUrl);
-  reclaimPlaidProofRequest.setAppCallbackUrl(reclaimPlaidCallbackUrl);
-
-  const reclaimPlaidMessage = `debt service calculation for ${accountAddress} at ${new Date().toISOString()} for loan application ${loanApplicationId}`;
-  reclaimPlaidProofRequest.addContext(accountAddress, reclaimPlaidMessage);
-
-  const reclaimPlaidRequestUrl = await reclaimPlaidProofRequest.getRequestUrl();
-  const reclaimPlaidStatusUrl = reclaimPlaidProofRequest.getStatusUrl();
+  const { requestUrl: reclaimPlaidRequestUrl, statusUrl: reclaimPlaidStatusUrl } =
+    await initialiseReclaimPlaidProof({
+      accountAddress,
+      loanApplicationId,
+    });
 
   return (
     <LoanApplicationForm
