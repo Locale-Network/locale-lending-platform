@@ -12,14 +12,14 @@ export default function AddressInput() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`/data/loan/credit-score?accountAddress=${address}`);
+    router.push(`/data/loan/debt-service?accountAddress=${address}`);
   };
 
   return (
     <div className="container mx-auto p-4">
       <Card>
         <CardHeader>
-          <CardTitle>Enter Account Address</CardTitle>
+          <CardTitle>Enter account address</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -29,7 +29,7 @@ export default function AddressInput() {
               onChange={e => setAddress(e.target.value)}
             />
             <Button type="submit" className="w-full">
-              Use Account
+              Use account
             </Button>
           </form>
         </CardContent>
