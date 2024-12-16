@@ -8,7 +8,7 @@ interface ReclaimProofResponse {
   statusUrl: string;
 }
 
-export async function initialiseReclaimPlaidProof({
+export async function initialiseReclaimDebtServiceProof({
   accountAddress,
   loanApplicationId,
 }: {

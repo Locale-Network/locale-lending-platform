@@ -35,8 +35,11 @@ import {
   BusinessIndustry,
 } from '@/types/business';
 import QRCode from 'react-qr-code';
-import { CreditScore } from '@prisma/client';
-import { getCreditScoreOfLoanApplication, submitLoanApplication } from './actions';
+import {
+  getCreditScoreOfLoanApplication,
+  getDebtServiceOfLoanApplication,
+  submitLoanApplication,
+} from './actions';
 import {
   loanApplicationFormSchema,
   BUSINESS_DESCRIPTION_MAX_LENGTH,
@@ -50,16 +53,16 @@ interface LoanApplicationFormProps {
   accountAddress: string;
   reclaimCreditKarmaRequestUrl: string;
   reclaimCreditKarmaStatusUrl: string;
-  reclaimPlaidRequestUrl: string;
-  reclaimPlaidStatusUrl: string;
+  reclaimDebtServiceRequestUrl: string;
+  reclaimDebtServiceStatusUrl: string;
 }
 export default function LoanApplicationForm({
   loanApplicationId,
   accountAddress,
   reclaimCreditKarmaRequestUrl,
   reclaimCreditKarmaStatusUrl,
-  reclaimPlaidRequestUrl,
-  reclaimPlaidStatusUrl,
+  reclaimDebtServiceRequestUrl,
+  reclaimDebtServiceStatusUrl,
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
 
@@ -77,10 +80,10 @@ export default function LoanApplicationForm({
       accountAddress,
       hasOutstandingLoans: false,
       outstandingLoans: [],
-      hasPlaidProof: false,
-      plaidProofId: undefined,
-      hasCreditKarmaProof: false,
-      creditKarmaProofId: undefined,
+      hasDebtServiceProof: false,
+      debtServiceId: undefined,
+      hasCreditScoreProof: false,
+      creditScoreId: undefined,
     },
   });
 
@@ -99,29 +102,29 @@ export default function LoanApplicationForm({
     name: 'outstandingLoans',
   });
 
-  const hasPlaidProof = useWatch({
+  const hasDebtServiceProof = useWatch({
     control: form.control,
-    name: 'hasPlaidProof',
+    name: 'hasDebtServiceProof',
   });
 
-  const hasCreditKarmaProof = useWatch({
+  const hasCreditScoreProof = useWatch({
     control: form.control,
-    name: 'hasCreditKarmaProof',
+    name: 'hasCreditScoreProof',
   });
 
   async function onSubmit(values: z.infer<typeof loanApplicationFormSchema>) {
-    if (!values.hasPlaidProof) {
-      form.setError('hasPlaidProof', {
+    if (!values.hasDebtServiceProof) {
+      form.setError('hasDebtServiceProof', {
         type: 'manual',
-        message: 'Please connect your bank account',
+        message: 'Please connect your bank account to calculate your debt service score',
       });
       return;
     }
 
-    if (!values.hasCreditKarmaProof) {
-      form.setError('hasCreditKarmaProof', {
+    if (!values.hasCreditScoreProof) {
+      form.setError('hasCreditScoreProof', {
         type: 'manual',
-        message: 'Please connect your credit karma account',
+        message: 'Please connect your Credit Karma account to calculate your credit score',
       });
       return;
     }
@@ -174,19 +177,22 @@ export default function LoanApplicationForm({
 
     const pollPlaidStatus = async () => {
       try {
-        const response = await fetch(reclaimPlaidStatusUrl);
+        const response = await fetch(reclaimDebtServiceStatusUrl);
         const data = await response.json();
 
         if (data?.session?.statusV2 === 'PROOF_SUBMITTED') {
-          form.setValue('hasPlaidProof', true);
           clearInterval(intervalId);
+          form.setValue('hasDebtServiceProof', true);
+          const { debtService } = await getDebtServiceOfLoanApplication(loanApplicationId);
+
+          form.setValue('debtServiceId', debtService?.id);
         }
       } catch (error) {
-        console.error('Error polling Plaid status:', error);
+        console.error('Error polling debt service status:', error);
       }
     };
 
-    if (step === 2 && !hasPlaidProof) {
+    if (step === 2 && !hasDebtServiceProof) {
       // Poll every 3 seconds
       intervalId = setInterval(pollPlaidStatus, 3000);
 
@@ -200,7 +206,7 @@ export default function LoanApplicationForm({
         clearInterval(intervalId);
       }
     };
-  }, [step, hasPlaidProof, reclaimPlaidStatusUrl, form]);
+  }, [step, hasDebtServiceProof, reclaimDebtServiceStatusUrl, form, loanApplicationId]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
@@ -211,15 +217,17 @@ export default function LoanApplicationForm({
         const data = await response.json();
 
         if (data?.session?.statusV2 === 'PROOF_SUBMITTED') {
-          form.setValue('hasPlaidProof', true);
+          form.setValue('hasCreditScoreProof', true);
           clearInterval(intervalId);
+          const { creditScore } = await getCreditScoreOfLoanApplication(loanApplicationId);
+          form.setValue('creditScoreId', creditScore?.id);
         }
       } catch (error) {
         console.error('Error polling Plaid status:', error);
       }
     };
 
-    if (step === 3 && !hasCreditKarmaProof) {
+    if (step === 3 && !hasCreditScoreProof) {
       // Poll every 3 seconds
       intervalId = setInterval(pollCreditKarmaStatus, 3000);
 
@@ -233,7 +241,7 @@ export default function LoanApplicationForm({
         clearInterval(intervalId);
       }
     };
-  }, [step, hasCreditKarmaProof, reclaimCreditKarmaStatusUrl, form]);
+  }, [step, hasCreditScoreProof, reclaimCreditKarmaStatusUrl, form, loanApplicationId]);
 
   return (
     <Card className="mx-auto w-full max-w-4xl">
@@ -507,14 +515,14 @@ export default function LoanApplicationForm({
               <div className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="hasPlaidProof"
+                  name="hasDebtServiceProof"
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
                         <div className="flex flex-col items-center space-y-4">
                           <p className="text-center">Scan the QR code to link your bank account</p>
-                          <QRCode value={reclaimPlaidRequestUrl} size={256} />
-                          {hasPlaidProof ? (
+                          <QRCode value={reclaimDebtServiceRequestUrl} size={256} />
+                          {hasDebtServiceProof ? (
                             <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
                               <svg
                                 className="h-5 w-5"
@@ -550,7 +558,7 @@ export default function LoanApplicationForm({
               <div className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="hasCreditKarmaProof"
+                  name="hasCreditScoreProof"
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
@@ -559,7 +567,7 @@ export default function LoanApplicationForm({
                             Scan the QR code to link your credit karma account
                           </p>
                           <QRCode value={reclaimCreditKarmaRequestUrl} size={256} />
-                          {hasCreditKarmaProof ? (
+                          {hasCreditScoreProof ? (
                             <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
                               <svg
                                 className="h-5 w-5"

@@ -70,14 +70,14 @@ export const loanApplicationFormSchema = z.object({
     }),
   // Step 1: Business information
 
-  // Step 2: Plaid
-  hasPlaidProof: z.boolean(),
-  plaidProofId: z.string().optional(),
-  // Step 2: Plaid
+  // Step 2: Debt service calculation
+  hasDebtServiceProof: z.boolean(),
+  debtServiceId: z.string().optional(),
+  // Step 2: Debt service calculation
 
   // Step 3: Credit Karma
-  hasCreditKarmaProof: z.boolean(),
-  creditKarmaProofId: z.string().optional(),
+  hasCreditScoreProof: z.boolean(),
+  creditScoreId: z.string().optional(),
   // Step 3: Credit Karma
 
   // Step 4: Current loans

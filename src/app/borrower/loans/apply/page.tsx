@@ -4,7 +4,7 @@ import { authOptions } from '@/app/api/auth/auth-options';
 import { initialiseLoanApplication } from './actions';
 import { getIdentityVerificationStatus } from '@/app/borrower/account/actions';
 import { redirect } from 'next/navigation';
-import { initialiseReclaimCreditKarmaProof, initialiseReclaimPlaidProof } from './actions-reclaim';
+import { initialiseReclaimCreditKarmaProof, initialiseReclaimDebtServiceProof } from './actions-reclaim';
 
 export default async function Page() {
   const session = await getServerSession(authOptions);
@@ -35,9 +35,9 @@ export default async function Page() {
       loanApplicationId,
     });
 
-  // reclaim plaid proof
-  const { requestUrl: reclaimPlaidRequestUrl, statusUrl: reclaimPlaidStatusUrl } =
-    await initialiseReclaimPlaidProof({
+  // reclaim debt service proof
+  const { requestUrl: reclaimDebtServiceRequestUrl, statusUrl: reclaimDebtServiceStatusUrl } =
+    await initialiseReclaimDebtServiceProof({
       accountAddress,
       loanApplicationId,
     });
@@ -48,8 +48,8 @@ export default async function Page() {
       accountAddress={accountAddress}
       reclaimCreditKarmaRequestUrl={reclaimCreditKarmaRequestUrl}
       reclaimCreditKarmaStatusUrl={reclaimCreditKarmaStatusUrl}
-      reclaimPlaidRequestUrl={reclaimPlaidRequestUrl}
-      reclaimPlaidStatusUrl={reclaimPlaidStatusUrl}
+      reclaimDebtServiceRequestUrl={reclaimDebtServiceRequestUrl}
+      reclaimDebtServiceStatusUrl={reclaimDebtServiceStatusUrl}
     />
   );
 }

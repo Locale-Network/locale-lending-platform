@@ -9,12 +9,20 @@ export async function saveCreditScoreProof(args: {
   context: Context;
 }) {
   const { creditScoreId, proof, context } = args;
-  await prisma.creditScoreProof.create({
+
+  await prisma.creditScore.update({
+    where: {
+      id: creditScoreId,
+    },
     data: {
-      id: proof.identifier,
-      creditScoreId,
-      proof: JSON.stringify(proof),
-      context: JSON.stringify(context),
+      creditScoreProofId: proof.identifier,
+      creditScoreProof: {
+        create: {
+          id: proof.identifier,
+          proof: JSON.stringify(proof),
+          context: JSON.stringify(context),
+        },
+      },
     },
   });
 }
@@ -25,12 +33,20 @@ export async function saveDebtServiceProof(args: {
   context: Context;
 }) {
   const { debtServiceId, proof, context } = args;
-  await prisma.debtServiceProof.create({
+
+  await prisma.debtService.update({
+    where: {
+      id: debtServiceId,
+    },
     data: {
-      id: proof.identifier,
-      debtServiceId,
-      proof: JSON.stringify(proof),
-      context: JSON.stringify(context),
+      debtServiceProofId: proof.identifier,
+      debtServiceProof: {
+        create: {
+          id: proof.identifier,
+          proof: JSON.stringify(proof),
+          context: JSON.stringify(context),
+        },
+      },
     },
   });
 }
