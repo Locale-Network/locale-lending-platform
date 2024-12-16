@@ -15,29 +15,25 @@ export const saveDebtServiceOfLoanApplication = async (args: {
 }): Promise<void> => {
   const { debtService, loanApplicationId } = args;
 
-  await prisma.loanApplication.update({
-    where: {
-      id: loanApplicationId,
-    },
+  await prisma.debtService.create({
     data: {
-      debtService: {
-        connectOrCreate: {
-          where: {
-            loanApplicationId,
-          },
-          create: {
-            ...debtService,
-          },
+      ...debtService,
+      loanApplication: {
+        connect: {
+          id: loanApplicationId,
         },
       },
     },
   });
 };
 
-export async function getDebtServiceOfLoanApplication(loanApplicationId: string) {
-  const result = await prisma.debtService.findUniqueOrThrow({
+export async function getLatestDebtServiceOfLoanApplication(loanApplicationId: string) {
+  const result = await prisma.debtService.findFirstOrThrow({
     where: {
       loanApplicationId,
+    },
+    orderBy: {
+      createdAt: 'desc',
     },
   });
 

@@ -1,8 +1,6 @@
 'use server';
 
-import {
-  getAllLoanApplicationsOfBorrower as dbGetAllLoanApplicationsOfBorrower,
-} from '@/services/db/loan-applications/borrower';
+import { getAllLoanApplicationsOfBorrower as dbGetAllLoanApplicationsOfBorrower } from '@/services/db/loan-applications/borrower';
 import plaidClient from '@/utils/plaid';
 import { LoanApplicationStatus, LoanApplication } from '@prisma/client';
 import { CountryCode, Products } from 'plaid';
@@ -79,12 +77,11 @@ export async function getFilteredLoanApplicationsOfBorrower(
   try {
     const loanApplications = await dbGetAllLoanApplicationsOfBorrower(accountAddress);
 
-
-    const notApprovedLoanApplications = loanApplications
-      .filter(loanApplication => 
-        loanApplication.status !== LoanApplicationStatus.APPROVED && 
+    const notApprovedLoanApplications = loanApplications.filter(
+      loanApplication =>
+        loanApplication.status !== LoanApplicationStatus.APPROVED &&
         loanApplication.status !== LoanApplicationStatus.REJECTED
-      );
+    );
 
     return {
       isError: false,
@@ -94,7 +91,6 @@ export async function getFilteredLoanApplicationsOfBorrower(
     return { isError: true, errorMessage: 'Failed to get all loan applications of borrower' };
   }
 }
-
 
 export async function savePlaidItemAccessToken(args: {
   accessToken: string;

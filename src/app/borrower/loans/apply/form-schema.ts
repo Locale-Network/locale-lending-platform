@@ -72,12 +72,10 @@ export const loanApplicationFormSchema = z.object({
 
   // Step 2: Debt service calculation
   hasDebtServiceProof: z.boolean(),
-  debtServiceId: z.string().optional(),
   // Step 2: Debt service calculation
 
   // Step 3: Credit Karma
   hasCreditScoreProof: z.boolean(),
-  creditScoreId: z.string().optional(),
   // Step 3: Credit Karma
 
   // Step 4: Current loans

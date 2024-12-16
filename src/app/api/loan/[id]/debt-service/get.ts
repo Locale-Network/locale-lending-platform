@@ -6,21 +6,20 @@ import { saveDebtServiceOfLoanApplication } from '@/services/db/debt-service';
  * API endpoint is called automatically at the end of Plaid Link flow after user's bank account is connected
  * The Authorization header contains the Plaid access token for transactions
  * Flow: src/app/data/loan/credit-score/page.tsx
- * 
+ *
  * @route GET /api/loan/[id]/debt-service
  * @param {string} id - The loan application ID
  * @param {string} Authorization - Bearer token containing Plaid access token for transactions
- * 
+ *
  * @returns {Promise<DebtServiceApiResponse>} JSON response containing:
  * - status: 'success' or 'error'
  * - message: Description of the result
  * - data: Object containing debt service data or null
- * 
+ *
  * @throws {400} - When Plaid access token is missing
  * @throws {404} - When loan application is not found
  * @throws {500} - When debt service fetch fails
  */
-
 
 export interface SBA {
   netOperatingIncome: number;

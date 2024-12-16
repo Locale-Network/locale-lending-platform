@@ -37,7 +37,7 @@ export default function CreditScoreInformation({ creditScore }: Props) {
           </div>
 
           <Separator orientation="vertical" />
-         
+
           <div className="flex flex-col items-center">
             <p className="font-semibold">TransUnion</p>
             <span className="text-4xl font-bold">{creditScore.creditScoreTransUnion}</span>

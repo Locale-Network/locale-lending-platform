@@ -5,11 +5,9 @@ import {
   initialiseLoanApplication as dbInitialiseLoanApplication,
   submitLoanApplication as dbSubmitLoanApplication,
 } from '@/services/db/loan-applications/borrower';
-import { getCreditScoreOfLoanApplication as dbGetCreditScoreOfLoanApplication } from '@/services/db/credit-scores';
-import { getDebtServiceOfLoanApplication as dbGetDebtServiceOfLoanApplication } from '@/services/db/debt-service';
 import { validateRequest as validateBorrowerRequest } from '@/app/borrower/actions';
-import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+
 // return loan application id
 interface InitialiseLoanApplicationResponse {
   isError: boolean;
@@ -36,55 +34,10 @@ export async function initialiseLoanApplication(
   }
 }
 
-interface GetCreditScoreOfLoanApplicationResponse {
-  isError: boolean;
-  errorMessage?: string;
-  creditScore?: Pick<CreditScore, 'id'>;
-}
-export async function getCreditScoreOfLoanApplication(
-  loanApplicationId: string
-): Promise<GetCreditScoreOfLoanApplicationResponse> {
-  try {
-    const result = await dbGetCreditScoreOfLoanApplication(loanApplicationId);
 
-    return {
-      isError: false,
-      creditScore: {
-        id: result.id,
-      },
-    };
-  } catch (error) {
-    return {
-      isError: true,
-      errorMessage: 'Error getting credit score of loan application',
-    };
-  }
-}
 
-interface GetDebtServiceOfLoanApplicationResponse {
-  isError: boolean;
-  errorMessage?: string;
-  debtService?: Pick<DebtService, 'id'>;
-}
-export async function getDebtServiceOfLoanApplication(
-  loanApplicationId: string
-): Promise<GetDebtServiceOfLoanApplicationResponse> {
-  try {
-    const result = await dbGetDebtServiceOfLoanApplication(loanApplicationId);
 
-    return {
-      isError: false,
-      debtService: {
-        id: result.id,
-      },
-    };
-  } catch (error) {
-    return {
-      isError: true,
-      errorMessage: 'Error getting debt service of loan application',
-    };
-  }
-}
+
 
 export async function submitLoanApplication(args: {
   formData: LoanApplicationForm;
@@ -105,8 +58,6 @@ export async function submitLoanApplication(args: {
 
   await dbSubmitLoanApplication({
     id: formData.applicationId,
-    creditScoreId: formData.creditScoreId || '',
-    debtServiceId: formData.debtServiceId || '',
     accountAddress,
     businessInfo: {
       businessLegalName: formData.businessLegalName,

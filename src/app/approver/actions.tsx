@@ -49,8 +49,8 @@ export const getSubmittedLoanApplications = async (
     const loanApplicationsForTable: LoanApplicationsForTable[] = loanApplications.map(loan => ({
       id: loan.id,
       creatorAddress: formatAddress(loan.account.address as Address),
-      creditScoreEquifax: loan.creditScore?.creditScoreEquifax ?? null,
-      creditScoreTransUnion: loan.creditScore?.creditScoreTransUnion ?? null,
+      creditScoreEquifax: loan.creditScore?.[0]?.creditScoreEquifax ?? null,
+      creditScoreTransUnion: loan.creditScore?.[0]?.creditScoreTransUnion ?? null,
       status: loan.status,
       createdDate: loan.createdAt,
       updatedDate: loan.updatedAt,

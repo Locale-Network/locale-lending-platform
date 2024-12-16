@@ -107,14 +107,14 @@ model Account {
 model PlaidItemAccessToken {
   id          Int    @id @default(autoincrement())
   accessToken String @map("access_token") @db.VarChar(255)
-  itemId      String @unique @map("item_id") @db.VarChar(255)
+  itemId      String @map("item_id") @db.VarChar(255)
 
   // account
   accountAddress String  @map("account_address") @db.VarChar(255)
   account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
 
   // loan
-  loanApplicationId String          @unique @map("loan_application_id")
+  loanApplicationId String          @map("loan_application_id")
   loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -151,16 +151,13 @@ model LoanApplication {
   businessDescription     String  @map("business_description") @db.VarChar(255)
 
   // Credit Score
-  creditScoreId String?      @unique @map("credit_score_id")
-  creditScore   CreditScore?
+  creditScore CreditScore[]
 
   // Debt service
-  debtServiceId String?      @unique @map("debt_service_id")
-  debtService   DebtService?
+  debtService DebtService[]
 
   // Plaid access token
-  plaidItemAccessTokenId String?               @unique @map("plaid_item_access_token_id")
-  plaidItemAccessToken   PlaidItemAccessToken?
+  plaidItemAccessToken PlaidItemAccessToken[]
 
   // Current Loans
   hasOutstandingLoans Boolean           @default(false) @map("has_outstanding_loans")
@@ -200,15 +197,14 @@ model OutstandingLoan {
 model CreditScore {
   id String @id @default(cuid())
 
-  loanApplicationId String          @unique @map("loan_application_id")
+  loanApplicationId String          @map("loan_application_id")
   loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
 
   creditScoreEquifax    Int @map("credit_score_equifax")
   creditScoreTransUnion Int @map("credit_score_transunion")
 
   // proof
-  creditScoreProofId String?           @unique @map("credit_score_proof_id")
-  creditScoreProof   CreditScoreProof?
+  creditScoreProof CreditScoreProof?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -222,7 +218,7 @@ model CreditScore {
 model DebtService {
   id String @id @default(cuid())
 
-  loanApplicationId String          @unique @map("loan_application_id")
+  loanApplicationId String          @map("loan_application_id")
   loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
 
   netOperatingIncome Float @map("net_operating_income")
@@ -230,8 +226,7 @@ model DebtService {
   dscr               Float @map("dscr")
 
   // proof
-  debtServiceProofId String?           @unique @map("debt_service_proof_id")
-  debtServiceProof   DebtServiceProof?
+  debtServiceProof DebtServiceProof?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
