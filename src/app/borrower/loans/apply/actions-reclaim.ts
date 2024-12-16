@@ -48,6 +48,11 @@ export async function initialiseReclaimPlaidProof({
   const reclaimPlaidMessage = `debt service calculation for ${accountAddress} at ${new Date().toISOString()} for loan application ${loanApplicationId}`;
   reclaimPlaidProofRequest.addContext(accountAddress, reclaimPlaidMessage);
 
+  reclaimPlaidProofRequest.setParams({
+    'loan_id': loanApplicationId,
+    'account_address': accountAddress,
+  })
+
   const reclaimPlaidRequestUrl = await reclaimPlaidProofRequest.getRequestUrl();
   const reclaimPlaidStatusUrl = reclaimPlaidProofRequest.getStatusUrl();
 
