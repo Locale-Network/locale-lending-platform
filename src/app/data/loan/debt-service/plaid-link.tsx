@@ -70,13 +70,6 @@ export default function PlaidLink(props: PlaidLinkProps) {
   }
 
   return (
-    <>
-      {accessToken && (
-        <CalculateDebtService
-          accessToken={accessToken}
-          loanApplicationId={props.loanApplicationId}
-        />
-      )}
-    </>
+    <CalculateDebtService accessToken={accessToken} loanApplicationId={props.loanApplicationId} />
   );
 }
