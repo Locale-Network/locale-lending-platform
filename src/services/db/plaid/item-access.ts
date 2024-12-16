@@ -9,12 +9,27 @@ export const saveItemAccessToken = async (
     'accessToken' | 'itemId' | 'accountAddress' | 'loanApplicationId'
   >
 ) => {
-  return prisma.plaidItemAccessToken.create({
-    data: {
-      accountAddress: data.accountAddress,
+  return prisma.plaidItemAccessToken.upsert({
+    where: {
+      loanApplicationId: data.loanApplicationId,
+    },
+    create: {
       accessToken: data.accessToken,
       itemId: data.itemId,
-      loanApplicationId: data.loanApplicationId,
+      account: {
+        connect: {
+          address: data.accountAddress,
+        },
+      },
+      loanApplication: {
+        connect: {
+          id: data.loanApplicationId,
+        },
+      },
+    },
+    update: {
+      accessToken: data.accessToken,
+      itemId: data.itemId,
     },
   });
 };
