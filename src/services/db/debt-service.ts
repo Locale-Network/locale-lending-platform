@@ -12,46 +12,26 @@ export type CartesiDebtServiceResponse = Pick<
 export const saveDebtServiceOfLoanApplication = async (args: {
   debtService: CartesiDebtServiceResponse;
   loanApplicationId: string;
-}): Promise<DebtService> => {
+}): Promise<void> => {
   const { debtService, loanApplicationId } = args;
 
-  const loanApplication = await getLoanApplication({ loanApplicationId });
-
-  if (!loanApplication) {
-    throw new Error(`Loan application with id ${loanApplicationId} not found`);
-  }
-
-  const result = await prisma.$transaction(async tx => {
-    const debtServiceResult = await tx.debtService.upsert({
-      where: {
-        loanApplicationId: loanApplicationId,
-      },
-      create: {
-        ...debtService,
-        loanApplication: {
-          connect: {
-            id: loanApplicationId,
+  await prisma.loanApplication.update({
+    where: {
+      id: loanApplicationId,
+    },
+    data: {
+      debtService: {
+        connectOrCreate: {
+          where: {
+            loanApplicationId,
+          },
+          create: {
+            ...debtService,
           },
         },
       },
-      update: {
-        ...debtService,
-      },
-    });
-
-    await tx.loanApplication.update({
-      where: {
-        id: loanApplicationId,
-      },
-      data: {
-        debtServiceId: debtServiceResult.id,
-      },
-    });
-
-    return debtServiceResult;
+    },
   });
-
-  return result;
 };
 
 export async function getDebtServiceOfLoanApplication(loanApplicationId: string) {
