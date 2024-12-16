@@ -105,6 +105,8 @@ export async function submitLoanApplication(args: {
 
   await dbSubmitLoanApplication({
     id: formData.applicationId,
+    creditScoreId: formData.creditScoreId || '',
+    debtServiceId: formData.debtServiceId || '',
     accountAddress,
     businessInfo: {
       businessLegalName: formData.businessLegalName,

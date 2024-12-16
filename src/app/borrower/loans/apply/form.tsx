@@ -113,21 +113,21 @@ export default function LoanApplicationForm({
   });
 
   async function onSubmit(values: z.infer<typeof loanApplicationFormSchema>) {
-    if (!values.hasDebtServiceProof) {
-      form.setError('hasDebtServiceProof', {
-        type: 'manual',
-        message: 'Please connect your bank account to calculate your debt service score',
-      });
-      return;
-    }
+    // if (!values.hasDebtServiceProof) {
+    //   form.setError('hasDebtServiceProof', {
+    //     type: 'manual',
+    //     message: 'Please connect your bank account to calculate your debt service score',
+    //   });
+    //   return;
+    // }
 
-    if (!values.hasCreditScoreProof) {
-      form.setError('hasCreditScoreProof', {
-        type: 'manual',
-        message: 'Please connect your Credit Karma account to calculate your credit score',
-      });
-      return;
-    }
+    // if (!values.hasCreditScoreProof) {
+    //   form.setError('hasCreditScoreProof', {
+    //     type: 'manual',
+    //     message: 'Please connect your Credit Karma account to calculate your credit score',
+    //   });
+    //   return;
+    // }
 
     try {
       setIsSubmitting(true);
