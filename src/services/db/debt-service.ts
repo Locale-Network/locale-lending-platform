@@ -1,19 +1,19 @@
 import 'server-only';
 
 import prisma from '@prisma/index';
-import { CreditScore } from '@prisma/client';
+import { DebtService } from '@prisma/client';
 import { getLoanApplication } from './loan-applications/borrower';
 
-export type CreditKarmaCreditScoreResponse = Pick<
-  CreditScore,
-  'creditScoreEquifax' | 'creditScoreTransUnion'
+export type CartesiDebtServiceResponse = Pick<
+  DebtService,
+  'netOperatingIncome' | 'totalDebtService' | 'dscr'
 >;
 
-export const saveCreditScoreOfLoanApplication = async (args: {
-  creditScore: CreditKarmaCreditScoreResponse;
+export const saveDebtServiceOfLoanApplication = async (args: {
+  debtService: CartesiDebtServiceResponse;
   loanApplicationId: string;
-}): Promise<CreditScore> => {
-  const { creditScore, loanApplicationId } = args;
+}): Promise<DebtService> => {
+  const { debtService, loanApplicationId } = args;
 
   const loanApplication = await getLoanApplication({ loanApplicationId });
 
@@ -22,12 +22,12 @@ export const saveCreditScoreOfLoanApplication = async (args: {
   }
 
   const result = await prisma.$transaction(async tx => {
-    const creditScoreResult = await tx.creditScore.upsert({
+    const debtServiceResult = await tx.debtService.upsert({
       where: {
         loanApplicationId: loanApplicationId,
       },
       create: {
-        ...creditScore,
+        ...debtService,
         loanApplication: {
           connect: {
             id: loanApplicationId,
@@ -35,7 +35,7 @@ export const saveCreditScoreOfLoanApplication = async (args: {
         },
       },
       update: {
-        ...creditScore,
+        ...debtService,
       },
     });
 
@@ -44,18 +44,18 @@ export const saveCreditScoreOfLoanApplication = async (args: {
         id: loanApplicationId,
       },
       data: {
-        creditScoreId: creditScoreResult.id,
+        debtServiceId: debtServiceResult.id,
       },
     });
 
-    return creditScoreResult;
+    return debtServiceResult;
   });
 
   return result;
 };
 
-export async function getCreditScoreOfLoanApplication(loanApplicationId: string) {
-  const result = await prisma.creditScore.findUniqueOrThrow({
+export async function getDebtServiceOfLoanApplication(loanApplicationId: string) {
+  const result = await prisma.debtService.findUniqueOrThrow({
     where: {
       loanApplicationId,
     },

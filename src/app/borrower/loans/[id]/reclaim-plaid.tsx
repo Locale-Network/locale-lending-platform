@@ -66,12 +66,13 @@ export default function ReclaimPlaid({ loanApplicationId, requestUrl, statusUrl 
             <Landmark className="h-4 w-4" />
             <Plus className="absolute -right-2 -top-2 h-1 w-1" />
           </div>
-          <span className="ml-2">Add Bank Account</span>
+          <span className="ml-2">Add bank account</span>
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Connect your bank account</DialogTitle>
+          <DialogDescription>Loan id: {loanApplicationId}</DialogDescription>
           <DialogDescription>Scan the QR code to link your bank account</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center space-y-4">

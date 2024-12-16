@@ -1,6 +1,6 @@
 'use server';
 
-import { getLoanApplicationsOfBorrower as dbGetLoanApplicationsOfBorrower } from '@/services/db/loan-applications/borrower';
+import { getSubmittedLoanApplicationsOfBorrower as dbGetSubmittedLoanApplicationsOfBorrower } from '@/services/db/loan-applications/borrower';
 import { validateRequest as validateBorrowerRequest } from '@/app/borrower/actions';
 import { LoanApplicationsForTable } from './columns';
 
@@ -14,7 +14,7 @@ export const getLoanApplications = async (
 ): Promise<GetLoanApplicationsResponse> => {
   try {
     await validateBorrowerRequest(accountAddress);
-    const loans = await dbGetLoanApplicationsOfBorrower(accountAddress);
+    const loans = await dbGetSubmittedLoanApplicationsOfBorrower(accountAddress);
 
     const loansForTable: LoanApplicationsForTable[] = loans.map(loan => ({
       id: loan.id,

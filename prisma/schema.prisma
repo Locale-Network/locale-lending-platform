@@ -12,19 +12,34 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
-// reclaim proof
-model Proof {
+// reclaim debt service proof
+model DebtServiceProof {
   id String @id @db.VarChar(255)
 
-  accountAddress String  @map("account_address") @db.VarChar(255)
-  account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
+  debtServiceId String      @unique @map("debt_service_id")
+  debtService   DebtService @relation(fields: [debtServiceId], references: [id], onDelete: Cascade)
 
   proof   Json
   context Json
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@map("proofs")
+  @@map("debt_service_proofs")
+}
+
+// reclaim credit score proof
+model CreditScoreProof {
+  id String @id @db.VarChar(255)
+
+  creditScoreId String      @unique @map("credit_score_id")
+  creditScore   CreditScore @relation(fields: [creditScoreId], references: [id], onDelete: Cascade)
+
+  proof   Json
+  context Json
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("credit_score_proofs")
 }
 
 // https://plaid.com/docs/api/products/transactions/
@@ -77,34 +92,34 @@ enum Role {
 
 // accounts from the Arbitrum chain
 model Account {
-  address               String                 @id @db.VarChar(255)
-  role                  Role                   @default(BORROWER)
-  createdAt             DateTime               @default(now()) @map("created_at")
-  updatedAt             DateTime               @updatedAt @map("updated_at")
-  KYCVerification       KYCVerification?
-  PlaidItemAccessTokens PlaidItemAccessToken[]
-  loanApplications      LoanApplication[]
-  outstandingLoans      OutstandingLoan[]
-  creditScore           CreditScore[]
-  proofs                Proof[]
+  address              String                 @id @db.VarChar(255)
+  role                 Role                   @default(BORROWER)
+  createdAt            DateTime               @default(now()) @map("created_at")
+  updatedAt            DateTime               @updatedAt @map("updated_at")
+  KYCVerification      KYCVerification?
+  plaidItemAccessToken PlaidItemAccessToken[]
+  loanApplications     LoanApplication[]
 
   @@map("accounts")
 }
 
-// TODO: create relation with loan application
 // plaid items authorised by chain account
 model PlaidItemAccessToken {
   id          Int    @id @default(autoincrement())
   accessToken String @map("access_token") @db.VarChar(255)
   itemId      String @unique @map("item_id") @db.VarChar(255)
 
+  // account
   accountAddress String  @map("account_address") @db.VarChar(255)
   account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
+
+  // loan
+  loanApplicationId String          @unique @map("loan_application_id")
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([accountAddress])
   @@map("plaid_item_access_tokens")
 }
 
@@ -139,6 +154,14 @@ model LoanApplication {
   creditScoreId String?      @unique @map("credit_score_id")
   creditScore   CreditScore?
 
+  // Debt service
+  debtServiceId String?      @unique @map("debt_service_id")
+  debtService   DebtService?
+
+  // Plaid access token
+  plaidItemAccessTokenId String?               @unique @map("plaid_item_access_token_id")
+  plaidItemAccessToken   PlaidItemAccessToken?
+
   // Current Loans
   hasOutstandingLoans Boolean           @default(false) @map("has_outstanding_loans")
   outstandingLoans    OutstandingLoan[]
@@ -159,9 +182,6 @@ model OutstandingLoan {
   loanApplicationId String          @map("loan_application_id")
   loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
 
-  accountAddress String  @map("account_address") @db.VarChar(255)
-  account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
-
   lenderName         String   @map("lender_name") @db.VarChar(255)
   loanType           String   @map("loan_type") @db.VarChar(255)
   outstandingBalance Float    @map("outstanding_balance")
@@ -171,35 +191,51 @@ model OutstandingLoan {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  @@index([accountAddress])
   @@index([loanApplicationId])
   @@map("outstanding_loans")
 }
 
 // credit score associated with a loan application
-// ✅ Create loan application without credit score
-// ✅ Create credit score with loan application
-// ❌ Create credit score without loan application (will fail)
-// ❌ Create credit score for loan application that already has one (will fail)
+// taken from reclaim + credit karma
 model CreditScore {
   id String @id @default(cuid())
-
-  accountAddress String  @map("account_address") @db.VarChar(255)
-  account        Account @relation(fields: [accountAddress], references: [address], onDelete: Cascade)
 
   loanApplicationId String          @unique @map("loan_application_id")
   loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
 
-  score         Int    @map("score")
-  scoreRangeMin Int    @map("score_range_min")
-  scoreRangeMax Int    @map("score_range_max")
-  scoreType     String @map("score_type") @db.VarChar(255) // (e.g., FICO, VantageScore)
-  creditBureau  String @map("credit_bureau") @db.VarChar(255) // (e.g., Equifax, Experian, TransUnion)
+  creditScoreEquifax    Int @map("credit_score_equifax")
+  creditScoreTransUnion Int @map("credit_score_transunion")
+
+  // proof
+  creditScoreProofId String?           @unique @map("credit_score_proof_id")
+  creditScoreProof   CreditScoreProof?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([accountAddress])
   @@index([loanApplicationId])
   @@map("credit_scores")
+}
+
+// https://chatgpt.com/share/675bf5ae-5e28-8006-b322-40a615646d12
+// debt service associated with a loan application
+model DebtService {
+  id String @id @default(cuid())
+
+  loanApplicationId String          @unique @map("loan_application_id")
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+
+  netOperatingIncome Float @map("net_operating_income")
+  totalDebtService   Float @map("total_debt_service")
+  dscr               Float @map("dscr")
+
+  // proof
+  debtServiceProofId String?           @unique @map("debt_service_proof_id")
+  debtServiceProof   DebtServiceProof?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([loanApplicationId])
+  @@map("debt_services")
 }

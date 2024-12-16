@@ -39,15 +39,16 @@ export default async function Page({ params }: { params: { id: string } }) {
 
   return (
     <>
-      {loanApplication.status !== LoanApplicationStatus.APPROVED && (
-        <div className="flex justify-end">
-          <ReclaimPlaid
-            requestUrl={reclaimPlaidRequestUrl}
-            statusUrl={reclaimPlaidStatusUrl}
-            loanApplicationId={id}
-          />
-        </div>
-      )}
+      {loanApplication.status !== LoanApplicationStatus.APPROVED &&
+        loanApplication.status !== LoanApplicationStatus.REJECTED && (
+          <div className="flex justify-end">
+            <ReclaimPlaid
+              requestUrl={reclaimPlaidRequestUrl}
+              statusUrl={reclaimPlaidStatusUrl}
+              loanApplicationId={id}
+            />
+          </div>
+        )}
       <div className="my-4" />
       <div className="grid grid-cols-1 gap-4 p-0 md:grid-cols-2">
         <LoanInformation loanApplication={loanApplication} />

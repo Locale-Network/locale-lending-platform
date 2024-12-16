@@ -22,7 +22,8 @@ import { useToast } from '@/hooks/use-toast';
 export type LoanApplicationsForTable = {
   id: string;
   creatorAddress: string;
-  creditScore: number;
+  creditScoreEquifax: number | null;
+  creditScoreTransUnion: number | null;
   status: LoanApplicationStatus;
   createdDate: Date;
   updatedDate: Date;
@@ -123,10 +124,33 @@ export const columns: ColumnDef<LoanApplicationsForTable>[] = [
   },
 
   {
-    accessorKey: 'creditScore',
-    header: 'Credit Score',
-    cell: ({ row }) => <div>{row.getValue('creditScore')}</div>,
+    accessorKey: 'creditScoreEquifax  ',
+    header: 'Credit Score Equifax',
+    cell: ({ row }) => {
+      const creditScoreEquifax = row.getValue('creditScoreEquifax') as number | null;
+
+      if (creditScoreEquifax === null) {
+        return <div>Not found</div>;
+      }
+
+      return <div>{creditScoreEquifax}</div>;
+    },
   },
+
+  {
+    accessorKey: 'creditScoreTransUnion',
+    header: 'Credit Score TransUnion',
+    cell: ({ row }) => {
+      const creditScoreTransUnion = row.getValue('creditScoreTransUnion') as number | null;
+
+      if (creditScoreTransUnion === null) {
+        return <div>Not found</div>;
+      }
+
+      return <div>{creditScoreTransUnion}</div>;
+    },
+  },
+
   {
     accessorKey: 'status',
     header: 'Status',

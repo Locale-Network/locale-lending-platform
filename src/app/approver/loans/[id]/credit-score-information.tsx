@@ -2,9 +2,7 @@
 
 import { CreditScore } from '@prisma/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { normalizeCreditScore } from '@/utils/number';
-import { creditScoreProgressColor } from '@/utils/colour';
+import { Separator } from '@/components/ui/separator';
 
 interface Props {
   creditScore: CreditScore | null;
@@ -26,44 +24,24 @@ export default function CreditScoreInformation({ creditScore }: Props) {
     );
   }
 
-  const scorePercentage = normalizeCreditScore(
-    creditScore.scoreRangeMin,
-    creditScore.scoreRangeMax,
-    creditScore.score
-  );
-
   return (
     <Card className="mx-auto w-full">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">Credit Score</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-center">
-          <span className="text-4xl font-bold">{creditScore.score}</span>
-          <span className="ml-2 text-sm text-muted-foreground">({creditScore.scoreType})</span>
-        </div>
-        <Progress
-          value={scorePercentage}
-          className="h-3 w-full"
-          indicatorClassName={creditScoreProgressColor(
-            creditScore.scoreRangeMin,
-            creditScore.scoreRangeMax,
-            creditScore.score
-          )}
-        />
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>{creditScore.scoreRangeMin}</span>
-          <span>{creditScore.scoreRangeMax}</span>
-        </div>
-        <div className="text-center text-sm">
-          <p>
-            Credit Bureau: <span className="font-semibold">{creditScore.creditBureau}</span>
-          </p>
-        </div>
-        <div className="text-center text-xs text-muted-foreground">
-          <p>
-            Score range: {creditScore.scoreRangeMin} - {creditScore.scoreRangeMax}
-          </p>
+      <CardContent>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="flex flex-col items-center">
+            <p className="font-semibold">Equifax</p>
+            <span className="text-4xl font-bold">{creditScore.creditScoreEquifax}</span>
+          </div>
+
+          <Separator orientation="vertical" />
+         
+          <div className="flex flex-col items-center">
+            <p className="font-semibold">TransUnion</p>
+            <span className="text-4xl font-bold">{creditScore.creditScoreTransUnion}</span>
+          </div>
         </div>
       </CardContent>
     </Card>
