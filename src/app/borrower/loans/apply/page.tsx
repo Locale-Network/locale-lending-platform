@@ -1,11 +1,10 @@
 import LoanApplicationForm from './form';
-import { ReclaimProofRequest } from '@reclaimprotocol/js-sdk';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/auth-options';
 import { initialiseLoanApplication } from './actions';
 import { getIdentityVerificationStatus } from '@/app/borrower/account/actions';
-import { KYCVerificationStatus } from '@prisma/client';
 import { redirect } from 'next/navigation';
+import { initialiseReclaimCreditKarmaProof, initialiseReclaimPlaidProof } from './actions-reclaim';
 
 export default async function Page() {
   const session = await getServerSession(authOptions);
@@ -29,35 +28,28 @@ export default async function Page() {
     return <div>{errorMessage}</div>;
   }
 
-  const redirectUrl = process.env.RECLAIM_SUCCESS_URL ?? '';
-  const appSecret = process.env.SECRET_ID;
-  const appId = process.env.APP_ID;
-  const callbackUrl = process.env.RECLAIM_CALLBACK_URL;
-  const providerId = process.env.RECLAIM_PROVIDER_ID;
+  // reclaim credit karma proof
+  const { requestUrl: reclaimCreditKarmaRequestUrl, statusUrl: reclaimCreditKarmaStatusUrl } =
+    await initialiseReclaimCreditKarmaProof({
+      accountAddress,
+      loanApplicationId,
+    });
 
-  if (!appSecret || !appId || !callbackUrl || !providerId) {
-    throw new Error('Missing reclaim configuration');
-  }
-
-  const reclaimProofRequest = await ReclaimProofRequest.init(appId, appSecret, providerId, {
-    log: false,
-  });
-
-  reclaimProofRequest.setRedirectUrl(redirectUrl);
-  reclaimProofRequest.setAppCallbackUrl(callbackUrl);
-
-  const message = `credit score calculation for ${accountAddress} at ${new Date().toISOString()} for loan application ${loanApplicationId}`;
-  reclaimProofRequest.addContext(accountAddress, message);
-
-  const requestUrl = await reclaimProofRequest.getRequestUrl();
-  const statusUrl = reclaimProofRequest.getStatusUrl();
+  // reclaim plaid proof
+  const { requestUrl: reclaimPlaidRequestUrl, statusUrl: reclaimPlaidStatusUrl } =
+    await initialiseReclaimPlaidProof({
+      accountAddress,
+      loanApplicationId,
+    });
 
   return (
     <LoanApplicationForm
       loanApplicationId={loanApplicationId}
       accountAddress={accountAddress}
-      reclaimRequestUrl={requestUrl}
-      reclaimStatusUrl={statusUrl}
+      reclaimCreditKarmaRequestUrl={reclaimCreditKarmaRequestUrl}
+      reclaimCreditKarmaStatusUrl={reclaimCreditKarmaStatusUrl}
+      reclaimPlaidRequestUrl={reclaimPlaidRequestUrl}
+      reclaimPlaidStatusUrl={reclaimPlaidStatusUrl}
     />
   );
 }

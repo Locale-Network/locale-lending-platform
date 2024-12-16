@@ -66,7 +66,7 @@ export const getLoanApplication = async (args: {
   return result;
 };
 
-export const getLoanApplicationsOfBorrower = async (
+export const getSubmittedLoanApplicationsOfBorrower = async (
   accountAddress: string
 ): Promise<LoanApplication[]> => {
   const result = await prisma.loanApplication.findMany({
@@ -78,6 +78,16 @@ export const getLoanApplicationsOfBorrower = async (
       },
     },
     orderBy: [{ createdAt: 'desc' }, { updatedAt: 'desc' }],
+  });
+  return result;
+};
+
+export const getAllLoanApplicationsOfBorrower = async (
+  accountAddress: string
+): Promise<LoanApplication[]> => {
+  const result = await prisma.loanApplication.findMany({
+    where: { accountAddress },
+    orderBy: [{ createdAt: 'desc' }],
   });
   return result;
 };

@@ -2,7 +2,7 @@ import { DataTable } from '@/components/ui/data-table';
 import Pagination from '@/components/custom/pagination';
 import { ColumnDef } from '@tanstack/react-table';
 
-export default async function Table<T>({
+export default function Table<T>({
   rows = [],
   columns = [],
   total = 0,

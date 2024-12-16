@@ -5,6 +5,7 @@ import {
   LoanApplicationDetails,
 } from '@/services/db/loan-applications/borrower';
 import { validateRequest as validateBorrowerRequest } from '@/app/borrower/actions';
+import { revalidatePath } from 'next/cache';
 
 interface GetLoanApplicationResponse {
   isError: boolean;
@@ -33,4 +34,8 @@ export async function getLoanApplication({
       errorMessage: 'Error fetching loan application',
     };
   }
+}
+
+export async function revalidateLoanApplication(loanApplicationId: string) {
+  revalidatePath(`/borrower/loans/${loanApplicationId}`);
 }

@@ -48,24 +48,27 @@ import {
 interface LoanApplicationFormProps {
   loanApplicationId: string;
   accountAddress: string;
-  reclaimRequestUrl: string;
-  reclaimStatusUrl: string;
+  reclaimCreditKarmaRequestUrl: string;
+  reclaimCreditKarmaStatusUrl: string;
+  reclaimPlaidRequestUrl: string;
+  reclaimPlaidStatusUrl: string;
 }
 export default function LoanApplicationForm({
   loanApplicationId,
   accountAddress,
-  reclaimRequestUrl,
-  reclaimStatusUrl,
+  reclaimCreditKarmaRequestUrl,
+  reclaimCreditKarmaStatusUrl,
+  reclaimPlaidRequestUrl,
+  reclaimPlaidStatusUrl,
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
-  const reclaimProofIntervalIdRef = useRef<NodeJS.Timer | null>(null);
-  const creditScoreIntervalIdRef = useRef<NodeJS.Timer | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState(false); // TODO: replace with transition hook
   const router = useRouter();
 
   const { toast } = useToast();
 
-  const totalSteps = 3;
+  const totalSteps = 4;
 
   const form = useForm<z.infer<typeof loanApplicationFormSchema>>({
     resolver: zodResolver(loanApplicationFormSchema),
@@ -74,8 +77,10 @@ export default function LoanApplicationForm({
       accountAddress,
       hasOutstandingLoans: false,
       outstandingLoans: [],
-      hasReclaimProof: false,
-      creditScoreId: undefined,
+      hasPlaidProof: false,
+      plaidProofId: undefined,
+      hasCreditKarmaProof: false,
+      creditKarmaProofId: undefined,
     },
   });
 
@@ -94,29 +99,29 @@ export default function LoanApplicationForm({
     name: 'outstandingLoans',
   });
 
-  const hasReclaimProof = useWatch({
+  const hasPlaidProof = useWatch({
     control: form.control,
-    name: 'hasReclaimProof',
+    name: 'hasPlaidProof',
   });
 
-  const creditScoreId = useWatch({
+  const hasCreditKarmaProof = useWatch({
     control: form.control,
-    name: 'creditScoreId',
+    name: 'hasCreditKarmaProof',
   });
 
   async function onSubmit(values: z.infer<typeof loanApplicationFormSchema>) {
-    if (!values.hasReclaimProof) {
-      form.setError('hasReclaimProof', {
+    if (!values.hasPlaidProof) {
+      form.setError('hasPlaidProof', {
         type: 'manual',
-        message: 'Please complete bank account verification before submitting',
+        message: 'Please connect your bank account',
       });
       return;
     }
 
-    if (!values.creditScoreId) {
-      form.setError('creditScoreId', {
+    if (!values.hasCreditKarmaProof) {
+      form.setError('hasCreditKarmaProof', {
         type: 'manual',
-        message: 'Please wait for credit score to be calculated',
+        message: 'Please connect your credit karma account',
       });
       return;
     }
@@ -150,8 +155,10 @@ export default function LoanApplicationForm({
       case 1:
         return 'Business information';
       case 2:
-        return 'Cash flow verification';
+        return 'Connect your bank account';
       case 3:
+        return 'Connect your Intuit Credit Karma';
+      case 4:
         return 'Current loans';
       default:
         return 'Loan Application';
@@ -162,82 +169,71 @@ export default function LoanApplicationForm({
   const prevStep = () => setStep(step => Math.max(step - 1, 1));
   const clickStep = (step: number) => setStep(step);
 
-  const startReclaimProofPolling = useCallback(async () => {
-    const pollStatus = async () => {
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    const pollPlaidStatus = async () => {
       try {
-        const response = await fetch(reclaimStatusUrl);
-        const jsonResponse = await response.json();
-        if (jsonResponse?.session?.statusV2 === 'PROOF_SUBMITTED') {
-          form.setValue('hasReclaimProof', true);
+        const response = await fetch(reclaimPlaidStatusUrl);
+        const data = await response.json();
+
+        if (data?.session?.statusV2 === 'PROOF_SUBMITTED') {
+          form.setValue('hasPlaidProof', true);
+          clearInterval(intervalId);
         }
       } catch (error) {
-        console.error('Error polling status:', error);
+        console.error('Error polling Plaid status:', error);
       }
     };
 
-    const newIntervalId = setInterval(pollStatus, 3000);
-    reclaimProofIntervalIdRef.current = newIntervalId;
-  }, [reclaimStatusUrl, form]);
+    if (step === 2 && !hasPlaidProof) {
+      // Poll every 3 seconds
+      intervalId = setInterval(pollPlaidStatus, 3000);
 
-  const stopReclaimProofPolling = (intervalId: NodeJS.Timer | null) => {
-    clearInterval(intervalId as NodeJS.Timeout);
-    reclaimProofIntervalIdRef.current = null;
-  };
+      // Initial check
+      pollPlaidStatus();
+    }
 
-  const startCreditScorePolling = useCallback(async () => {
-    const pollStatus = async () => {
+    // Cleanup function
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [step, hasPlaidProof, reclaimPlaidStatusUrl, form]);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    const pollCreditKarmaStatus = async () => {
       try {
-        const response = await getCreditScoreOfLoanApplication(loanApplicationId);
+        const response = await fetch(reclaimCreditKarmaStatusUrl);
+        const data = await response.json();
 
-        if (response.creditScore) {
-          const { creditScore } = response;
-          form.setValue('creditScoreId', creditScore.id);
+        if (data?.session?.statusV2 === 'PROOF_SUBMITTED') {
+          form.setValue('hasPlaidProof', true);
+          clearInterval(intervalId);
         }
       } catch (error) {
-        console.error('Error polling credit score:', error);
+        console.error('Error polling Plaid status:', error);
       }
     };
 
-    const newIntervalId = setInterval(pollStatus, 3000);
-    creditScoreIntervalIdRef.current = newIntervalId;
-  }, [loanApplicationId, form]);
+    if (step === 3 && !hasCreditKarmaProof) {
+      // Poll every 3 seconds
+      intervalId = setInterval(pollCreditKarmaStatus, 3000);
 
-  const stopCreditScorePolling = (intervalId: NodeJS.Timer | null) => {
-    clearInterval(intervalId as NodeJS.Timeout);
-    creditScoreIntervalIdRef.current = null;
-  };
-
-  useEffect(() => {
-    if (step === 2 && !hasReclaimProof) {
-      startReclaimProofPolling();
-    }
-  }, [hasReclaimProof, step, startReclaimProofPolling]);
-
-  useEffect(() => {
-    if (hasReclaimProof) {
-      stopReclaimProofPolling(reclaimProofIntervalIdRef.current);
-    }
-  }, [hasReclaimProof]);
-
-  useEffect(() => {
-    if (hasReclaimProof) {
-      startCreditScorePolling();
+      // Initial check
+      pollCreditKarmaStatus();
     }
 
+    // Cleanup function
     return () => {
-      stopCreditScorePolling(creditScoreIntervalIdRef.current);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
-  }, [hasReclaimProof, startCreditScorePolling]);
-
-  useEffect(() => {
-    if (creditScoreId) {
-      stopCreditScorePolling(creditScoreIntervalIdRef.current);
-    }
-
-    return () => {
-      stopCreditScorePolling(creditScoreIntervalIdRef.current);
-    };
-  }, [creditScoreId]);
+  }, [step, hasCreditKarmaProof, reclaimCreditKarmaStatusUrl, form]);
 
   return (
     <Card className="mx-auto w-full max-w-4xl">
@@ -511,14 +507,14 @@ export default function LoanApplicationForm({
               <div className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="hasReclaimProof"
+                  name="hasPlaidProof"
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
                         <div className="flex flex-col items-center space-y-4">
                           <p className="text-center">Scan the QR code to link your bank account</p>
-                          <QRCode value={reclaimRequestUrl} size={256} />
-                          {hasReclaimProof ? (
+                          <QRCode value={reclaimPlaidRequestUrl} size={256} />
+                          {hasPlaidProof ? (
                             <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
                               <svg
                                 className="h-5 w-5"
@@ -534,7 +530,7 @@ export default function LoanApplicationForm({
                                   d="M5 13l4 4L19 7"
                                 />
                               </svg>
-                              <p className="font-medium">You&apos;ve been prequalified</p>
+                              <p className="font-medium">Bank account connected</p>
                             </div>
                           ) : (
                             <div className="flex items-center space-x-2">
@@ -551,6 +547,51 @@ export default function LoanApplicationForm({
             )}
 
             {step === 3 && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="hasCreditKarmaProof"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="flex flex-col items-center space-y-4">
+                          <p className="text-center">
+                            Scan the QR code to link your credit karma account
+                          </p>
+                          <QRCode value={reclaimCreditKarmaRequestUrl} size={256} />
+                          {hasCreditKarmaProof ? (
+                            <div className="flex items-center space-x-2 rounded-lg bg-green-100 p-3 text-green-700">
+                              <svg
+                                className="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              <p className="font-medium">Credit karma connected</p>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <p className="animate-pulse">Waiting for completion...</p>
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {step === 4 && (
               <div className="space-y-4">
                 <FormField
                   control={form.control}

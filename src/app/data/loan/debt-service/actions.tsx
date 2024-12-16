@@ -1,11 +1,12 @@
 'use server';
 
 import {
-  getLoanApplication as dbGetLoanApplication,
-  getLatestLoanApplicationOfBorrower as dbGetLatestLoanApplicationOfBorrower,
+  getAllLoanApplicationsOfBorrower as dbGetAllLoanApplicationsOfBorrower,
 } from '@/services/db/loan-applications/borrower';
 import plaidClient from '@/utils/plaid';
+import { LoanApplicationStatus, LoanApplication } from '@prisma/client';
 import { CountryCode, Products } from 'plaid';
+import { saveItemAccessToken as dbSaveItemAccessToken } from '@/services/db/plaid/item-access';
 
 interface CreateLinkTokenResponse {
   isError: boolean;
@@ -68,21 +69,47 @@ export async function plaidPublicTokenExchange(
   }
 }
 
-interface GetLatestLoanApplicationOfBorrowerResponse {
+interface GetFilteredLoanApplicationsOfBorrowerResponse {
   isError: boolean;
   errorMessage?: string;
-  loanApplicationId?: string;
+  loanApplications?: LoanApplication[];
 }
-export async function getLatestLoanApplicationOfBorrower(
+export async function getFilteredLoanApplicationsOfBorrower(
   accountAddress: string
-): Promise<GetLatestLoanApplicationOfBorrowerResponse> {
+): Promise<GetFilteredLoanApplicationsOfBorrowerResponse> {
   try {
-    const loanApplication = await dbGetLatestLoanApplicationOfBorrower(accountAddress);
+    const loanApplications = await dbGetAllLoanApplicationsOfBorrower(accountAddress);
+
+
+    const notApprovedLoanApplications = loanApplications
+      .filter(loanApplication => 
+        loanApplication.status !== LoanApplicationStatus.APPROVED && 
+        loanApplication.status !== LoanApplicationStatus.REJECTED
+      );
+
     return {
       isError: false,
-      loanApplicationId: loanApplication?.id,
+      loanApplications: notApprovedLoanApplications,
     };
   } catch (error) {
-    return { isError: true, errorMessage: 'Failed to get latest loan application of borrower' };
+    return { isError: true, errorMessage: 'Failed to get all loan applications of borrower' };
   }
+}
+
+
+export async function savePlaidItemAccessToken(args: {
+  accessToken: string;
+  itemId: string;
+  accountAddress: string;
+  loanApplicationId: string;
+}) {
+  const { accessToken, itemId, accountAddress, loanApplicationId } = args;
+  try {
+    await dbSaveItemAccessToken({
+      accessToken,
+      itemId,
+      accountAddress,
+      loanApplicationId,
+    });
+  } catch (error) {}
 }
