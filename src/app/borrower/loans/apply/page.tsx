@@ -4,7 +4,10 @@ import { authOptions } from '@/app/api/auth/auth-options';
 import { initialiseLoanApplication } from './actions';
 import { getIdentityVerificationStatus } from '@/app/borrower/account/actions';
 import { redirect } from 'next/navigation';
-import { initialiseReclaimCreditKarmaProof, initialiseReclaimDebtServiceProof } from './actions-reclaim';
+import {
+  initialiseReclaimCreditKarmaProof,
+  initialiseReclaimDebtServiceProof,
+} from './actions-reclaim';
 
 export default async function Page() {
   const session = await getServerSession(authOptions);

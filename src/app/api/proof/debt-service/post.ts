@@ -57,7 +57,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const debtServiceId = loanApplication.debtServiceId ?? '';
+    const debtServiceId = loanApplication.debtService?.[0]?.id;
+
+    if (!debtServiceId) {
+      return NextResponse.json(
+        {
+          message: 'Debt service not found',
+        },
+        { status: 404 }
+      );
+    }
 
     await saveDebtServiceProof({
       debtServiceId,
@@ -72,6 +81,7 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
+    console.error(error);
     return NextResponse.json(
       {
         message: 'Error verifying proof',

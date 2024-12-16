@@ -10,17 +10,14 @@ export async function saveCreditScoreProof(args: {
 }) {
   const { creditScoreId, proof, context } = args;
 
-  await prisma.creditScore.update({
-    where: {
-      id: creditScoreId,
-    },
+  await prisma.creditScoreProof.create({
     data: {
-      creditScoreProofId: proof.identifier,
-      creditScoreProof: {
-        create: {
-          id: proof.identifier,
-          proof: JSON.stringify(proof),
-          context: JSON.stringify(context),
+      id: proof.identifier,
+      proof: JSON.stringify(proof),
+      context: JSON.stringify(context),
+      creditScore: {
+        connect: {
+          id: creditScoreId,
         },
       },
     },
@@ -34,17 +31,14 @@ export async function saveDebtServiceProof(args: {
 }) {
   const { debtServiceId, proof, context } = args;
 
-  await prisma.debtService.update({
-    where: {
-      id: debtServiceId,
-    },
+  await prisma.debtServiceProof.create({
     data: {
-      debtServiceProofId: proof.identifier,
-      debtServiceProof: {
-        create: {
-          id: proof.identifier,
-          proof: JSON.stringify(proof),
-          context: JSON.stringify(context),
+      id: proof.identifier,
+      proof: JSON.stringify(proof),
+      context: JSON.stringify(context),
+      debtService: {
+        connect: {
+          id: debtServiceId,
         },
       },
     },

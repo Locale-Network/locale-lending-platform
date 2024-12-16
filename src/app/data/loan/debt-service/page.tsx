@@ -1,7 +1,4 @@
-import {
-  createLinkTokenForTransactions,
-  getFilteredLoanApplicationsOfBorrower,
-} from './actions';
+import { createLinkTokenForTransactions, getFilteredLoanApplicationsOfBorrower } from './actions';
 import AddressInput from './input-address';
 import { formatAddress } from '@/utils/string';
 import { Address } from 'viem';

@@ -10,7 +10,7 @@ import {
 } from '@prisma/client';
 
 export type LoanApplicationDetails = LoanApplication & {
-  creditScore: CreditScore | null;
+  creditScore: CreditScore[] | null;
   account: Account;
   outstandingLoans: OutstandingLoan[];
 };
@@ -22,7 +22,12 @@ export const getLoanApplication = async (args: {
   const result = await prisma.loanApplication.findUnique({
     where: { id: loanApplicationId },
     include: {
-      creditScore: true,
+      creditScore: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1,
+      },
       account: true,
       outstandingLoans: true,
     },
@@ -32,7 +37,7 @@ export const getLoanApplication = async (args: {
 
 export const getSubmittedLoanApplications = async (): Promise<
   (LoanApplication & {
-    creditScore: CreditScore | null;
+    creditScore: CreditScore[] | null;
     account: Account;
   })[]
 > => {
@@ -44,7 +49,12 @@ export const getSubmittedLoanApplications = async (): Promise<
       },
     },
     include: {
-      creditScore: true,
+      creditScore: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1,
+      },
       account: true,
     },
     orderBy: [{ createdAt: 'desc' }, { updatedAt: 'desc' }],

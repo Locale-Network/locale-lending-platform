@@ -6,7 +6,16 @@ import prisma from '@prisma/index';
 export const createKycVerification = async (
   data: Pick<KYCVerification, 'accountAddress' | 'identityVerificationId'>
 ) => {
-  return prisma.kYCVerification.create({ data: { ...data, updatedAt: new Date() } });
+  return prisma.kYCVerification.create({
+    data: {
+      identityVerificationId: data.identityVerificationId,
+      account: {
+        connect: {
+          address: data.accountAddress,
+        },
+      },
+    },
+  });
 };
 
 // plaid webhook increments the attempts count of the kyc verification

@@ -26,7 +26,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   StateMajorCities,
@@ -35,11 +42,7 @@ import {
   BusinessIndustry,
 } from '@/types/business';
 import QRCode from 'react-qr-code';
-import {
-  getCreditScoreOfLoanApplication,
-  getDebtServiceOfLoanApplication,
-  submitLoanApplication,
-} from './actions';
+import { submitLoanApplication } from './actions';
 import {
   loanApplicationFormSchema,
   BUSINESS_DESCRIPTION_MAX_LENGTH,
@@ -80,9 +83,7 @@ export default function LoanApplicationForm({
       hasOutstandingLoans: false,
       outstandingLoans: [],
       hasDebtServiceProof: false,
-      debtServiceId: undefined,
       hasCreditScoreProof: false,
-      creditScoreId: undefined,
     },
   });
 
@@ -171,9 +172,6 @@ export default function LoanApplicationForm({
         if (data?.session?.statusV2 === 'PROOF_SUBMITTED') {
           clearInterval(intervalId);
           form.setValue('hasDebtServiceProof', true);
-          const { debtService } = await getDebtServiceOfLoanApplication(loanApplicationId);
-
-          form.setValue('debtServiceId', debtService?.id);
         }
       } catch (error) {
         console.error('Error polling debt service status:', error);
@@ -207,8 +205,6 @@ export default function LoanApplicationForm({
         if (data?.session?.statusV2 === 'PROOF_SUBMITTED') {
           form.setValue('hasCreditScoreProof', true);
           clearInterval(intervalId);
-          const { creditScore } = await getCreditScoreOfLoanApplication(loanApplicationId);
-          form.setValue('creditScoreId', creditScore?.id);
         }
       } catch (error) {
         console.error('Error polling Plaid status:', error);
@@ -235,6 +231,7 @@ export default function LoanApplicationForm({
     <Card className="mx-auto w-full max-w-4xl">
       <CardHeader>
         <CardTitle>{cardTitleForStep(step)}</CardTitle>
+        <CardDescription>Application ID: {loanApplicationId}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-10 flex justify-between">

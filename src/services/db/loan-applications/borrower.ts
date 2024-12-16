@@ -3,10 +3,11 @@ import 'server-only';
 import prisma from '@prisma/index';
 import {
   Account,
-  CreditScore,
   LoanApplication,
   LoanApplicationStatus,
   OutstandingLoan,
+  DebtService,
+  CreditScore,
 } from '@prisma/client';
 
 export type BusinessInfo = Pick<
@@ -27,6 +28,8 @@ export type BusinessInfo = Pick<
 export type LoanApplicationDetails = LoanApplication & {
   account: Account;
   outstandingLoans: OutstandingLoan[];
+  debtService: DebtService[];
+  creditScore: CreditScore[];
 };
 
 // DRAFT MODE
@@ -35,7 +38,11 @@ export const initialiseLoanApplication = async (
 ): Promise<LoanApplication> => {
   const result = await prisma.loanApplication.create({
     data: {
-      accountAddress,
+      account: {
+        connect: {
+          address: accountAddress,
+        },
+      },
       businessLegalName: '',
       businessAddress: '',
       businessState: '',
@@ -61,6 +68,18 @@ export const getLoanApplication = async (args: {
     include: {
       account: true,
       outstandingLoans: true,
+      debtService: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1,
+      },
+      creditScore: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1,
+      },
     },
   });
   return result;
@@ -97,8 +116,6 @@ export const submitLoanApplication = async (data: {
   id: string;
   accountAddress: string;
   businessInfo: BusinessInfo;
-  debtServiceId: string;
-  creditScoreId: string;
   outstandingLoans: Pick<
     OutstandingLoan,
     | 'annualInterestRate'
@@ -109,7 +126,7 @@ export const submitLoanApplication = async (data: {
     | 'loanType'
   >[];
 }): Promise<any> => {
-  const { id, accountAddress, businessInfo, outstandingLoans, debtServiceId, creditScoreId } = data;
+  const { id, businessInfo, outstandingLoans } = data;
 
   const result = await prisma.loanApplication.update({
     where: {
@@ -117,14 +134,11 @@ export const submitLoanApplication = async (data: {
     },
     data: {
       ...businessInfo,
-      // credit score
-      // debt service
       hasOutstandingLoans: outstandingLoans.length > 0,
       outstandingLoans: {
         createMany: {
           data: outstandingLoans.map(outstandingLoan => ({
             ...outstandingLoan,
-            accountAddress,
           })),
         },
       },
@@ -133,13 +147,5 @@ export const submitLoanApplication = async (data: {
     },
   });
 
-  return result;
-};
-
-export const getLatestLoanApplicationOfBorrower = async (accountAddress: string) => {
-  const result = await prisma.loanApplication.findFirst({
-    where: { accountAddress, isSubmitted: false, status: LoanApplicationStatus.DRAFT },
-    orderBy: [{ createdAt: 'desc' }, { updatedAt: 'desc' }],
-  });
   return result;
 };

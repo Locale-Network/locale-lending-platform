@@ -42,7 +42,7 @@ export default async function Page({ params }: { params: { id: string } }) {
       <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
         <LoanInformation loanApplication={loanApplication} />
         <BusinessInformation business={loanApplication} />
-        <CreditScoreInformation creditScore={loanApplication.creditScore} />
+        <CreditScoreInformation creditScore={loanApplication.creditScore?.[0] ?? null} />
         <OutstandingLoans loans={loanApplication.outstandingLoans} />
       </div>
     </>
