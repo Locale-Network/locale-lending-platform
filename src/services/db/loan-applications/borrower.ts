@@ -97,6 +97,8 @@ export const submitLoanApplication = async (data: {
   id: string;
   accountAddress: string;
   businessInfo: BusinessInfo;
+  debtServiceId: string;
+  creditScoreId: string;
   outstandingLoans: Pick<
     OutstandingLoan,
     | 'annualInterestRate'
@@ -107,7 +109,7 @@ export const submitLoanApplication = async (data: {
     | 'loanType'
   >[];
 }): Promise<any> => {
-  const { id, accountAddress, businessInfo, outstandingLoans } = data;
+  const { id, accountAddress, businessInfo, outstandingLoans, debtServiceId, creditScoreId } = data;
 
   const result = await prisma.loanApplication.update({
     where: {
@@ -116,6 +118,7 @@ export const submitLoanApplication = async (data: {
     data: {
       ...businessInfo,
       // credit score
+      // debt service
       hasOutstandingLoans: outstandingLoans.length > 0,
       outstandingLoans: {
         createMany: {

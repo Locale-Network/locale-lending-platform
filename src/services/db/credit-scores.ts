@@ -12,46 +12,26 @@ export type CreditKarmaCreditScoreResponse = Pick<
 export const saveCreditScoreOfLoanApplication = async (args: {
   creditScore: CreditKarmaCreditScoreResponse;
   loanApplicationId: string;
-}): Promise<CreditScore> => {
+}): Promise<void> => {
   const { creditScore, loanApplicationId } = args;
 
-  const loanApplication = await getLoanApplication({ loanApplicationId });
-
-  if (!loanApplication) {
-    throw new Error(`Loan application with id ${loanApplicationId} not found`);
-  }
-
-  const result = await prisma.$transaction(async tx => {
-    const creditScoreResult = await tx.creditScore.upsert({
-      where: {
-        loanApplicationId: loanApplicationId,
-      },
-      create: {
-        ...creditScore,
-        loanApplication: {
-          connect: {
-            id: loanApplicationId,
+  await prisma.loanApplication.update({
+    where: {
+      id: loanApplicationId,
+    },
+    data: {
+      creditScore: {
+        connectOrCreate: {
+          where: {
+            loanApplicationId,
+          },
+          create: {
+            ...creditScore,
           },
         },
       },
-      update: {
-        ...creditScore,
-      },
-    });
-
-    await tx.loanApplication.update({
-      where: {
-        id: loanApplicationId,
-      },
-      data: {
-        creditScoreId: creditScoreResult.id,
-      },
-    });
-
-    return creditScoreResult;
+    },
   });
-
-  return result;
 };
 
 export async function getCreditScoreOfLoanApplication(loanApplicationId: string) {

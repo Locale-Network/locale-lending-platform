@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
@@ -66,8 +66,7 @@ export default function LoanApplicationForm({
 }: LoanApplicationFormProps) {
   const [step, setStep] = useState(1);
 
-  const [isSubmitting, setIsSubmitting] = useState(false); // TODO: replace with transition hook
-  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const { toast } = useToast();
 
@@ -113,25 +112,23 @@ export default function LoanApplicationForm({
   });
 
   async function onSubmit(values: z.infer<typeof loanApplicationFormSchema>) {
-    if (!values.hasDebtServiceProof) {
-      form.setError('hasDebtServiceProof', {
-        type: 'manual',
-        message: 'Please connect your bank account to calculate your debt service score',
-      });
-      return;
-    }
+    // if (!values.hasDebtServiceProof) {
+    //   form.setError('hasDebtServiceProof', {
+    //     type: 'manual',
+    //     message: 'Please connect your bank account to calculate your debt service score',
+    //   });
+    //   return;
+    // }
 
-    if (!values.hasCreditScoreProof) {
-      form.setError('hasCreditScoreProof', {
-        type: 'manual',
-        message: 'Please connect your Credit Karma account to calculate your credit score',
-      });
-      return;
-    }
+    // if (!values.hasCreditScoreProof) {
+    //   form.setError('hasCreditScoreProof', {
+    //     type: 'manual',
+    //     message: 'Please connect your Credit Karma account to calculate your credit score',
+    //   });
+    //   return;
+    // }
 
-    try {
-      setIsSubmitting(true);
-
+    startTransition(async () => {
       await submitLoanApplication({
         formData: values,
         accountAddress,
@@ -141,16 +138,7 @@ export default function LoanApplicationForm({
         title: 'Loan application submitted',
         variant: 'success',
       });
-
-      router.replace('/borrower/loans');
-    } catch (error) {
-      toast({
-        title: 'Error submitting loan application',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
   function cardTitleForStep(step: number): string {
@@ -808,8 +796,8 @@ export default function LoanApplicationForm({
         )}
         {step < totalSteps && <Button onClick={nextStep}>Next</Button>}
         {step === totalSteps && (
-          <Button disabled={isSubmitting} onClick={form.handleSubmit(onSubmit)}>
-            {isSubmitting ? 'Submitting...' : 'Submit Application'}
+          <Button disabled={isPending} onClick={form.handleSubmit(onSubmit)}>
+            {isPending ? 'Submitting...' : 'Submit Application'}
           </Button>
         )}
       </CardFooter>
