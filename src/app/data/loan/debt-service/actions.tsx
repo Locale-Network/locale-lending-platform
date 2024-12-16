@@ -28,7 +28,6 @@ export async function createLinkTokenForTransactions(
       country_codes: [CountryCode.Us],
       client_name: 'Locale Lending',
       language: 'en',
-      redirect_uri: process.env.PLAID_REDIRECT_URI,
     });
 
     return {

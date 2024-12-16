@@ -15,7 +15,9 @@ interface PlaidLinkProps {
 }
 
 export default function PlaidLink(props: PlaidLinkProps) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(
+    'access-sandbox-eb79b3cc-83b2-4358-88a3-128c9925f183' // FIXME: make null later
+  );
   const toast = useToast();
 
   const onSuccess = useCallback<PlaidLinkOnSuccess>(
