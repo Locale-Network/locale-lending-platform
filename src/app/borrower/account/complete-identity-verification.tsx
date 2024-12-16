@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { IdCard, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 interface CompleteIdentityVerificationProps {
   accountAddress: string;
@@ -22,7 +23,7 @@ interface CompleteIdentityVerificationProps {
 
 export default function CompleteIdentityVerification(props: CompleteIdentityVerificationProps) {
   const { toast } = useToast();
-
+  const router = useRouter();
   const onSuccess = useCallback<PlaidLinkOnSuccess>(
     async (_, metadata) => {
       await createKycVerificationRecord(props.accountAddress, metadata.link_session_id);
@@ -30,8 +31,9 @@ export default function CompleteIdentityVerification(props: CompleteIdentityVeri
         title: 'Identity verification completed',
         variant: 'success',
       });
+      router.push('/borrower/loans/apply');
     },
-    [props.accountAddress, toast]
+    [props.accountAddress, toast, router]
   );
 
   const config: PlaidLinkOptions = {
