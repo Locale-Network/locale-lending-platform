@@ -1,8 +1,13 @@
-import PlaidLink from './plaid-link';
-import { createLinkTokenForTransactions, getLatestLoanApplicationOfBorrower } from './actions';
+import {
+  createLinkTokenForTransactions,
+  getFilteredLoanApplicationsOfBorrower,
+} from './actions';
 import AddressInput from './input-address';
 import { formatAddress } from '@/utils/string';
 import { Address } from 'viem';
+import * as React from 'react';
+import Loans from './select-loan';
+import { isUndefined } from 'lodash';
 
 /**
  * This page offers a Plaid Link session for users to connect to their bank account.
@@ -10,7 +15,6 @@ import { Address } from 'viem';
  * After bank account is successfully connected, an access token is generated for the user's transaction history.
  * The transaction history to used to calculated debt-service/ interest rate
  */
-
 
 interface Props {
   searchParams: {
@@ -34,20 +38,24 @@ export default async function Page({ searchParams: { accountAddress } }: Props) 
   }
 
   const {
-    isError: isErrorLoanApplication,
-    errorMessage: errorMessageLoanApplication,
-    loanApplicationId,
-  } = await getLatestLoanApplicationOfBorrower(accountAddress); // DRAFT application
+    isError: isErrorLoanApplications,
+    errorMessage: errorMessageLoanApplications,
+    loanApplications,
+  } = await getFilteredLoanApplicationsOfBorrower(accountAddress);
 
-  if (isErrorLoanApplication || !loanApplicationId) {
-    return <div>{errorMessageLoanApplication}</div>;
+  if (isErrorLoanApplications || isUndefined(loanApplications)) {
+    return <div>{errorMessageLoanApplications}</div>;
   }
 
   return (
-    <div>
-      <p>Loan ID: {loanApplicationId}</p>
+    <div className="mx-4">
       <p>Loan creator: {formatAddress(accountAddress as Address)}</p>
-      <PlaidLink linkToken={linkToken} loanApplicationId={loanApplicationId} />
+      <div className="my-4" />
+      <Loans
+        loanApplications={loanApplications}
+        linkToken={linkToken}
+        accountAddress={accountAddress}
+      />
     </div>
   );
 }

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { XCircle } from 'lucide-react';
-import { CreditScore } from '@prisma/client';
-import { CreditScoreApiResponse } from '@/app/api/loan/[id]/credit-score/get';
-export default function CalculateCreditScore({
+import { DebtServiceApiResponse, SBA } from '@/app/api/loan/[id]/debt-service/get';
+
+export default function CalculateDebtService({
   accessToken,
   loanApplicationId,
 }: {
@@ -12,18 +12,22 @@ export default function CalculateCreditScore({
   loanApplicationId: string;
 }) {
   const [apiError, setApiError] = useState<any | null>(null);
-  const [creditScore, setCreditScore] = useState<CreditScore | null>(null);
+  const [sba, setSba] = useState<SBA | null>(null);
 
   useEffect(() => {
     if (accessToken) {
-      // TODO: change to debt-service api
-      fetch(`/api/loan/${loanApplicationId}/credit-score?access_token=${accessToken}`)
+      fetch(`/api/loan/${loanApplicationId}/debt-service`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
         .then(response => response.json())
-        .then((data: CreditScoreApiResponse) => {
+        .then((data: DebtServiceApiResponse) => {
           if (data.status === 'error') {
             setApiError(data.message);
           } else {
-            setCreditScore(data.data?.creditScore ?? null);
+            setSba(data.data?.sba ?? null);
           }
         })
         .catch(() => setApiError('Error fetching credit score'));
@@ -34,15 +38,15 @@ export default function CalculateCreditScore({
     return (
       <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-600">
         <XCircle className="h-5 w-5" />
-        <span>We were not able to prequalify you at this time</span>
+        <span>{apiError}</span>
       </div>
     );
   }
 
-  if (creditScore) {
+  if (sba) {
     return (
       <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
-        <p>You’ve been prequalified</p>
+        <p>Debt service: {sba.dscr}</p>
       </div>
     );
   }
