@@ -46,7 +46,7 @@ export default function CalculateDebtService({
   if (sba) {
     return (
       <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
-        <p>Debt service: {sba.dscr}</p>
+        <p>Success</p>
       </div>
     );
   }

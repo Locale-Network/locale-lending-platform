@@ -68,10 +68,13 @@ export async function GET(request: NextRequest, context: { params: { id: string 
 
   try {
     // TODO: make a POST request to the Cartesi
+    const netOperatingIncome = 100000;
+    const totalDebtService = 10000;
+    const dscr = netOperatingIncome / totalDebtService;
     const sba: SBA = {
-      netOperatingIncome: 100000,
-      totalDebtService: 10000,
-      dscr: 1.0,
+      netOperatingIncome,
+      totalDebtService,
+      dscr,
     };
 
     await saveDebtServiceOfLoanApplication({
