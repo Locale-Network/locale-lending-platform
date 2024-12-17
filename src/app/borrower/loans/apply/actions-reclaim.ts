@@ -95,7 +95,7 @@ export async function initialiseReclaimCreditKarmaProof({
   reclaimCreditKarmaProofRequest.setAppCallbackUrl(reclaimCreditKarmaCallbackUrl);
 
   const reclaimCreditKarmaMessage = `credit score calculation for ${accountAddress} at ${new Date().toISOString()} for loan application ${loanApplicationId}`;
-  reclaimCreditKarmaProofRequest.addContext(accountAddress, reclaimCreditKarmaMessage);
+  reclaimCreditKarmaProofRequest.addContext(loanApplicationId, reclaimCreditKarmaMessage);
 
   const reclaimCreditKarmaRequestUrl = await reclaimCreditKarmaProofRequest.getRequestUrl();
   const reclaimCreditKarmaStatusUrl = reclaimCreditKarmaProofRequest.getStatusUrl();
