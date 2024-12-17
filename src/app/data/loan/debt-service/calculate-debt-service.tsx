@@ -13,30 +13,28 @@ export default function CalculateDebtService({
 }) {
   const [apiError, setApiError] = useState<any | null>(null);
   const [sba, setSba] = useState<SBA | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
 
-   useEffect(() => {
-     if (accessToken && !isLoading) {
-       setIsLoading(true);
-       fetch(`/api/loan/${loanApplicationId}/debt-service`, {
-         headers: {
-           'Content-Type': 'application/json',
-           Authorization: `Bearer ${accessToken}`,
-         },
-       })
-         .then(response => response.json())
-         .then((data: DebtServiceApiResponse) => {
-           if (data.status === 'error') {
-             setApiError(data.message);
-           } else {
-             setSba(data.data?.sba ?? null);
-           }
-         })
-         .catch(() => setApiError('Error fetching credit score'))
-         .finally(() => setIsLoading(false));
-     }
-   }, [loanApplicationId, accessToken, isLoading]);
+  useEffect(() => {
+    if (accessToken) {
+      fetch(`/api/loan/${loanApplicationId}/debt-service`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+        .then(response => response.json())
+        .then((data: DebtServiceApiResponse) => {
+          if (data.status === 'error') {
+            setApiError(data.message);
+          } else {
+            setSba(data.data?.sba ?? null);
+          }
+        })
+        .catch(() => setApiError('Error fetching credit score'));
+    }
+  }, [loanApplicationId, accessToken]);
 
   if (apiError) {
     return (
