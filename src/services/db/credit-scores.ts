@@ -2,15 +2,11 @@ import 'server-only';
 
 import prisma from '@prisma/index';
 import { CreditScore } from '@prisma/client';
-import { getLoanApplication } from './loan-applications/borrower';
 
-export type CreditKarmaCreditScoreResponse = Pick<
-  CreditScore,
-  'creditScoreEquifax' | 'creditScoreTransUnion'
->;
+export type SaveCreditScoreArgs = Pick<CreditScore, 'creditScoreEquifax' | 'creditScoreTransUnion'>;
 
 export const saveCreditScoreOfLoanApplication = async (args: {
-  creditScore: CreditKarmaCreditScoreResponse;
+  creditScore: SaveCreditScoreArgs;
   loanApplicationId: string;
 }): Promise<void> => {
   const { creditScore, loanApplicationId } = args;
@@ -31,9 +27,6 @@ export async function getLatestCreditScoreOfLoanApplication(loanApplicationId: s
   const result = await prisma.creditScore.findFirstOrThrow({
     where: {
       loanApplicationId,
-    },
-    orderBy: {
-      createdAt: 'desc',
     },
   });
 
