@@ -51,6 +51,7 @@ export const getSubmittedLoanApplications = async (
       creatorAddress: formatAddress(loan.account.address as Address),
       creditScoreEquifax: loan.creditScore?.[0]?.creditScoreEquifax ?? null,
       creditScoreTransUnion: loan.creditScore?.[0]?.creditScoreTransUnion ?? null,
+      dscr: loan.debtService?.[0]?.dscr ?? null,
       status: loan.status,
       createdDate: loan.createdAt,
       updatedDate: loan.updatedAt,
