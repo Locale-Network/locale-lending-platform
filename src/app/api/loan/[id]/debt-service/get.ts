@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLoanApplication } from '@/services/db/loan-applications/borrower';
-import { saveDebtServiceOfLoanApplication } from '@/services/db/debt-service';
 
 /**
  * API endpoint is called automatically at the end of Plaid Link flow after user's bank account is connected
@@ -75,11 +74,6 @@ export async function GET(request: NextRequest, context: { params: { id: string 
       totalDebtService,
       dscr,
     };
-
-    await saveDebtServiceOfLoanApplication({
-      debtService: sba,
-      loanApplicationId,
-    });
 
     return NextResponse.json(
       {
