@@ -1,7 +1,7 @@
 import { Context, Proof, verifyProof } from '@reclaimprotocol/js-sdk';
 import { NextResponse } from 'next/server';
-import { saveDebtServiceProof } from '@/services/db/reclaim-proof';
 import { getLoanApplication } from '@/services/db/loan-applications/borrower';
+import prisma from '@prisma/index';
 
 // called as part of Reclaim's Debt Service flow
 
@@ -39,6 +39,9 @@ export async function POST(req: Request) {
   }
     */
     const loanApplicationId = context.extractedParameters.URL_PARAMS_1;
+    const netOperatingIncome = context.extractedParameters.netOperatingIncome;
+    const totalDebtService = context.extractedParameters.totalDebtService;
+    const dscr = context.extractedParameters.dscr;
 
     console.log('proof identifier', proof.identifier);
     console.log('ctx', context);
@@ -57,21 +60,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const debtServiceId = loanApplication.debtService?.[0]?.id;
-
-    if (!debtServiceId) {
-      return NextResponse.json(
-        {
-          message: 'Debt service not found',
+    await prisma.debtService.create({
+      data: {
+        loanApplication: {
+          connect: {
+            id: loanApplicationId,
+          },
         },
-        { status: 404 }
-      );
-    }
-
-    await saveDebtServiceProof({
-      debtServiceId,
-      proof,
-      context,
+        netOperatingIncome: Number(netOperatingIncome),
+        totalDebtService: Number(totalDebtService),
+        dscr: Number(dscr),
+        debtServiceProof: {
+          create: {
+            id: proof.identifier,
+            proof: JSON.stringify(proof),
+            context: JSON.stringify(context),
+          },
+        },
+      },
     });
 
     return NextResponse.json(

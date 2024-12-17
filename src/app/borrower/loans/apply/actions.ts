@@ -6,7 +6,6 @@ import {
   submitLoanApplication as dbSubmitLoanApplication,
 } from '@/services/db/loan-applications/borrower';
 import { validateRequest as validateBorrowerRequest } from '@/app/borrower/actions';
-import { redirect } from 'next/navigation';
 
 // return loan application id
 interface InitialiseLoanApplicationResponse {
@@ -33,11 +32,6 @@ export async function initialiseLoanApplication(
     };
   }
 }
-
-
-
-
-
 
 export async function submitLoanApplication(args: {
   formData: LoanApplicationForm;
@@ -74,6 +68,4 @@ export async function submitLoanApplication(args: {
     },
     outstandingLoans: formData.outstandingLoans,
   });
-
-  redirect('/borrower/loans');
 }

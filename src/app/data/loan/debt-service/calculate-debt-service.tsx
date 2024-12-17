@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect } from 'react';
 import { XCircle } from 'lucide-react';
 import { DebtServiceApiResponse, SBA } from '@/app/api/loan/[id]/debt-service/get';
 
@@ -13,8 +13,6 @@ export default function CalculateDebtService({
 }) {
   const [apiError, setApiError] = useState<any | null>(null);
   const [sba, setSba] = useState<SBA | null>(null);
-  const [isPending, startTransition] = useTransition();
-
 
   useEffect(() => {
     if (accessToken) {

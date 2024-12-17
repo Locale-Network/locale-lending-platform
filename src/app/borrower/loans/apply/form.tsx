@@ -72,6 +72,7 @@ export default function LoanApplicationForm({
   const [isPending, startTransition] = useTransition();
 
   const { toast } = useToast();
+  const router = useRouter();
 
   const totalSteps = 4;
 
@@ -130,15 +131,23 @@ export default function LoanApplicationForm({
     // }
 
     startTransition(async () => {
-      await submitLoanApplication({
-        formData: values,
-        accountAddress,
-      });
+      try {
+        await submitLoanApplication({
+          formData: values,
+          accountAddress,
+        });
 
-      toast({
-        title: 'Loan application submitted',
-        variant: 'success',
-      });
+        toast({
+          title: 'Loan application submitted',
+          variant: 'success',
+        });
+        router.push('/borrower/loans');
+      } catch (error) {
+        toast({
+          title: 'Error submitting loan application',
+          variant: 'destructive',
+        });
+      }
     });
   }
 
@@ -231,7 +240,7 @@ export default function LoanApplicationForm({
     <Card className="mx-auto w-full max-w-4xl">
       <CardHeader>
         <CardTitle>{cardTitleForStep(step)}</CardTitle>
-        <CardDescription>Application ID: {loanApplicationId}</CardDescription>
+        <CardDescription>Loan ID: {loanApplicationId}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-10 flex justify-between">
