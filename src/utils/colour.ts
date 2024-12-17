@@ -1,5 +1,4 @@
 import { LoanApplicationStatus } from '@prisma/client';
-import { normalizeCreditScore } from './number';
 
 export const getLoanStatusStyle = (status: LoanApplicationStatus) => {
   const statusStyles: Record<LoanApplicationStatus, string> = {
@@ -13,12 +12,18 @@ export const getLoanStatusStyle = (status: LoanApplicationStatus) => {
   return statusStyles[status as keyof typeof statusStyles] || 'bg-gray-100 text-gray-800';
 };
 
-export const creditScoreProgressColor = (rangeMin: number, rangeMax: number, score: number) => {
-  const normalizedScore = normalizeCreditScore(rangeMin, rangeMax, score);
-
-  if (normalizedScore < 30) return 'bg-red-500'; // 0-30%
-  if (normalizedScore < 50) return 'bg-orange-500'; // 30-50%
-  if (normalizedScore < 70) return 'bg-yellow-500'; // 50-70%
-  if (normalizedScore < 90) return 'bg-green-500'; // 70-90%
-  return 'bg-blue-500'; // 90-100%
+export const getCreditScoreStyle = (score: number) => {
+  if (score >= 300 && score <= 579) {
+    return 'bg-red-100 text-red-800 border-red-300';
+  } else if (score >= 580 && score <= 669) {
+    return 'bg-orange-100 text-orange-800 border-orange-300';
+  } else if (score >= 670 && score <= 739) {
+    return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+  } else if (score >= 740 && score <= 799) {
+    return 'bg-lime-100 text-lime-800 border-lime-300';
+  } else if (score >= 800 && score <= 850) {
+    return 'bg-green-100 text-green-800 border-green-300';
+  } else {
+    return 'bg-gray-100 text-gray-800 border-gray-300';
+  }
 };

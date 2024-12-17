@@ -24,6 +24,7 @@ export type LoanApplicationsForTable = {
   creatorAddress: string;
   creditScoreEquifax: number | null;
   creditScoreTransUnion: number | null;
+  dscr: number | null;
   status: LoanApplicationStatus;
   createdDate: Date;
   updatedDate: Date;
@@ -122,32 +123,39 @@ export const columns: ColumnDef<LoanApplicationsForTable>[] = [
     header: 'Borrower Address',
     cell: ({ row }) => <div>{row.getValue('creatorAddress')}</div>,
   },
-
   {
-    accessorKey: 'creditScoreEquifax  ',
-    header: 'Credit Score Equifax',
+    id: 'creditScores',
+    header: 'Credit Score',
     cell: ({ row }) => {
       const creditScoreEquifax = row.getValue('creditScoreEquifax') as number | null;
+      const creditScoreTransUnion = row.getValue('creditScoreTransUnion') as number | null;
 
-      if (creditScoreEquifax === null) {
-        return <div>Not found</div>;
-      }
-
-      return <div>{creditScoreEquifax}</div>;
+      return (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center space-x-2">
+            <span className="w-20 text-sm text-gray-500">Equifax:</span>
+            <span className="font-medium">{creditScoreEquifax ?? 'Not found'}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="w-20 text-sm text-gray-500">TransUnion:</span>
+            <span className="font-medium">{creditScoreTransUnion ?? 'Not found'}</span>
+          </div>
+        </div>
+      );
     },
   },
 
   {
-    accessorKey: 'creditScoreTransUnion',
-    header: 'Credit Score TransUnion',
+    accessorKey: 'dscr',
+    header: 'DSCR',
     cell: ({ row }) => {
-      const creditScoreTransUnion = row.getValue('creditScoreTransUnion') as number | null;
+      const dscr = row.getValue('dscr') as number | null;
 
-      if (creditScoreTransUnion === null) {
+      if (dscr === null) {
         return <div>Not found</div>;
       }
 
-      return <div>{creditScoreTransUnion}</div>;
+      return <div>{dscr}</div>;
     },
   },
 

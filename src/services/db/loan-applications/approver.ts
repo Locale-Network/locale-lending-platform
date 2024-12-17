@@ -7,10 +7,12 @@ import {
   LoanApplication,
   LoanApplicationStatus,
   OutstandingLoan,
+  DebtService,
 } from '@prisma/client';
 
 export type LoanApplicationDetails = LoanApplication & {
   creditScore: CreditScore[] | null;
+  debtService: DebtService[] | null;
   account: Account;
   outstandingLoans: OutstandingLoan[];
 };
@@ -28,6 +30,12 @@ export const getLoanApplication = async (args: {
         },
         take: 1,
       },
+      debtService: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1,
+      },
       account: true,
       outstandingLoans: true,
     },
@@ -38,6 +46,7 @@ export const getLoanApplication = async (args: {
 export const getSubmittedLoanApplications = async (): Promise<
   (LoanApplication & {
     creditScore: CreditScore[] | null;
+    debtService: DebtService[] | null;
     account: Account;
   })[]
 > => {
@@ -50,6 +59,12 @@ export const getSubmittedLoanApplications = async (): Promise<
     },
     include: {
       creditScore: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1,
+      },
+      debtService: {
         orderBy: {
           createdAt: 'desc',
         },

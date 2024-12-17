@@ -2,7 +2,7 @@
 
 import { CreditScore } from '@prisma/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { getCreditScoreStyle } from '@/utils/colour';
 
 interface Props {
   creditScore: CreditScore | null;
@@ -24,6 +24,9 @@ export default function CreditScoreInformation({ creditScore }: Props) {
     );
   }
 
+  const creditScoreStyleEquifax = getCreditScoreStyle(creditScore.creditScoreEquifax);
+  const creditScoreStyleTransUnion = getCreditScoreStyle(creditScore.creditScoreTransUnion);
+
   return (
     <Card className="mx-auto w-full">
       <CardHeader>
@@ -33,14 +36,20 @@ export default function CreditScoreInformation({ creditScore }: Props) {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="flex flex-col items-center">
             <p className="font-semibold">Equifax</p>
-            <span className="text-4xl font-bold">{creditScore.creditScoreEquifax}</span>
+            <span
+              className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-4xl font-bold ${creditScoreStyleEquifax}`}
+            >
+              {creditScore.creditScoreEquifax}
+            </span>
           </div>
-
-          <Separator orientation="vertical" />
 
           <div className="flex flex-col items-center">
             <p className="font-semibold">TransUnion</p>
-            <span className="text-4xl font-bold">{creditScore.creditScoreTransUnion}</span>
+            <span
+              className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-4xl font-bold ${creditScoreStyleTransUnion}`}
+            >
+              {creditScore.creditScoreTransUnion}
+            </span>
           </div>
         </div>
       </CardContent>
